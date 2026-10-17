@@ -26,7 +26,7 @@
     - "Integration effort or a missing native connector could make the project too heavy: SAP and on-premise systems at DeltaWorks, the first-class Dynamics gap at Greenline, iManage/Intapp at Harbor Legal"
     - "Security or regulatory gates have to clear first: BrightPath's BAA, Harbor Legal's UK residency and ethical walls, DeltaWorks' works council and data residency"
     - "Prospects worry about the licensing and usage model: occasional approvers needing full seats, unpredictable usage overages, and subflow billing at Juniper"
-    - "Lack of internal capacity to own or maintain the tool (Fable has no IT team; Juniper's engineer worries about maintenance; Cedar & Finch could be over-buying)"
+    - "Lack of internal capacity to own or maintain the tool, or doubt that a platform reduces maintenance (Fable has no IT team; at Juniper the staff engineer says a platform brings its own integration maintenance, while the sponsor argues ownership is the real cost; Cedar & Finch could be over-buying)"
   evidence:
     - "CALL-003 [06:54] Sophie Reed (expected 800-1,000) / [13:35] budget is the biggest risk"
     - "CALL-006 [08:06] Imogen Price 'above what I had in mind' / [12:37] price and complexity are the two risks / [11:20] no IT team"
@@ -36,7 +36,7 @@
     - "CALL-004 [34:26] Martin Vogel SAP/on-prem too heavy / [05:02] Anika Bose works council"
     - "CALL-007 [13:20] Carlos Mendes first-class Dynamics gap, Power Automate embedded"
     - "CALL-008 [19:23] Samir Khan integration effort disproportionate"
-    - "CALL-010 [11:33] Ava Sinclair could build internally / [09:05] subflow billing"
+    - "CALL-010 [11:33] Ava Sinclair could build internally / [12:18] Marcus Chen maintenance is the real cost / [12:58] Ava: maintaining the integration to the platform / [08:21] subflow billing"
     - "CALL-005 [20:52] Noah Williams usage overages; CALL-016 [00:51] Dermot Kelly no new software this year"
   should_abstain: false
   notes: "Broad synthesis question. A good answer groups reasons into themes and cites several calls per theme. If it only lists price, it is incomplete: the incumbent/alternative and integration-effort themes are just as common. Weak answers mix in churn reasons (CALL-014/015), which are about customers who already bought, not prospects."
@@ -172,7 +172,7 @@
     - "Inkwell Learning will pilot if a backward analysis shows the signal exists; it wants a decision by late September"
     - "Least likely near-term: Greenline (no decision this year), DeltaWorks (architecture review first, production early next year), BrightPath (gated on the BAA), Cedar & Finch and Fable Media (budget), and the cold calls Quarry Ridge and Trafford"
   evidence:
-    - "CALL-005 [27:03] Noah Williams / [24:00] remediation programme / [29:49] head start"
+    - "CALL-005 [27:03] Noah Williams / [25:35] remediation programme date drives the timeline / [29:49] head start"
     - "CALL-010 [22:41] four-week evaluation / [29:49] Marcus Chen wants to proceed / [21:47] Ava's veto"
     - "CALL-001 [26:17] Rachel Morgan sandbox, three real workflows / [20:58] Workato"
     - "CALL-009 [24:34] Olivia Grant pilot if signal / [23:37] late September"
@@ -604,15 +604,15 @@
   question: "In the Verity Payments post-mortem, Maya says someone reviewed an exported workflow definition 'last month'. Which prospect was that most likely, and what did they ask for?"
   kind: multi_call
   expected_calls: [CALL-014, CALL-010]
-  acceptable_calls: []
+  acceptable_calls: [CALL-009]
   expected_facts:
     - "In the Verity call (18 September), Maya says 'Someone did that to us last month' about having an engineer read the exported definition of a real workflow"
     - "The most likely match is Juniper Cloud Tools (call dated 12 August): staff engineer Ava Sinclair asked for three exported definitions (one trivial, one with branching, one with a custom step) to review diffs"
     - "Ava also made 'review the exported definition as though it were a pull request' a pass/fail evaluation criterion"
-    - "The transcript never names the prospect, so the attribution is an inference and should be hedged"
+    - "The transcript never names the prospect, so the attribution is an inference and should be hedged; Inkwell Learning (4 August) is a weaker alternative, since Darren Wu asked about version control and diffs but did not ask to read an exported definition"
   evidence:
     - "CALL-014 [18:11]-[18:39] Sarah Lindqvist / Maya Chen"
     - "CALL-010 [01:28]-[01:48] Ava Sinclair three definitions / [26:28] fourth criterion"
     - "manifest.json dates: CALL-010 2026-08-12, CALL-014 2026-09-18"
   should_abstain: false
-  notes: "Multi-hop: needs the call date plus content from another call. A good answer names Juniper with an explicit hedge. Stating it as fact, or failing to find any link, both lose credit."
+  notes: "Multi-hop: needs the call date plus content from another call. A good answer names Juniper with an explicit hedge. Stating it as fact, or failing to find any link, both lose credit. Juniper fits best: Ava asked for three exported definitions to read the diffs herself (exactly Sarah's advice), and its four-week evaluation matches Maya's 'It's ongoing' [18:39]. Inkwell (CALL-009 [27:40]-[28:36]) also falls in 'last month' and Maya attended that call, but nobody there asked to read an export, so it is a weaker candidate."

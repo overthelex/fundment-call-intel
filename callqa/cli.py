@@ -10,7 +10,7 @@ from pathlib import Path
 from .pipeline import Pipeline, Result
 from .verify import CitationCheck
 
-MARK = {"exact": "✓", "shifted": "✓~", "fuzzy": "≈", "not_found": "✗", "unknown_call": "✗"}
+MARK = {"exact": "✓", "shifted": "✓~", "fuzzy": "≈", "wrong_speaker": "✗", "wrong_call": "✗", "not_found": "✗", "unknown_call": "✗"}
 
 
 def _cite_line(pipe: Pipeline, c: CitationCheck) -> str:
@@ -20,7 +20,7 @@ def _cite_line(pipe: Pipeline, c: CitationCheck) -> str:
         p = call.speaker(c.turn.speaker)
         who = f"{c.turn.speaker}" + (f" ({p.role}, {p.company})" if p else "")
         where = f"{call.path}:{c.turn.line}"
-        note = "" if c.status == "exact" else f"  [{c.status}: cited {c.timestamp}]"
+        note = "" if c.status == "exact" else f"  [{c.status}: cited {c.timestamp} {c.speaker}]"
         return f'    {mark} {c.turn.call_id} [{c.turn.ts}] {who}: "{c.quote}"\n       {where}{note}'
     return f'    {mark} {c.call_id} [{c.timestamp}] {c.speaker}: "{c.quote}"  (quote not found in transcript)'
 

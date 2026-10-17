@@ -64,3 +64,29 @@ def test_speaker_with_role_suffix_still_matches(calls):
     t = calls["CALL-003"].turns[30]
     r = check_citation(calls, "CALL-003", "99:99", f"{t.speaker} (Some Role, Cedar & Finch)", t.text, set())
     assert r.status == "shifted" and r.turn == t
+
+
+def test_words_said_by_someone_else_are_a_misattribution(calls):
+    # CALL-014 [13:36] is Maya Chen; crediting her words to Sarah must fail
+    r = check_citation(calls, "CALL-014", "13:36", "Sarah Lindqvist", "The right response was three days of an SE.", set())
+    assert r.status == "wrong_speaker" and not r.ok
+
+
+def test_exact_neighbour_beats_fuzzy_anchor(calls):
+    # the quote is Sarah's [13:40]; Maya's [13:36] is only a near match and must not win
+    r = check_citation(
+        calls, "CALL-014", "13:36", "Sarah Lindqvist", "The right response was three days of an SE, yes.", set()
+    )
+    assert r.status == "shifted" and r.turn.ts == "13:40" and r.turn.speaker == "Sarah Lindqvist"
+
+
+def test_speaker_written_with_role_after_comma(calls):
+    t = calls["CALL-014"].turns[20]
+    r = check_citation(calls, "CALL-014", t.ts, f"{t.speaker}, Some Role, Verity Payments", t.text, set())
+    assert r.status == "exact"
+
+
+def test_quote_from_another_call_is_rejected_but_located(calls):
+    # Leo Grant's SSO line is in CALL-012, not CALL-015
+    r = check_citation(calls, "CALL-015", "08:09", "Leo Grant", "SAML SSO is Enterprise.", set())
+    assert r.status == "wrong_call" and not r.ok and r.turn.call_id == "CALL-012"

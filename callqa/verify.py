@@ -32,7 +32,7 @@ class CitationCheck:
     timestamp: str
     speaker: str
     quote: str
-    status: str  # exact | shifted | fuzzy | not_found | unknown_call
+    status: str  # exact | shifted | fuzzy | wrong_speaker | wrong_call | not_found | unknown_call
     turn: Turn | None = None
     in_context: bool = False
 
@@ -70,33 +70,56 @@ def check_citation(
         for t in call.header:
             status = _match(quote, t)
             if status:
-                return _found(out, status, t, context_turns)
+                return _found(out, status, t, "header", context_turns)
         out.status = "not_found"
         return out
-    speaker = re.sub(r"\s*\(.*\)\s*$", "", speaker).strip()  # "Name (Role, Company)" -> "Name"
+    speaker = _name(speaker)
     anchors = [t for t in call.turns if t.ts == ts]
 
-    # 1) the turn the model pointed at
-    for t in anchors:
-        status = _match(quote, t)
-        if status:
-            return _found(out, status, t, context_turns)
-    # 2) neighbouring turns: right quote, slightly wrong timestamp
-    for a in anchors:
+    def neighbours(a: Turn) -> list[Turn]:
         lo, hi = max(0, a.idx - NEIGHBOUR_TURNS), min(len(call.turns), a.idx + NEIGHBOUR_TURNS + 1)
-        for t in call.turns[lo:hi]:
+        return call.turns[lo:hi]
+
+    # 1) exact quote in the turn the model pointed at
+    for t in anchors:
+        if _match(quote, t) == "exact":
+            return _found(out, "exact", t, speaker, context_turns)
+    # 2) exact quote in a neighbouring turn: right words, slightly wrong timestamp
+    for a in anchors:
+        for t in neighbours(a):
             if _match(quote, t) == "exact":
-                return _found(out, "shifted", t, context_turns)
-    # 3) anywhere in the same call, same speaker (timestamp wrong or missing)
+                return _found(out, "shifted", t, speaker, context_turns)
+    # 3) near-verbatim quote in the turn the model pointed at
+    for t in anchors:
+        if _match(quote, t) == "fuzzy":
+            return _found(out, "fuzzy", t, speaker, context_turns)
+    # 4) anywhere in the same call, said by the cited speaker (timestamp wrong or missing)
     for t in call.turns:
         if t.speaker == speaker and _match(quote, t) == "exact":
-            return _found(out, "shifted", t, context_turns)
+            return _found(out, "shifted", t, speaker, context_turns)
+    # 5) the words exist in another call: still a failed citation, but point at the real source
+    for other in calls.values():
+        if other is call:
+            continue
+        for t in other.turns:
+            if _match(quote, t) == "exact":
+                _found(out, "wrong_call", t, speaker, context_turns)
+                out.status = "wrong_call"
+                return out
     out.status = "not_found"
     return out
 
 
-def _found(out: CitationCheck, status: str, turn: Turn, context_turns: set[tuple[str, int]]) -> CitationCheck:
-    out.status = status
+def _name(speaker: str) -> str:
+    """'Name (Role, Company)' or 'Name, Role, Company' -> 'Name'."""
+    return re.split(r"[(,]", speaker, maxsplit=1)[0].strip()
+
+
+def _found(
+    out: CitationCheck, status: str, turn: Turn, speaker: str, context_turns: set[tuple[str, int]]
+) -> CitationCheck:
+    # the words exist, but someone else said them: a misattribution, not a valid citation
+    out.status = status if turn.speaker == speaker else "wrong_speaker"
     out.turn = turn
     out.in_context = (turn.call_id, turn.idx) in context_turns
     return out

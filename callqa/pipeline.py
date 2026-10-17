@@ -209,7 +209,7 @@ class Pipeline:
             warnings.append("confidence lowered: no claim could be verified against the transcripts")
         bad = sum(1 for checks in claim_checks + conflict_checks for c in checks if not c.ok)
         if bad:
-            warnings.append(f"{bad} citation(s) did not match the transcript text")
+            warnings.append(f"{bad} citation(s) failed verification (quote not found or wrong speaker)")
 
         return Result(
             question, plan, context, answer, claim_checks, conflict_checks,
