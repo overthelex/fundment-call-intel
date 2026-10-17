@@ -66,7 +66,15 @@ def check_citation(
     if call is None:
         return out
     ts = timestamp.strip().lstrip("[").rstrip("]")
-    anchors = [t for t in call.turns if t.ts == ts] or []
+    if ts.lower() == "header":
+        for t in call.header:
+            status = _match(quote, t)
+            if status:
+                return _found(out, status, t, context_turns)
+        out.status = "not_found"
+        return out
+    speaker = re.sub(r"\s*\(.*\)\s*$", "", speaker).strip()  # "Name (Role, Company)" -> "Name"
+    anchors = [t for t in call.turns if t.ts == ts]
 
     # 1) the turn the model pointed at
     for t in anchors:

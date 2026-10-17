@@ -53,7 +53,9 @@ class LLM:
         api_key = os.environ.get("LLM_API_KEY") or os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise SystemExit("Set LLM_API_KEY (or OPENAI_API_KEY); see README.")
-        self.client = OpenAI(api_key=api_key, base_url=os.environ.get("LLM_BASE_URL") or None)
+        self.client = OpenAI(
+            api_key=api_key, base_url=os.environ.get("LLM_BASE_URL") or None, max_retries=8, timeout=180
+        )
         self.chat_model = os.environ.get("CHAT_MODEL", "gpt-5.4-mini")
         self.judge_model = os.environ.get("JUDGE_MODEL", "gpt-5.4")
         self.embed_model = os.environ.get("EMBED_MODEL", "text-embedding-3-small")
@@ -66,6 +68,7 @@ class LLM:
         schema: type[T],
         model: str | None = None,
         reasoning_effort: str | None = None,
+        usage: Usage | None = None,
     ) -> T:
         """One chat call whose output is validated against a pydantic schema."""
         kwargs = {}
@@ -78,16 +81,20 @@ class LLM:
             **kwargs,
         )
         if resp.usage:
-            self.usage.add(resp.usage.prompt_tokens, resp.usage.completion_tokens)
+            for u in (self.usage, usage):
+                if u is not None:
+                    u.add(resp.usage.prompt_tokens, resp.usage.completion_tokens)
         msg = resp.choices[0].message
         if msg.parsed is None:
             raise RuntimeError(f"model returned no parseable output (refusal={msg.refusal!r})")
         return msg.parsed
 
-    def embed(self, texts: list[str], batch_size: int = 128) -> list[list[float]]:
+    def embed(self, texts: list[str], batch_size: int = 128, usage: Usage | None = None) -> list[list[float]]:
         out: list[list[float]] = []
         for i in range(0, len(texts), batch_size):
             resp = self.client.embeddings.create(model=self.embed_model, input=texts[i : i + batch_size])
-            self.usage.add(embed=resp.usage.total_tokens)
+            for u in (self.usage, usage):
+                if u is not None:
+                    u.add(embed=resp.usage.total_tokens)
             out.extend(d.embedding for d in resp.data)
         return out

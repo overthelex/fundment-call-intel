@@ -54,6 +54,8 @@ class Call:
     call_type: str = ""  # from manifest: Prospect | Renewal | Churn | Cold call ...
     participants: list[Participant] = field(default_factory=list)
     turns: list[Turn] = field(default_factory=list)
+    # header lines as pseudo-turns (ts="header"), so header metadata can be cited and checked too
+    header: list[Turn] = field(default_factory=list)
 
     @property
     def category(self) -> str:
@@ -93,9 +95,12 @@ def parse_call(path: Path) -> Call:
     lines = path.read_text(encoding="utf-8").splitlines()
     header: dict[str, str] = {}
     participants: list[Participant] = []
+    header_lines: list[tuple[int, str]] = []
     i = 0
     while i < len(lines) and lines[i].strip() != "TRANSCRIPT":
         line = lines[i]
+        if line.strip():
+            header_lines.append((i + 1, line.strip()))
         if line.startswith("- "):
             participants.append(_parse_participant(line))
         elif ":" in line:
@@ -140,6 +145,9 @@ def parse_call(path: Path) -> Call:
         duration_minutes=int(duration.group()) if duration else 0,
         participants=participants,
         turns=turns,
+        header=[
+            Turn(call_id, -1, "header", 0, "header", "metadata", text, lineno) for lineno, text in header_lines
+        ],
     )
 
 

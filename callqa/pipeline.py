@@ -10,7 +10,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from .index import Chunk, Index, turn_line
-from .llm import LLM
+from .llm import LLM, Usage
 from .parse import Call, Turn, load_calls
 from .prompts import ANSWER_SYSTEM, PLANNER_SYSTEM
 from .verify import CitationCheck, check_citation
@@ -94,14 +94,9 @@ class Result:
 
 
 def call_header(call: Call) -> str:
-    people = "; ".join(
-        f"{p.name} - {p.role}, {p.company}" + (f" ({p.note})" if p.note else "") for p in call.participants
-    )
-    return (
-        f"=== {call.call_id} | {call.company} | {call.industry}, {call.company_size} | "
-        f"{call.category} ({call.stage}) | {call.date} | {call.duration_minutes} min\n"
-        f"Participants: {people}"
-    )
+    # the header exactly as in the file, so a quoted header line can be checked like a turn
+    raw = "\n".join(t.text for t in call.header if t.text != "TRANSCRIPT")
+    return f"=== {call.call_id} (call kind: {call.category})\n{raw}\nTRANSCRIPT"
 
 
 def catalogue(calls: list[Call]) -> str:
@@ -121,9 +116,9 @@ class Pipeline:
 
     # -- steps -------------------------------------------------------------
 
-    def plan(self, question: str) -> Plan:
+    def plan(self, question: str, usage: Usage | None = None) -> Plan:
         user = f"CALL CATALOGUE\n{catalogue(self.calls_list)}\n\nQUESTION\n{question}"
-        plan = self.llm.structured(PLANNER_SYSTEM, user, Plan, reasoning_effort="low")
+        plan = self.llm.structured(PLANNER_SYSTEM, user, Plan, reasoning_effort="low", usage=usage)
         plan.call_ids = [c for c in (x.strip().upper() for x in plan.call_ids) if c in self.calls]
         return plan
 
@@ -142,10 +137,14 @@ class Pipeline:
             turns.extend(call.turns)
         return Context("full", call_ids, turns, "\n\n".join(parts))
 
-    def excerpt_context(self, question: str, plan: Plan, call_ids: list[str]) -> Context:
+    def excerpt_context(
+        self, question: str, plan: Plan, call_ids: list[str], usage: Usage | None = None
+    ) -> Context:
         queries = [question, *plan.search_queries][:5]
-        per_call = 2 if plan.scope == "across" else 0
-        hits = self.index.search(queries, call_ids=call_ids, per_call=per_call)
+        # A quota per call unless the question named its calls: facts about the product or the
+        # vendor can sit in any call, often in a single turn that global top-k misses.
+        per_call = 0 if plan.call_ids else (2 if plan.scope == "across" else 1)
+        hits = self.index.search(queries, call_ids=call_ids, per_call=per_call, usage=usage)
         by_call: dict[str, dict[int, Turn]] = {}
         for chunk, _ in hits:
             by_call.setdefault(chunk.call_id, {}).update({t.idx: t for t in chunk.turns})
@@ -162,7 +161,7 @@ class Pipeline:
             turns.extend(picked[i] for i in sorted(picked))
         return Context("excerpts", sorted(by_call), turns, "\n\n".join(parts), [c for c, _ in hits])
 
-    def answer(self, question: str, context: Context, plan: Plan | None) -> Answer:
+    def answer(self, question: str, context: Context, plan: Plan | None, usage: Usage | None = None) -> Answer:
         notes = ""
         if plan and plan.entity_notes:
             notes = "NOTES FROM QUERY PLANNING\n" + "\n".join(f"- {n}" for n in plan.entity_notes) + "\n\n"
@@ -172,10 +171,10 @@ class Pipeline:
             + ")"
         )
         user = f"{scope}\n\n{notes}TRANSCRIPTS\n{context.text}\n\nQUESTION\n{question}"
-        return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort="medium")
+        return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort="medium", usage=usage)
 
     def check(self, citations: list[Citation], context: Context) -> list[CitationCheck]:
-        in_ctx = {(t.call_id, t.idx) for t in context.turns}
+        in_ctx = {(t.call_id, t.idx) for t in context.turns} | {(cid, -1) for cid in context.call_ids}
         return [check_citation(self.calls, c.call_id, c.timestamp, c.speaker, c.quote, in_ctx) for c in citations]
 
     # -- entry point -------------------------------------------------------
@@ -184,17 +183,20 @@ class Pipeline:
         """mode="auto": plan, then whole calls or retrieved excerpts depending on size.
         mode="full": skip planning and put the entire dataset in context (baseline)."""
         t0 = time.time()
-        before = self.llm.usage.snapshot()
+        usage = Usage()
         plan: Plan | None = None
         if mode == "full":
             context = self.full_context(list(self.calls))
         else:
-            plan = self.plan(question)
+            plan = self.plan(question, usage)
             ids = self.candidates(plan)
             size = sum(len(t.text.split()) for cid in ids for t in self.calls[cid].turns)
-            context = self.full_context(ids) if size <= FULL_TEXT_WORD_BUDGET else self.excerpt_context(question, plan, ids)
+            if size <= FULL_TEXT_WORD_BUDGET:
+                context = self.full_context(ids)
+            else:
+                context = self.excerpt_context(question, plan, ids, usage)
 
-        answer = self.answer(question, context, plan)
+        answer = self.answer(question, context, plan, usage)
         claim_checks = [self.check(c.citations, context) for c in answer.claims]
         conflict_checks = [self.check(c.citations, context) for c in answer.conflicts]
 
@@ -209,6 +211,7 @@ class Pipeline:
         if bad:
             warnings.append(f"{bad} citation(s) did not match the transcript text")
 
-        after = self.llm.usage.snapshot()
-        usage = {k: after[k] - before[k] for k in after}
-        return Result(question, plan, context, answer, claim_checks, conflict_checks, confidence, warnings, usage, time.time() - t0)
+        return Result(
+            question, plan, context, answer, claim_checks, conflict_checks,
+            confidence, warnings, usage.snapshot(), time.time() - t0,
+        )

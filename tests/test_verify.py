@@ -53,3 +53,14 @@ def test_out_of_context_turn_is_flagged(calls):
     other = calls["CALL-002"].turns[5]
     r = check_citation(calls, "CALL-002", other.ts, other.speaker, other.text, context_turns=set())
     assert r.ok and not r.in_context
+
+
+def test_header_metadata_can_be_cited(calls):
+    r = check_citation(calls, "CALL-007", "header", "header", "2,300 employees", context_turns={("CALL-007", -1)})
+    assert r.status == "exact" and r.in_context and r.turn.line == 6
+
+
+def test_speaker_with_role_suffix_still_matches(calls):
+    t = calls["CALL-003"].turns[30]
+    r = check_citation(calls, "CALL-003", "99:99", f"{t.speaker} (Some Role, Cedar & Finch)", t.text, set())
+    assert r.status == "shifted" and r.turn == t

@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from rank_bm25 import BM25Okapi
 
-from .llm import LLM
+from .llm import LLM, Usage
 from .parse import Call, Turn
 
 WINDOW_WORDS = 180
@@ -98,6 +98,7 @@ class Index:
         per_call: int = 2,
         top_k: int = 12,
         max_chunks: int = 40,
+        usage: Usage | None = None,
     ) -> list[tuple[Chunk, float]]:
         """Hybrid search with reciprocal-rank fusion.
 
@@ -110,7 +111,7 @@ class Index:
         idx = [i for i, ch in enumerate(self.chunks) if ch.call_id in allowed]
         if not idx:
             return []
-        qvecs = np.asarray(self.llm.embed(queries), dtype=np.float32)
+        qvecs = np.asarray(self.llm.embed(queries, usage=usage), dtype=np.float32)
         qvecs /= np.linalg.norm(qvecs, axis=1, keepdims=True)
 
         fused: dict[int, float] = defaultdict(float)

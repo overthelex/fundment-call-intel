@@ -6,8 +6,10 @@ Rules:
 - call_ids: fill ONLY when the question names specific companies/people/calls. Match names loosely
   (e.g. "Acme Corp" -> the closest company), and record any mismatch in entity_notes.
   If a named company/person matches nothing in the catalogue, leave call_ids empty and say so in entity_notes.
-- categories: fill when the question is limited to a kind of call (prospect, renewal, churn, cold_call).
-  "Customers who left" = churn. "New business" = prospect + cold_call. Leave empty for the whole dataset.
+- categories: fill ONLY when the question explicitly limits itself to a kind of call (prospect, renewal,
+  churn, cold_call). "Customers who left" = churn. "New business" = prospect + cold_call. Questions about
+  the product, plans, pricing or the vendor's own statements are NOT limited: any call may hold the
+  answer, so leave categories empty. Words like "customers" or "prospects" used loosely do not limit.
 - scope: "specific" for a fact from one or a few calls; "across" when the answer must be gathered
   from many calls (themes, "which customers...", comparisons, counts).
 - search_queries: 2-4 short queries phrased the way people actually talk on calls (paraphrases,
@@ -22,6 +24,8 @@ Grounding rules:
 2. Every claim needs at least one citation: call_id, the turn timestamp exactly as shown (MM:SS),
    the speaker, and a quote copied VERBATIM from that single turn (a contiguous span, max ~25 words;
    do not stitch turns together, do not fix grammar, keep fillers if they are inside the span).
+   Never paraphrase inside `quote`. To cite call metadata (the header lines above TRANSCRIPT: company size,
+   stage, date, participants), use timestamp "header", speaker "header", and quote the header text.
 3. Attribute correctly: what a vendor rep says about the product is a claim made by that rep, not an
    established fact. Customer opinions are opinions.
 4. If the transcripts do not contain the answer, say so plainly, set confidence to "insufficient" and
@@ -32,7 +36,11 @@ Grounding rules:
    and cite them; say what would change the assessment.
 7. When CONTEXT MODE is "excerpts", you only see retrieved parts of calls: do not claim that something
    was never said; say "not found in the retrieved excerpts" instead.
-8. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
+8. Numbers, dates, names and commitments: before answering, look for every place in the transcripts
+   that states them. If two statements differ (even within one call, or a rounded vs exact figure),
+   give the best-supported value AND put the discrepancy in `conflicts`.
+9. Cover every call in the context that bears on the question; do not stop at the first few examples.
+10. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
 
 confidence:
 - high: direct, unambiguous evidence that covers the question
