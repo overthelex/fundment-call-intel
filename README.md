@@ -44,173 +44,128 @@ are then deployment names. Defaults: `CHAT_MODEL=gpt-5.4-mini`, `JUDGE_MODEL=gpt
 
 ### Evaluation
 
-```bash
-uv run python eval/run_eval.py               # the system as shipped
-uv run python eval/run_eval.py --mode full   # baseline: all transcripts in context
-uv run python eval/run_eval.py --only q01,q05
-```
+`eval/questions.yaml` has 30 annotated questions: single-call lookups, cross-call themes, call-kind
+filters, name mismatches, ambiguous questions, unanswerable and near-miss questions, and vendor
+contradictions. Each has the gold calls, the evidence locations (call + timestamp) and whether the
+system should abstain, plus a rubric for the judge:
 
-Results are written to `eval/results/<timestamp>-<mode>.{md,json}`. One run of 30 questions uses about
-0.4M prompt tokens in `auto` mode and 3.7M in `full` mode (judge included). The JSON holds every answer,
-citation check and judge verdict, for manual review.
+- **required facts**, each split into a *core* claim and supporting *details*; for enumerations
+  ("which companies…") covering k of n details counts as full coverage;
+- **bonus facts**, credited when present but never required;
+- **penalties**, statements a correct answer must not make (e.g. attributing a customer's figure to
+  the vendor, or naming SAP as Kestrel's ERP).
 
-## Approach
-
-```
-question
-  │
-  ├─ 1. plan (LLM, structured)      which calls? (named companies, call kinds) · specific vs across · search queries
-  │                                 · name mismatches ("Acme Corp" → Acme Logistics, flagged)
-  ├─ 2. context                     candidate calls fit in 12K words? → send whole transcripts
-  │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
-  ├─ 3. answer (LLM, structured)    summary · claims[] each with verbatim quotes · conflicts[] · not_found[]
-  │                                 · confidence (high / medium / low / insufficient) + reason
-  └─ 4. verify (code)               each quote looked up in the parsed transcript → exact / shifted / fuzzy
-                                    / wrong speaker / wrong call / not found
-                                    unverifiable claims flagged; if none verify, confidence is lowered
-```
-
-- **Parsing** (`callqa/parse.py`): header + `[MM:SS] Speaker: text` turns; each turn keeps its file
-  line number and its side (vendor / customer, taken from the participant list). The call kind
-  (prospect / renewal / churn / cold call) is derived from `STAGE`, because the manifest's `call_type`
-  only separates prospects from existing customers.
-- **Chunks** (`callqa/index.py`): windows of consecutive turns (~180 words, 2-turn overlap) within one
-  call, each with a header naming the call, company, and kind. People talk in fragments, so a window keeps a
-  question with its answer.
-- **Retrieval**: BM25 catches exact names (Salesforce, Workato, SOC 2); embeddings catch paraphrase
-  ("we're nervous about the price" ≈ pricing concern). The two are merged with reciprocal-rank fusion
-  over the original question plus the planner's rewrites. For questions about the whole dataset, every
-  candidate call also gets its best 2 chunks. Without that quota, long calls crowd short ones out of the
-  top-k.
-- **Answering** (`callqa/prompts.py`): the model sees whose side each speaker is on. It is told that a
-  vendor's product statement is a claim, not a fact. It is told to report contradictions instead of
-  picking one side. When it only saw excerpts, it must say "not found in the retrieved excerpts", not
-  "never said".
-
-## Key decisions
-
-1. **Whole calls when they fit, retrieval when they don't.** One call is at most ~5K words, and all 20
-   are ~51K words. If the question names a company or a call kind (cold calls are ~4K words in total;
-   renewals ~7.5K), chunking only loses context. So those questions get whole transcripts. Retrieval is
-   used when the candidate set is large (all prospects, the whole dataset). The 12K-word budget is one
-   constant (`FULL_TEXT_WORD_BUDGET`).
-2. **Structured output and a verifier in code, not "please cite your sources".** Citations are data
-   (call, timestamp, speaker, quote), so they can be checked. The checker allows small timestamp
-   slips (`shifted`) and punctuation and casing differences, but rejects invented quotes, words said
-  by someone else (`wrong_speaker`) and quotes from another call (`wrong_call`, with a pointer to the
-  real one). That gives an
-   objective grounding metric for the eval and a live warning for the user.
-3. **The planner sees a catalogue, not the data.** 20 lines of call metadata are enough to resolve
-   "Acme Corp", "customers who left" (= churn) or "renewals vs new business" to the right calls. A
-   question about something absent from the catalogue (an unknown company) is flagged up front.
-4. **Confidence is part of the answer contract.** `insufficient` is an expected output, not a failure.
-   The verifier can lower confidence but never raise it.
-5. **The baseline is in the code (`--mode full`).** At this dataset size, the whole corpus fits in one
-   prompt. The eval compares the pipeline with that brute-force option, so retrieval has to earn its
-   place in quality, cost and latency. It is not assumed to help.
-6. **One OpenAI-compatible client.** It runs on OpenAI or Azure by changing env vars; no framework.
-
-## Assumptions
-
-- Transcripts are the source of truth; the manifest/header is metadata and can be wrong. Speaker
-  attribution is correct (stated in the dataset README), so the speaker's side comes from the participant list.
-- Users are sales managers. They want a short answer plus the quotes to check it, more than a long essay.
-- English only, a few dozen calls, questions one at a time (no chat history).
-
-## Evaluation
-
-`eval/questions.yaml` has 30 annotated questions, each with gold calls, gold facts, the evidence
-location (call + timestamp), and whether the system should abstain. `eval/GOLD_NOTES.md` lists the
-dataset's traps found while annotating (contradictions, header-vs-body mismatches, name collisions). They cover single-call lookups, cross-call themes,
-call-kind filters, name mismatch, unanswerable and near-miss questions, and contradictions. Each
-question is scored on:
+One question (q30, a two-step inference) is marked as a bonus and kept out of the headline numbers.
+`eval/GOLD_NOTES.md` lists the dataset's traps found while annotating.
 
 | metric | what it tells you | how |
 |---|---|---|
 | context recall | did retrieval/routing put the right calls in front of the model? | gold calls ∩ context calls |
 | cited recall | did the answer actually use them? | gold calls ∩ calls with a verified citation |
-| citation validity | are the quotes real? | code check against the transcript |
-| fact recall | is the answer right and complete? | LLM judge (a stronger model than the answerer) per gold fact |
-| abstention | does it say "not in the data" when, and only when, it should? | confidence = insufficient or no claims |
+| citation validity | are the quotes real and correctly attributed? | code check against the transcript |
+| correct (yes / partly / no) | is the main point right? | LLM judge against the rubric |
+| core / atomic fact recall | how complete is it? | LLM judge, per core and per detail |
+| penalties | did it make a statement the gold set rules out? | LLM judge |
+| abstention | does it say "not in the data" when, and only when, it should? | LLM judge (`declines`) |
 | tokens, latency | what does it cost? | API usage per question |
 
 The metrics separate the failure points. Low context recall means retrieval or routing failed. High
 context recall with low cited recall means the answer step ignored evidence. Low citation validity
-means hallucinated quotes. Low fact recall with good citations means the answer is wrong or incomplete
-despite good sources.
+means invented or misattributed quotes. Low fact recall with good citations means the answer is
+incomplete despite good sources.
 
 ### Results
 
-30 questions, `gpt-5.4-mini` answering, `gpt-5.4` judging. The pipeline was run three times with no
-code changes in between (to measure noise), and the full-context baseline once. All runs are in
-`eval/results/` (`*-auto.*` = pipeline, `*-full.*` = baseline).
+`gpt-5.4-mini` answering. The judge is Claude Opus (a different vendor from the answering model, see
+Setup). The pipeline was run three times with identical code and the full-context baseline once; all
+four sets of answers were then re-checked and re-judged against the reviewed gold set without
+regenerating them (`--regrade`). Files in `eval/results/`: `*-auto.*` / `*-full.*` are the original
+runs, `*-regraded.*` the numbers below, `comparison.md` the per-question comparison.
+
+Headline over 29 questions (q30 excluded):
 
 | | pipeline (`auto`), 3 runs | whole dataset in prompt (`full`), 1 run |
 |---|---|---|
-| context recall | 0.98 / 0.98 / 0.98 | 1.00 (by construction) |
-| cited recall | 0.88 / 0.89 / 0.87 | 0.90 |
-| citation validity | **1.00 / 1.00 / 0.96** | 0.93 |
-| answer correct: yes / partly / no | 7/21/2 · 5/24/1 · 8/20/2 | 8 / 21 / 1 |
-| fact recall (completeness) | 0.44 / 0.43 / 0.41 | 0.45 |
+| context recall | 1.00 / 1.00 / 1.00 | 1.00 (by construction) |
+| cited recall | 0.91 / 0.91 / 0.89 | 0.90 |
+| citation validity | **1.00 / 1.00 / 0.96** | 0.94 |
+| failed citations: not found · wrong call · wrong speaker | 1·0·0 / 0·0·0 / 1·2·3 | 3·6·1 |
+| answer correct: yes / partly / no | 14/14/1 in each run | 8 / 20 / 1 |
+| core fact recall | 0.62 / 0.65 / 0.62 | 0.58 |
+| atomic fact recall (cores + details) | 0.51 / 0.51 / 0.48 | 0.48 |
+| compound fact recall (old scoring) | 0.42 / 0.46 / 0.44 | 0.42 |
+| penalties hit | 0 / 0 / 0 | 0 |
 | correct abstention on unanswerable | 5/5 in every run | 5 / 5 |
-| false abstention on answerable | 3 / 2 / 3 (of 25) | 0 / 25 |
+| false abstention on answerable | 1 / 0 / 1 (of 24) | 0 / 24 |
 | prompt tokens / question | **~13K** | 122K |
 | latency / question | 13-14 s | 13 s |
 
+**How reliable is the judge?** Before reading the table: re-judging the *same* answers of one run
+with the same Claude judge moved 6 of 30 verdicts, all between yes and partly (14/14/1 became
+8/20/1). Claude and `gpt-5.4` agree on 22 of 30 for the same answers. So the yes/partly boundary is
+noise of about ±6 questions, and the identical 14/14/1 in the three runs is partly luck. The
+yes-vs-no line, the abstentions and the deterministic metrics are stable. Repeating the judge and
+taking the majority would cut this noise; the judge has not been calibrated against human grades
+(see below).
+
 How I read the numbers:
 
-- **Routing and retrieval are not the bottleneck.** 98% of gold calls reach the model in every run.
+- **Routing and retrieval are not the bottleneck.** Every gold call reaches the model in every run.
   Where cited recall drops (q02 Salesforce, q05 capabilities), the calls were in context but the answer
   stopped after a few examples.
-- **On most questions the pipeline matches the brute-force baseline at ~1/9 of the input tokens.** It
-  is behind on the hardest cross-call questions (q11, q30, sometimes q24): the pipeline declines where
-  the baseline, seeing everything, at least partly answers. That accounts for its 2-3 false
-  abstentions. At 20 calls the baseline is a reasonable product. At 2,000 it no longer fits, which is
-  why the pipeline exists, and why those questions are the "with more time" priority.
-- **Quotes are more reliable with less context**: 0.96-1.00 citation validity for the pipeline vs 0.93
-  for the baseline. In the baseline run, q21 ("How much was Verity paying?") supported its answer with
-  Oakhill's "twenty-one and a half thousand a year" quotes, labelled as CALL-014. That is a cross-call
-  mix-up the checker reports as `wrong_call`, with the real source (CALL-015).
-- **The checker catches real errors, not only typos.** Across runs it rejected: an invented quote
-  (q03), vendor words credited to the customer (Nina Patel's stack recap attributed to Marcus Chen; Leo
-  Grant's question attributed to Eleanor Brooks), one speaker's words credited to a colleague, a quote
-  from one call's SE credited to another call's SE, the right quote in the wrong call (q24), and a
-  junk citation. Each one is shown to the user as ✗, with a pointer to where the words actually are
-  when they exist elsewhere.
+- **The pipeline is at least as good as the brute-force baseline at ~1/9 of the input tokens.** The
+  baseline was generated once and its own noise is not measured; the gap in "yes" (14 vs 8) is within
+  the judge noise above, so the honest claim is "no worse", not "better". Per question
+  (`comparison.md`) the baseline is ahead on the two hardest cross-call questions, q11 and q30, where
+  it sees everything, and behind on q21, where it took Oakhill's figure for Verity's.
+- **Quotes are more reliable with less context**: 0.96-1.00 citation validity for the pipeline vs 0.94
+  for the baseline, and the baseline's failures are mostly *wrong call* (6): real quotes attached to the
+  wrong customer. In q21 ("How much was Verity paying?") it supported its answer with Oakhill's
+  "twenty-one and a half thousand a year", labelled as CALL-014. Wrong-call and not-found are reported
+  separately because they are different failures (attribution vs invention); both count as errors.
+- **The checker catches real errors, not only typos**: an invented quote, vendor words credited to the
+  customer, one speaker's words credited to a colleague, the right quote in the wrong call. Each is
+  shown to the user as ✗, with a pointer to where the words actually are when they exist elsewhere.
 - **Unanswerable and near-miss questions work** in all runs, e.g. "Which ERP does Kestrel use?" (they
   decline to say), ISO 27001 (only SOC 2 is mentioned), and an Enterprise price (always "custom").
-- **"Partly" dominates for a mundane reason.** The gold facts are deliberately detailed, and answers
-  stay short. The judge's `correct` verdict ("is the main point right?") separates *wrong* from
-  *incomplete*.
-- **Noise is about ±1.5 questions.** With identical code the "yes" count was 7, 5 and 8, and
-  single-call lookups (q12-q14) flip between yes and partly. Stable failures are what matter: q11 is
-  "no" in 3/3 runs, and q30 never makes the cross-call inference. With 30 questions, this eval catches
-  regressions and stable failures, not fine-grained improvements.
+- **Completeness depends on how you count.** Scoring each multi-part fact as one item with partial
+  credit (the original scoring) gives 0.42-0.46; counting atoms gives about 0.5; counting only the core
+  claims gives about 0.62. The answers usually get the points and drop supporting detail.
 
 Where it fails (all visible in the per-question tables):
 
-- **q11 "Has anyone from the vendor given inconsistent answers?"**: wrong in every pipeline run. The
-  contradictions (a rep saying SSO is on all plans vs. Enterprise-only elsewhere, a "non-negotiable"
-  7% uplift waived for another customer) sit in single turns of different calls. Retrieval by question
-  similarity does not find "statements that disagree". The full-context baseline only partly finds them.
-- **q30 (two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the question and
-  the Juniper call to answer it. The planner routes to Verity only, so the model declines or guesses
-  within that call. The baseline gets further because it sees everything.
+- **q11 "Has anyone from the vendor given inconsistent answers?"**: wrong in every pipeline run; it
+  concludes that no clear product contradiction exists. The contradictions (a rep saying SSO is on all
+  plans vs. Enterprise-only elsewhere; "completely no-code" vs. "we don't claim every workflow is
+  no-code") sit in single turns of different calls. Retrieval by question similarity does not find
+  "statements that disagree". The baseline partly finds them.
+- **q24 "Is SSO on Growth?"**: the pipeline finds both sides but says it cannot conclude, although eight
+  statements say Enterprise-only against one hesitant rep who backs off. That is false balance and is
+  graded partly (not as a decline).
+- **q30 (bonus, two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the
+  question and the Juniper call to answer it. The planner routes to Verity only, so the pipeline
+  declines; the baseline answers it.
 - **Long cross-call lists (q02, q05)**: the right calls are in context, but the answer stops early.
 
 What changed because of the eval (in order): the judge got partial credit and a separate `correct`
-verdict (all-or-nothing scoring of multi-part facts made every answer look bad); the planner stopped
-narrowing product questions to "prospect" calls (that cut out the renewal call holding the SSO answer);
-calls not named in the question each get one excerpt even for narrow questions; figures that differ
-across statements must go into `conflicts` (q21: £80K vs "a hundred thousand a year"); header metadata
-became citable; abstention scoring moved from a heuristic to the judge (the heuristic penalised a
-correct, confident "they declined to name it"); and after an audit of the results, the checker started
-verifying the speaker and preferring an exact neighbouring turn over a fuzzy match, because one run
-credited Sarah's words to Maya.
+verdict; the planner stopped narrowing product questions to "prospect" calls (that cut out the renewal
+call holding the SSO answer); calls not named in the question each get one excerpt even for narrow
+questions; figures that differ across statements must go into `conflicts`; header metadata became
+citable; abstention scoring moved from a heuristic to the judge; and after an audit of the results,
+the checker started verifying the speaker and the call, because one run credited Sarah's words to Maya.
 
-The gold set itself was checked line by line against the transcripts (every cited timestamp, plus a
-grep for each claimed absence). It needed small corrections: one evidence timestamp, one fact wording,
-and q30 now lists Inkwell as a weaker alternative candidate.
+**Where the gold set comes from.** The questions and facts were drafted by an LLM agent that read all
+20 transcripts. Every cited line was then checked against the source and every "not in the data" was
+checked with grep. The disputed interpretations (19 points) were reviewed by a second model (Claude),
+and a human decided each one; the decisions are in `eval/review/reviews_2026-10-19.json`. They changed
+the rubric, not the system: three apparent conflicts (Verity's "hundred thousand", "you weren't there
+in February", Greenline's "two and a half thousand") turned out to be readings of normal speech and
+became bonus facts or penalties; q11 now requires the two product contradictions and treats commercial
+concessions as optional; q07 is graded by tiers, not order; facts were split into core and details.
+The choice of what counts as the main point in the undisputed questions has not been reviewed by a
+human. That review is not a calibration of the judge: the planned calibration is 10 answers, stratified
+by verdict and question type, graded blind by a human, with the raw agreement rate and every
+disagreement explained.
 
 ## Known limitations
 
@@ -223,11 +178,10 @@ and q30 now lists Inkwell as a weaker alternative candidate.
   answer cites signals but there is no scoring rubric behind it.
 - **The checker verifies that the quote exists and that the cited person said it, not that it supports
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
-- **Header vs body disagreements** (e.g. Greenline: 2,300 employees in the header, "two and a half
-  thousand" in the call) are only surfaced when the question touches them.
-- **The gold set is small (30) and written by one annotator** (an LLM agent reading all transcripts;
-  every cited line was then checked against the source). The LLM judge is a different, stronger model, but it is still an LLM. Its
-  verdicts were spot-checked, not calibrated against human grades.
+- **Header vs body disagreements** are only surfaced when the question touches them.
+- **The gold set is small (30) and LLM-drafted** (see "Where the gold set comes from"). The judge is
+  from a different vendor than the answering model, but it is still an LLM, it is noisy on the
+  yes/partly boundary, and it has not been calibrated against human grades.
 - Single-turn, English, no auth. The transcripts are sent to an external LLM API.
 
 ## With more time
@@ -248,9 +202,9 @@ With another day:
    engineer reviewed an exported definition") before answering; this fixes q30-type questions.
 4. **Entailment check on citations**: a small model checks that each quote supports its claim, not just
    that it exists.
-5. **Better eval**: atomic gold facts (split the multi-part ones), 3–5 repeats per question to measure
-   variance, a human-graded subset to calibrate the judge, and separate retrieval-only tests that need
-   no LLM.
+5. **Better eval**: a majority of 3 judge passes per answer (the judge alone moves ~6 of 30 verdicts),
+   3–5 repeats of the baseline too, a blind human-graded subset to calibrate the judge, and separate
+   retrieval-only tests that need no LLM.
 
 For production:
 

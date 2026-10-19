@@ -12,9 +12,9 @@ Found during a full read of all 20 transcripts. Timestamps are `[MM:SS]` inside 
 - **Overstated claims.** Alastair says "all native connectors, no problem" (CALL-006 [03:19]), "up and running in a couple of weeks" ([11:58]), and "integrate with anything that's got an API" (CALL-019 [01:50]). He gets Trafford's practice count wrong: 14 vs 11 (CALL-019 [00:34]-[00:44]).
 
 ## Header / manifest vs body, and within-call contradictions
-- **Greenline size.** Header says 2,300 employees. Carlos says his team supports "two and a half thousand" (CALL-007 [06:49]).
-- **Verity's spend.** Sarah implies "a hundred thousand a year" (CALL-014 [06:56]). Ruth and Kwame say it is an £80K account ([11:40], [13:46], [18:52]).
-- **Ruth's Verity takeover.** Ruth says January ([00:41]) and Kwame confirms January ([04:24]), but later Kwame says "You weren't there in February" ([20:34]). "Month twenty" ([04:48]) doesn't fit either.
+- **Greenline size.** Header says 2,300 employees. Carlos says his six-person team is "supporting two and a half thousand" (CALL-007 [06:49]): the load on his team, rounded, not the headcount. Not a conflict after review.
+- **Verity's spend.** Ruth and Kwame say it is an £80K account ([11:40], [13:46], [18:52]). Sarah's "costs a hundred thousand a year" ([06:56]) has no currency, is rhetorical, and Maya immediately relates it to Workato ([07:13]); after review it is not treated as a conflict (flagging it is a bonus).
+- **Ruth's Verity takeover.** Ruth says January ([00:41]) and Kwame confirms it ([04:24]). His later "You weren't there in February" ([20:34]) reads, on review, as taking the February failure off Ruth, with her "I was there in April" pointing to the April episode ([13:06]-[13:23]); it is not a contradiction. "Month twenty" ([04:48]) does not reconcile with a two-year contract ending 31 October and is not used.
 - **Pinewood reschedules.** Ruth says "rescheduled twice", Graham says "Three times" (CALL-012 [00:00]-[00:08]). Graham says he has avoided the meeting for four months, Nadia says five ([21:47]-[21:51]).
 - **Oakhill tenure.** Hazel has wanted the compliance workflow "for three years" (CALL-015 [05:11]) but has been a customer for two years ([03:44], [08:19]).
 - **Silverline call length.** Chloe offers "five minutes", Martine says "three" (CALL-017 [02:34], [03:50]). The header also gives Martine a join time (03:41) that manifest.json does not carry.

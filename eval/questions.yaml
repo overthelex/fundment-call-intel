@@ -1,14 +1,23 @@
 # Gold evaluation set for the OrbitFlow sales-call RAG system.
-# Hand-annotated from a full read of all 20 transcripts. Timestamps refer to the
+# Annotated from a full read of all 20 transcripts. Timestamps refer to the
 # [MM:SS] markers inside each transcript.
 #
 # Field notes:
 #   expected_calls   - calls a correct answer MUST draw on (retrieval-recall gold).
 #   acceptable_calls - relevant but not required; retrieving them is not a false positive.
-#   expected_facts   - atomic facts a judge checks for. For aggregate questions a good
-#                      answer should cover most (not necessarily all) of them.
-#   tags             - optional extra labels: example (verbatim from INSTRUCTIONS.md),
-#                      call_type:<renewal|churn|cold|prospect>, ambiguous, near_miss.
+#   expected_facts   - required facts. Each is either a plain string (one atomic fact) or
+#                        core: the atomic claim a correct answer must make
+#                        details: supporting specifics, credited one by one
+#                        min_details: for enumerations, covering this many details counts
+#                                     as full coverage (k of n); default = all of them
+#   bonus_facts      - credited when present, never required.
+#   penalties        - statements a correct answer must NOT make.
+#   bonus_question   - reported separately, excluded from the headline numbers.
+#   tags             - example (verbatim from INSTRUCTIONS.md), call_type:<...>, ambiguous,
+#                      near_miss, former_conflict (re-scoped after the gold review).
+#
+# The gold set was reviewed on 18-19.10.2026; the review marks are in
+# eval/review/reviews_2026-10-19.json (d01-d19).
 
 # ---------------------------------------------------------------------------
 # The 11 example questions from INSTRUCTIONS.md (verbatim)
@@ -21,12 +30,45 @@
   expected_calls: [CALL-001, CALL-002, CALL-003, CALL-004, CALL-006, CALL-007, CALL-008, CALL-010]
   acceptable_calls: [CALL-005, CALL-009, CALL-016, CALL-019, CALL-020]
   expected_facts:
-    - "Price is high relative to company size or expectations: Cedar & Finch expected 800-1,000 a month against Growth's 1,800, Fable Media called it above budget, Trafford Dental could only consider 200-300 a month, and Acme found it more than expected after anchoring on Zapier"
-    - "An existing or already-licensed alternative is the real competitor: expanding Acme's Workato contract, Power Automate bundled with Microsoft agreements (BrightPath, Greenline, Quarry Ridge), MuleSoft at DeltaWorks, keeping Zapier plus better discipline (Cedar & Finch, Fable), or building in-house (Juniper)"
-    - "Integration effort or a missing native connector could make the project too heavy: SAP and on-premise systems at DeltaWorks, the first-class Dynamics gap at Greenline, iManage/Intapp at Harbor Legal"
-    - "Security or regulatory gates have to clear first: BrightPath's BAA, Harbor Legal's UK residency and ethical walls, DeltaWorks' works council and data residency"
-    - "Prospects worry about the licensing and usage model: occasional approvers needing full seats, unpredictable usage overages, and subflow billing at Juniper"
-    - "Lack of internal capacity to own or maintain the tool, or doubt that a platform reduces maintenance (Fable has no IT team; at Juniper the staff engineer says a platform brings its own integration maintenance, while the sponsor argues ownership is the real cost; Cedar & Finch could be over-buying)"
+    - core: "Price is high relative to company size or expectations"
+      details:
+        - "Cedar & Finch expected 800-1,000 a month against Growth's 1,800"
+        - "Fable Media called it above budget"
+        - "Trafford Dental could only consider 200-300 a month"
+        - "Acme found it more than expected after anchoring on Zapier"
+      min_details: 2
+    - core: "An existing or already-licensed alternative is the real competitor"
+      details:
+        - "Acme could expand its Workato contract"
+        - "Power Automate is bundled with Microsoft agreements (BrightPath, Greenline, Quarry Ridge)"
+        - "DeltaWorks already owns MuleSoft"
+        - "Cedar & Finch and Fable could keep Zapier plus better discipline"
+        - "Juniper could build in-house"
+      min_details: 2
+    - core: "Integration effort or a missing native connector could make the project too heavy"
+      details:
+        - "SAP and on-premise systems at DeltaWorks"
+        - "the first-class Dynamics gap at Greenline"
+        - "iManage/Intapp at Harbor Legal"
+      min_details: 2
+    - core: "Security or regulatory gates have to clear first"
+      details:
+        - "BrightPath's BAA"
+        - "Harbor Legal's UK residency and ethical walls"
+        - "DeltaWorks' works council and data residency"
+      min_details: 2
+    - core: "Prospects worry about the licensing and usage model"
+      details:
+        - "occasional approvers needing full seats"
+        - "unpredictable usage overages"
+        - "subflow billing at Juniper"
+      min_details: 2
+    - core: "Lack of internal capacity to own or maintain the tool, or doubt that a platform reduces maintenance"
+      details:
+        - "Fable has no IT team"
+        - "at Juniper the staff engineer says a platform brings its own integration maintenance"
+        - "Cedar & Finch could be over-buying"
+      min_details: 1
   evidence:
     - "CALL-003 [06:54] Sophie Reed (expected 800-1,000) / [13:35] budget is the biggest risk"
     - "CALL-006 [08:06] Imogen Price 'above what I had in mind' / [12:37] price and complexity are the two risks / [11:20] no IT team"
@@ -48,11 +90,20 @@
   expected_calls: [CALL-001, CALL-004, CALL-005, CALL-009, CALL-010]
   acceptable_calls: [CALL-011]
   expected_facts:
-    - "Acme Logistics: Salesforce is mandatory and the system of record; phase one starts when an opportunity closes in Salesforce"
-    - "DeltaWorks Manufacturing: Salesforce is in the stack; phase one validates a contract closed in Salesforce against SAP"
-    - "Ember Financial: Salesforce is a required integration; failed partner-onboarding events are enriched from Salesforce and Snowflake"
-    - "Inkwell Learning: Salesforce account status is one of three signals; reliable for contract dates/ARR/owner but not for human-maintained fields"
-    - "Juniper Cloud Tools: Salesforce is in the stack; Salesforce API limits are the constraint they have hit before"
+    - core: "Acme Logistics: Salesforce is mandatory and the system of record"
+      details: ["phase one starts when an opportunity closes in Salesforce"]
+    - core: "DeltaWorks Manufacturing: Salesforce is in the stack"
+      details: ["phase one validates a contract closed in Salesforce against SAP"]
+    - core: "Ember Financial: Salesforce is a required integration"
+      details: ["failed partner-onboarding events are enriched from Salesforce and Snowflake"]
+    - core: "Inkwell Learning: Salesforce account status is one of three signals"
+      details: ["reliable for contract dates/ARR/owner but not for human-maintained fields"]
+    - core: "Juniper Cloud Tools: Salesforce is in the stack"
+      details: ["Salesforce API limits are the constraint they have hit before"]
+  bonus_facts:
+    - "Lumen Retail (CALL-011) mentioned Salesforce only indirectly: a Salesforce outage caused a retry storm and a waived March overage"
+  penalties:
+    - "Lists BrightPath, Fable Media (both HubSpot) or Greenline (Dynamics 365) as Salesforce users"
   evidence:
     - "CALL-001 [06:31] stack / [08:26] phase one / [13:34] Salesforce mandatory"
     - "CALL-004 [09:46] stack / [13:34] phase-one candidate"
@@ -61,7 +112,7 @@
     - "CALL-010 [15:13] stack / [16:41] Ava Sinclair API limits"
     - "CALL-011 [02:19] Maya Chen: March overage waived because of a retry storm caused by a Salesforce outage"
   should_abstain: false
-  notes: "'Customers' here really means prospects plus existing customers. CALL-011 is only an indirect mention (a Salesforce outage caused a retry storm), so it is acceptable but not required. Traps: BrightPath and Fable Media use HubSpot, not Salesforce. Greenline uses Dynamics 365. Answers that list them are wrong."
+  notes: "'Customers' here really means prospects plus existing customers. CALL-011 is only an indirect mention, so it is a bonus, not required. Traps: BrightPath and Fable Media use HubSpot, not Salesforce. Greenline uses Dynamics 365."
 
 - id: q03
   question: "What concerns did customers raise about pricing?"
@@ -70,12 +121,33 @@
   expected_calls: [CALL-001, CALL-003, CALL-005, CALL-006, CALL-010, CALL-019]
   acceptable_calls: [CALL-002, CALL-004, CALL-007, CALL-008, CALL-009, CALL-011, CALL-012, CALL-014, CALL-015]
   expected_facts:
-    - "Growth (1,800 a month, up to 30 users, annual) is too expensive for small companies: Cedar & Finch expected 800-1,000, Trafford Dental 200-300, Oakhill left for a plan costing about a tenth"
-    - "The cost crosses internal sign-off thresholds: Cedar & Finch's 15,000 limit against 21,600 a year, Fable Media's 20,000 limit (founder approves above), and Acme finance involvement above 25,000"
-    - "Fear that occasional approvers or notification-only users will need full seats (Acme, BrightPath, DeltaWorks, Ember, Greenline, Harbor, Inkwell)"
-    - "Unpredictable usage and overage costs as volumes grow: Ember's second-year invoice worry, Juniper on per-event pricing and whether subflows count as separate runs, Lumen's actual overages"
-    - "Fable Media wanted 10 users instead of 30 or monthly billing; the 30-seat package meant paying for 20 seats it didn't need"
-    - "Transparency on professional services and premium connectors (DeltaWorks, Harbor Legal)"
+    - core: "Growth (1,800 a month, up to 30 users, annual) is too expensive for small companies"
+      details:
+        - "Cedar & Finch expected 800-1,000"
+        - "Trafford Dental 200-300"
+        - "Oakhill left for a plan costing about a tenth"
+      min_details: 2
+    - core: "The cost crosses internal sign-off thresholds"
+      details:
+        - "Cedar & Finch's 15,000 limit against 21,600 a year"
+        - "Fable Media's 20,000 limit (founder approves above)"
+        - "Acme finance involvement above 25,000"
+      min_details: 2
+    - core: "Fear that occasional approvers or notification-only users will need full seats"
+      details: ["Acme", "BrightPath", "DeltaWorks", "Ember", "Greenline", "Harbor Legal", "Inkwell"]
+      min_details: 3
+    - core: "Unpredictable usage and overage costs as volumes grow"
+      details:
+        - "Ember's second-year invoice worry"
+        - "Juniper on per-event pricing and whether subflows count as separate runs"
+        - "Lumen's actual overages"
+      min_details: 2
+    - core: "Fable Media wanted 10 users instead of 30, or monthly billing"
+      details: ["the 30-seat package meant paying for 20 seats it didn't need"]
+    - core: "DeltaWorks (Martin Vogel) wants transparency on professional services and premium connectors"
+  bonus_facts:
+    - "Harbor Legal: the integration effort may be disproportionate to the value (Samir Khan, CALL-008 [19:23])"
+    - "Harbor Legal agreed that the professional-services number should be quoted upfront (raised by the vendor's Leo Grant, CALL-008 [27:01])"
   evidence:
     - "CALL-003 [06:54] / [11:38]-[11:50] 15,000 threshold, 21,600"
     - "CALL-019 [05:43]"
@@ -83,10 +155,11 @@
     - "CALL-001 [05:11] / [22:46] approver seats / [24:26] finance above 25,000"
     - "CALL-005 [20:52] overages / [22:49] approver seats"
     - "CALL-010 [06:08] don't pay per event / [08:21]-[09:05] subflow billing"
-    - "CALL-004 [19:21] PS and premium connectors; CALL-008 [27:01]"
+    - "CALL-004 [19:21] Martin Vogel: PS and premium connectors"
+    - "CALL-008 [26:41] Eleanor Brooks: partner seats / [19:23] integration effort / [27:01] Leo Grant raises PS"
     - "CALL-011 [02:03] overages in four of last six months; CALL-015 [02:10] a tenth of the cost"
   should_abstain: false
-  notes: "Includes existing customers (Lumen overages, Oakhill churn on price). The Growth price is given without a currency. Pounds appear only in CALL-006/014/015/020 for other figures. Don't reward answers that invent a $ sign or quote an Enterprise price; Enterprise is always 'custom'."
+  notes: "Includes existing customers (Lumen overages, Oakhill churn on price). The Growth price is given without a currency. Pounds appear only in CALL-006/014/015/020 for other figures. Don't reward answers that invent a $ sign or quote an Enterprise price; Enterprise is always 'custom'. Harbor's PS point was raised by the vendor, so it is a bonus, not part of the PS fact (review d07)."
 
 - id: q04
   question: "Which competitors were mentioned, and in what context?"
@@ -95,12 +168,35 @@
   expected_calls: [CALL-001, CALL-003, CALL-004, CALL-005, CALL-007, CALL-010, CALL-014, CALL-020]
   acceptable_calls: [CALL-002, CALL-006, CALL-008, CALL-009, CALL-011, CALL-012, CALL-015, CALL-016]
   expected_facts:
-    - "Workato: Acme already has a Workato contract and may expand it instead; Verity Payments churned to Workato (better core-banking connector, stronger engineering story, unbilled custom connector during the PoC)"
-    - "Tray.io: Ember Financial is running a bake-off against a Tray PoC with a six-week head start; Kestrel Robotics is three weeks into a Tray evaluation and crossed OrbitFlow off its list"
-    - "Zapier: Acme's price anchor; Cedar & Finch (60+ Zaps) and Fable Media (~20 Zaps) treat it as the alternative; Lumen came from a Zapier estate; Oakhill is moving back to Zapier"
-    - "Microsoft Power Automate: the bundled incumbent at BrightPath, Greenline, Harbor Legal and Quarry Ridge, and a possible route for Pinewood's claims triage"
-    - "MuleSoft at DeltaWorks is the integration backbone they own, and a business-workflow layer built on it is the cheaper alternative"
-    - "Other alternatives: Make (Cedar & Finch tested it for branching), expanding Gainsight (Inkwell; also Acme spend), Retool Workflows or AWS Step Functions for an internal build (Juniper)"
+    - core: "Workato"
+      details:
+        - "Acme already has a Workato contract and may expand it instead"
+        - "Verity Payments churned to Workato"
+        - "Workato won Verity with a better core-banking connector, a stronger engineering story and an unbilled custom connector during the PoC"
+      min_details: 2
+    - core: "Tray.io"
+      details:
+        - "Ember Financial is running a bake-off against a Tray PoC with a six-week head start"
+        - "Kestrel Robotics is three weeks into a Tray evaluation and crossed OrbitFlow off its list"
+    - core: "Zapier"
+      details:
+        - "Acme's price anchor"
+        - "Cedar & Finch (60+ Zaps) treats it as the alternative"
+        - "Fable Media (~20 Zaps) treats it as the alternative"
+        - "Lumen came from a Zapier estate"
+        - "Oakhill is moving back to Zapier"
+      min_details: 3
+    - core: "Microsoft Power Automate as the bundled incumbent"
+      details: ["BrightPath", "Greenline", "Harbor Legal", "Quarry Ridge", "a possible route for Pinewood's claims triage"]
+      min_details: 2
+    - core: "MuleSoft at DeltaWorks"
+      details: ["it is the integration backbone they own, and a business-workflow layer built on it is the cheaper alternative"]
+    - core: "Minor alternatives are also mentioned"
+      details:
+        - "Make (Cedar & Finch tested it for branching)"
+        - "expanding Gainsight (Inkwell)"
+        - "Retool Workflows or AWS Step Functions for an internal build (Juniper)"
+      min_details: 2
   evidence:
     - "CALL-001 [07:09] / [20:58] Workato; [05:11] Zapier anchor"
     - "CALL-014 [00:08] signed with Workato / [07:37]-[07:49] / [12:35]"
@@ -121,12 +217,20 @@
   expected_calls: [CALL-001, CALL-002, CALL-004, CALL-005, CALL-007, CALL-008]
   acceptable_calls: [CALL-003, CALL-009, CALL-010, CALL-006]
   expected_facts:
-    - "Exception handling beyond the happy path (missing data, API timeouts, approvers who do nothing for two days, state changes mid-run) is raised almost verbatim in several calls"
+    - core: "Exception handling beyond the happy path"
+      details: ["examples such as missing data, API timeouts, approvers who do nothing for two days, state changes mid-run", "raised almost verbatim in several calls"]
     - "Exception queues owned by a team or group rather than a named individual, because people change roles"
     - "Run history and audit/run events exportable into the customer's own SIEM or monitoring, not only a vendor console"
     - "Reusable components or subflows that reduce maintenance and spread work across teams or regions"
     - "Version history plus a change-management scenario in the evaluation (build it, change it, break it, roll it back)"
-    - "Governance over AI and credentials: AI can be disabled or restricted, customer content is not used for training (in the contract), and connections/secrets are centrally managed and least-privilege"
+    - core: "Governance over AI and credentials"
+      details:
+        - "AI can be disabled or restricted"
+        - "customer content is not used for training (in the contract)"
+        - "connections/secrets are centrally managed and least-privilege"
+      min_details: 2
+  penalties:
+    - "Names AI features as a top capability prospects want (prospects explicitly want AI off or optional)"
   evidence:
     - "CALL-001 [09:00] Rachel Morgan; CALL-002 [13:52] Priya Shah; CALL-004 [14:54] Martin Vogel; CALL-007 [04:16] Lucy Hart (happy path not the hard part)"
     - "CALL-001 [09:40]; CALL-002 [14:26]; CALL-004 [16:15]; CALL-007 [11:24]; CALL-005 [19:26] team-owned queues"
@@ -135,7 +239,7 @@
     - "CALL-001 [19:04]; CALL-004 [23:56]; CALL-005 [19:07] change-management scenario"
     - "CALL-004 [26:00]; CALL-008 [13:55]; CALL-001 [16:03]; CALL-008 [03:22] credential scoping; CALL-010 [03:38]"
   should_abstain: false
-  notes: "The near-identical phrasing across calls (happy path, team-owned queue, fifteen times last month) is a dataset feature. A good answer notices the repetition and treats it as evidence of priority. Prospects explicitly deprioritise AI (Acme, DeltaWorks, Harbor, BrightPath want it off or optional), so an answer naming AI as a top capability is wrong."
+  notes: "The near-identical phrasing across calls (happy path, team-owned queue, fifteen times last month) is a dataset feature. A good answer notices the repetition and treats it as evidence of priority. Prospects explicitly deprioritise AI (Acme, DeltaWorks, Harbor, BrightPath want it off or optional)."
 
 - id: q06
   question: "What did Acme Corp say about their current workflow?"
@@ -145,11 +249,14 @@
   acceptable_calls: []
   expected_facts:
     - "The answer flags that no 'Acme Corp' exists and maps the question to Acme Logistics (CALL-001)"
-    - "Handoffs between sales, onboarding and customer success run on spreadsheets and Slack reminders, so renewal risks and implementation blockers are noticed late (sometimes a week, sometimes at the QBR)"
+    - core: "Handoffs between sales, onboarding and customer success run on spreadsheets and Slack reminders"
+      details: ["so renewal risks and implementation blockers are noticed late (sometimes a week, sometimes at the QBR)"]
     - "Not every step is manual; the problem is the gaps between automated pieces, e.g. something runs and then nothing happens for four days"
-    - "Workato is used by the data team for a handful of back-office integrations, but RevOps finds it too technical"
+    - core: "Workato is used by the data team for a handful of back-office integrations"
+      details: ["RevOps finds it too technical"]
     - "Onboarding is described as standardised, but EMEA and North America actually use different milestone definitions"
-    - "Ad-hoc automation nobody owns, including scripts (two per Rachel, three per Tom) whose authors are unknown"
+    - core: "Ad-hoc automation nobody owns, including scripts whose authors are unknown"
+      details: ["two scripts per Rachel, three per Tom"]
   evidence:
     - "CALL-001 [01:51] Rachel Morgan spreadsheets and Slack reminders / [02:12] a week or at the QBR"
     - "CALL-001 [02:23] gaps between automated pieces, four days"
@@ -166,19 +273,31 @@
   expected_calls: [CALL-001, CALL-005, CALL-009, CALL-010]
   acceptable_calls: [CALL-002, CALL-003, CALL-004, CALL-006, CALL-007, CALL-008, CALL-018, CALL-020]
   expected_facts:
-    - "Ember Financial is among the strongest: the sponsor wants sandbox access and a six-week pilot proposal, and a remediation programme with a fixed date drives the timeline, but Tray has a six-week head start"
-    - "Juniper Cloud Tools: a four-week evaluation starting Monday with a go/no-go decision in September; the sponsor says he wants to proceed, and the staff engineer holds an effective veto"
-    - "Acme Logistics is interested enough to test with three real workflows in a sandbox; the gating question is whether to expand Workato instead"
-    - "Inkwell Learning will pilot if a backward analysis shows the signal exists; it wants a decision by late September"
-    - "Least likely near-term: Greenline (no decision this year), DeltaWorks (architecture review first, production early next year), BrightPath (gated on the BAA), Cedar & Finch and Fable Media (budget), and the cold calls Quarry Ridge and Trafford"
+    - core: "Ember Financial is in the top tier, with the caveat that Tray has a six-week head start"
+      details:
+        - "the sponsor wants sandbox access and a six-week pilot proposal"
+        - "a remediation programme with a fixed date drives the timeline"
+    - core: "Juniper Cloud Tools is in the top tier, with the caveat of an in-house build option and the staff engineer's practical veto"
+      details:
+        - "a four-week evaluation with a go/no-go decision in September"
+        - "the sponsor says he wants to proceed"
+    - core: "Acme Logistics is conditional: it depends on whether they expand Workato instead"
+      details: ["they will test three real workflows in a sandbox"]
+    - core: "Inkwell Learning is conditional: it buys only if the backward analysis shows the signal exists"
+      details: ["it wants a decision by late September"]
+    - "The answer says explicitly that this is an inference from the calls: no prospect has committed and the outcomes are unknown"
+  bonus_facts:
+    - "Least likely near-term: Greenline (no decision this year), DeltaWorks (architecture review first), BrightPath (gated on the BAA), Cedar & Finch and Fable Media (budget), the cold calls"
+  penalties:
+    - "Places Greenline, DeltaWorks, Harbor Legal, BrightPath or Fable Media in the top tier without a caveat about timing or blockers"
   evidence:
     - "CALL-005 [27:03] Noah Williams / [25:35] remediation programme date drives the timeline / [29:49] head start"
-    - "CALL-010 [22:41] four-week evaluation / [29:49] Marcus Chen wants to proceed / [21:47] Ava's veto"
+    - "CALL-010 [22:41] four-week evaluation / [29:49] Marcus Chen wants to proceed / [21:41]-[21:47] Ava's veto"
     - "CALL-001 [26:17] Rachel Morgan sandbox, three real workflows / [20:58] Workato"
-    - "CALL-009 [24:34] Olivia Grant pilot if signal / [23:37] late September"
+    - "CALL-009 [24:34] Olivia Grant pilot if signal / [30:02] Darren Wu backward analysis / [23:37] late September"
     - "CALL-007 [22:39]; CALL-004 [33:19] / [35:45]; CALL-002 [24:22]; CALL-003 [14:53]; CALL-006 [12:37]"
   should_abstain: false
-  notes: "Judgement question. Answers should give a ranking with evidence and caveats rather than a confident single pick. Any answer naming a single 'will buy' without hedging overclaims: none of the prospects has committed."
+  notes: "Judgement question, graded by tiers, not by order: the order within a tier is not evaluated (review d09). Any answer naming a single 'will buy' without hedging overclaims: none of the prospects has committed."
 
 - id: q08
   question: "Why did customers who left decide to leave?"
@@ -187,12 +306,30 @@
   expected_calls: [CALL-014, CALL-015]
   acceptable_calls: [CALL-012]
   expected_facts:
-    - "Verity Payments left for Workato mainly because operations never built anything: every production workflow was built by engineering, so they paid a business-user premium for what they used as an engineering tool"
-    - "Verity had a connector gap for its European settlement provider that forced custom integration (February). Workato won with a better core-banking connector, a stronger engineering story (recipes as code, CI), and an unbilled three-day custom connector during its PoC"
-    - "Verity's enablement was one two-day onboarding (8 attended, 6 never used it again). Sessions offered later in January were declined"
-    - "Oakhill Property over-bought: it paid for Growth (1,800 a month, 30 users) but only 4 people logged in (2 builders) for 11 simple workflows"
-    - "Oakhill is moving back to Zapier at about 2,000-2,500 a year. The product worked perfectly, but losing approval forms and run history isn't worth about nineteen thousand pounds a year to them"
-    - "Oakhill: no smaller plan existed, and nobody noticed the low usage because its segment has no assigned CSM"
+    - core: "Verity Payments left mainly because operations never built anything: every production workflow was built by engineering"
+      details: ["so they paid a business-user premium for what they used as an engineering tool"]
+    - core: "Verity left for Workato"
+      details:
+        - "a connector gap for its European settlement provider forced custom integration (February)"
+        - "Workato had a better core-banking connector"
+        - "Workato had a stronger engineering story (recipes as code, CI)"
+        - "Workato built an unbilled three-day custom connector during its PoC"
+      min_details: 2
+    - core: "Verity's enablement was one two-day onboarding"
+      details: ["8 attended, 6 never used it again", "sessions offered later in January were declined"]
+    - core: "Oakhill Property over-bought: it paid for Growth but only 4 people logged in"
+      details: ["Growth is 1,800 a month for 30 users", "2 builders", "11 simple workflows"]
+      min_details: 2
+    - core: "Oakhill is moving back to Zapier because the product's value does not justify the cost"
+      details:
+        - "Zapier costs about 2,000-2,500 a year"
+        - "the product worked; losing approval forms and run history isn't worth about nineteen thousand pounds a year"
+    - core: "Oakhill: no smaller plan existed"
+      details: ["nobody noticed the low usage because its segment has no assigned CSM"]
+  bonus_facts:
+    - "Kwame says the connector gap 'wasn't why we left. It was the thing we pointed at' (CALL-014 [02:41])"
+  penalties:
+    - "Presents Pinewood Insurance (CALL-012) as a customer that has already left"
   evidence:
     - "CALL-014 [02:52]-[03:21] Kwame Boateng nobody in operations built anything"
     - "CALL-014 [01:33]-[02:09] settlement provider, no connector / [07:37]-[07:49] Workato advantages / [12:35] three days of a solutions architect, not billed"
@@ -201,7 +338,7 @@
     - "CALL-015 [01:53]-[02:14] Zapier, two thousand a year, nineteen thousand pounds"
     - "CALL-015 [06:39] no smaller plan / [08:45] no assigned CSM"
   should_abstain: false
-  notes: "Churn-only question. Pinewood (CALL-012) is at risk, not gone. It may be mentioned as a contrast, but presenting it as a churned customer is an error. Trap: Verity's Sarah first names the connector gap, but Kwame explicitly says it 'wasn't why we left. It was the thing we pointed at' [02:41]. A good answer keeps that nuance."
+  notes: "Churn-only question. Pinewood (CALL-012) is at risk, not gone; it may be mentioned as a contrast."
 
 - id: q09
   question: "What is different about how the sales team handles renewals versus new business?"
@@ -210,19 +347,29 @@
   expected_calls: [CALL-011, CALL-012, CALL-013, CALL-001]
   acceptable_calls: [CALL-002, CALL-004, CALL-005, CALL-008, CALL-009, CALL-010, CALL-003]
   expected_facts:
-    - "Renewals are led by the CSM (Ruth Adeyemi), with an AE joining only for commercials. New-business calls are run by an AE with a solutions engineer"
-    - "Renewals open with usage data from the account (workflow counts, run volume, error rates, dormant seats). New business opens with discovery of pain points, the stack and security requirements"
-    - "In renewals the vendor proactively right-sizes against its own revenue: it recommends cutting Lumen from 9 to 7 seats, suggests Pinewood may not need Enterprise or should not renew, and offers a six-month term"
-    - "Renewal commercials centre on a standard 7% uplift (Lumen, Halberd), run tiers and contract dates such as Pinewood's 30 September notice deadline. New-business pricing is deliberately not quoted until the builder/approver user model is known"
-    - "New business focuses on jointly written pilot success criteria and states that 'don't buy OrbitFlow' is a valid outcome"
+    - core: "The CSM (Ruth Adeyemi) opens and runs every renewal with usage data from the account"
+      details:
+        - "this holds in all three renewals (Lumen, Pinewood, Halberd)"
+        - "the AE leads the commercials when present: Maya at Lumen, Leo at Pinewood (tier, contract options, auto-renewal)"
+        - "Halberd has no AE; Ruth closes the commercials herself"
+    - "New business is run by an AE with a solutions engineer and opens with discovery of pain points, the stack and security requirements"
+    - core: "Renewal commercials centre on a standard 7% uplift (Lumen, Halberd)"
+      details: ["run tiers", "contract dates such as Pinewood's 30 September notice deadline"]
+    - "New-business pricing is deliberately not quoted until the builder/approver user model is known"
+    - core: "New business focuses on jointly written pilot success criteria"
+      details: ["'don't buy OrbitFlow' is stated as a valid outcome"]
+  bonus_facts:
+    - "In renewals the vendor sells less against its own revenue: it recommends cutting Lumen from 9 to 7 seats and admits Pinewood may be overpaying for Enterprise"
+  penalties:
+    - "Says an AE takes part in the commercial part of every renewal (Halberd has no AE)"
   evidence:
     - "CALL-011 [00:15] Maya there for the commercial part / [00:23] usage numbers / [04:40] seven active seats"
-    - "CALL-012 [01:58] fourteen workflows, six failing / [06:55] Leo Grant 'not sure you should be' on Enterprise / [08:53] option one don't renew / [12:38] notice deadline"
-    - "CALL-013 [00:24] renewal in one sentence, seven percent uplift"
+    - "CALL-012 [00:17] Ruth opens with usage / [06:55] Leo Grant 'not sure you should be' on Enterprise / [08:53] option one don't renew / [12:38] notice deadline / [10:11] Ruth owns enablement"
+    - "CALL-013 [00:24] renewal in one sentence, seven percent uplift / [15:56] Ruth: renewal papers from me"
     - "CALL-011 [08:24] seven percent standard uplift"
     - "CALL-001 [22:26] no number without user model / [25:57] 'don't buy OrbitFlow' valid outcome / [26:33] pilot success criteria"
   should_abstain: false
-  notes: "Requires contrasting call types. Answers drawn only from renewal calls, with no new-business contrast, are incomplete. Nuance: candour ('I'd rather lose') appears in both motions, so it is not a differentiator. Exception: the 7% uplift is described as applying to everyone, yet Pinewood's six-month option has no uplift (see q11)."
+  notes: "Requires contrasting call types. Answers drawn only from renewal calls, with no new-business contrast, are incomplete. Candour ('I'd rather lose') appears in both motions, so it is not a differentiator. Leo's many turns at Pinewood are commercial; enablement is Ruth's (review d06)."
 
 - id: q10
   question: "Which cold calls produced a follow-up, and what did the successful ones have in common?"
@@ -231,12 +378,35 @@
   expected_calls: [CALL-016, CALL-017, CALL-018, CALL-019, CALL-020]
   acceptable_calls: []
   expected_facts:
-    - "Beacon Housing Trust (CALL-018): a half-hour meeting with Ade Balogun and Priya Menon in the week of the sixth, no demo, frameworks list and technical requirements exchanged"
-    - "Silverline Travel (CALL-017): after the assistant put him through, Martine Duval asked for a one-page note (not a deck), copied to Chloe, who will book a meeting if it's good"
-    - "Kestrel Robotics (CALL-020): Rafael Santos asked for a short note and will do a 30-minute call if it's good, despite being three weeks into Tray with a mid-October decision"
-    - "Quarry Ridge Foods (CALL-016) is only a deferred follow-up (permission for one email in February). Trafford Dental (CALL-019) produced none ('I won't read it')"
-    - "The successful calls described a specific problem in the prospect's own terms (travel disruption, voids turnaround, order-to-deployment stages), asked questions, admitted limits (no connector, no sector reference, procurement, Tray is good), and asked for a small next step without a demo"
-    - "The failed call (Trafford) contrasts: the rep got facts wrong (14 practices, actually 11), asked no questions for three minutes, and led with price"
+    - core: "Beacon Housing Trust (CALL-018) produced a meeting"
+      details:
+        - "half an hour with Ade Balogun and Priya Menon in the week of the sixth"
+        - "no demo"
+        - "frameworks list and technical requirements exchanged"
+      min_details: 1
+    - core: "Silverline Travel (CALL-017): Martine Duval asked for a one-page note"
+      details:
+        - "after the assistant put him through"
+        - "a note, not a deck"
+        - "copied to Chloe, who will book a meeting if it's good"
+      min_details: 1
+    - core: "Kestrel Robotics (CALL-020): Rafael Santos asked for a short note and will do a 30-minute call if it's good"
+      details: ["despite being three weeks into Tray with a mid-October decision"]
+    - "Quarry Ridge Foods (CALL-016) is only a deferred follow-up: permission for one email in February"
+    - "Trafford Dental (CALL-019) produced no follow-up ('I won't read it')"
+    - core: "The answer names what the successful calls had in common"
+      details:
+        - "a specific problem described in the prospect's own terms"
+        - "the rep asked questions"
+        - "the rep admitted limits (no connector, no sector reference, procurement, Tray is good)"
+        - "a small next step without a demo"
+      min_details: 2
+    - core: "Trafford is the contrasting failed call"
+      details:
+        - "the rep got facts wrong (14 practices, actually 11)"
+        - "asked no questions for three minutes"
+        - "led with price"
+      min_details: 2
   evidence:
     - "CALL-018 [07:47] / [09:55] week of the sixth / [08:15] Priya Menon / [03:51] / [09:02]"
     - "CALL-017 [01:31] Chloe: she responds to specifics / [04:14] disruption event / [05:04] / [05:28]"
@@ -250,23 +420,27 @@
   question: "Has anyone from the vendor given inconsistent answers about the product?"
   kind: conflict
   tags: [example]
-  expected_calls: [CALL-006, CALL-001, CALL-012, CALL-011]
-  acceptable_calls: [CALL-002, CALL-004, CALL-005, CALL-007, CALL-008, CALL-009, CALL-010, CALL-014, CALL-015]
+  expected_calls: [CALL-006, CALL-001, CALL-012]
+  acceptable_calls: [CALL-002, CALL-004, CALL-005, CALL-007, CALL-008, CALL-009, CALL-010, CALL-011, CALL-014, CALL-015]
   expected_facts:
-    - "Alastair McCrae told Fable Media SSO is included on all plans, while Jon Bell, Nina Patel and Leo Grant say SAML SSO is Enterprise-only (Leo explicitly tells Pinewood it would be lost on Growth)"
-    - "Alastair said monthly billing is 'usually fine', but every other rep presents Growth as an annual agreement"
-    - "Alastair said the product is 'completely no-code'. Jon Bell says OrbitFlow does not claim every workflow is no-code (expressions, JavaScript steps on Enterprise)"
-    - "Maya Chen told Lumen the 7% renewal uplift applies to everyone and is not negotiable in principle, but Leo Grant offered Pinewood a six-month term with no uplift"
-    - "Maya told Verity that hands-on 'sitting with your team' enablement is a paid professional-services engagement, while Leo offered Pinewood enablement included and not charged as professional services"
+    - core: "SSO, with both sides: Alastair McCrae told Fable Media SSO is included on all plans, while Leo Grant told Pinewood that SAML SSO is Enterprise and would be lost on Growth"
+      details:
+        - "solutions engineers (Jon Bell, Nina Patel) also say SAML SSO is Enterprise-only"
+        - "when challenged, Alastair said he was only 'fairly sure' and would confirm"
+    - core: "No-code, with both sides: Alastair said the product is 'completely no-code', while Jon Bell says OrbitFlow does not claim every workflow is no-code (expressions, JavaScript steps on Enterprise)"
+  bonus_facts:
+    - "Alastair said monthly billing is 'usually fine', while other reps present Growth as an annual agreement (a hedge, not a contradicted product statement)"
+    - "Pinewood's six-month term without the 7% uplift is a condition of a bridge option, framed as such, not a different answer about the product"
+    - "Pinewood's free enablement is explicitly framed as an exception to the paid professional services Maya described to Verity"
   evidence:
-    - "CALL-006 [07:23] Alastair McCrae SSO on all plans / [14:36]-[14:50] Ben Foster challenges, Alastair 'fairly sure'"
-    - "CALL-001 [20:05] Jon Bell SAML SSO and SCIM on Enterprise; CALL-012 [08:09] Leo Grant 'SAML SSO is Enterprise'"
+    - "CALL-006 [07:23] / [07:35] Alastair McCrae SSO on all plans / [14:36]-[14:50] Ben Foster challenges, Alastair 'fairly sure'"
+    - "CALL-012 [08:09] Leo Grant 'SAML SSO is Enterprise'; CALL-001 [20:05] Jon Bell SAML SSO and SCIM on Enterprise"
+    - "CALL-006 [11:30] completely no-code; vs CALL-001 [12:12] and CALL-002 [19:37] Jon Bell"
     - "CALL-006 [08:25] monthly usually fine; vs CALL-003 [06:41], CALL-001 [04:50] annual agreement"
-    - "CALL-006 [11:30] completely no-code; vs CALL-001 [12:12] Jon Bell"
-    - "CALL-011 [08:24] Maya Chen seven percent applies to everyone; vs CALL-012 [09:50] Leo Grant no uplift"
-    - "CALL-014 [05:23] Maya Chen paid PS; vs CALL-012 [16:21] Leo Grant enablement included"
+    - "CALL-011 [08:24] Maya Chen seven percent applies to everyone; vs CALL-012 [09:50] / [15:58] six-month option without uplift"
+    - "CALL-014 [05:23] Maya Chen paid PS; vs CALL-012 [16:21]-[16:43] Leo Grant enablement included"
   should_abstain: false
-  notes: "The core conflict-detection question. The SSO contradiction is the clearest and must appear. The uplift and enablement items are policy exceptions that a rep openly frames as concessions; a nuanced answer says so rather than calling them lies. Alastair also suggested a pricing rethink to Oakhill [CALL-015 03:25] after having said Growth is the entry point [06:47]."
+  notes: "The core conflict-detection question. SSO and no-code, each with both sides, are required; an answer that finds both deserves full credit (review d04). Commercial concessions are acceptable extras; calling them lies is wrong."
 
 # ---------------------------------------------------------------------------
 # Single-call factual lookups
@@ -278,16 +452,21 @@
   expected_calls: [CALL-003]
   acceptable_calls: []
   expected_facts:
-    - "Cedar & Finch has more than sixty Zapier automations, several owned by people who have left"
-    - "Only about a quarter of them touch Zendesk; Marcus Lee corrects an earlier overstatement of the Zendesk angle"
-    - "Most of the rest touch Shopify, plus Klaviyo and Airtable"
+    - core: "Cedar & Finch has more than sixty Zapier automations"
+      details: ["several are owned by people who have left"]
+    - core: "Only about a quarter of them touch Zendesk"
+      details: ["Marcus Lee corrects an earlier overstatement of the Zendesk angle"]
+    - core: "Most of the rest touch Shopify"
+      details: ["plus Klaviyo and Airtable"]
     - "They find out an automation broke when a customer complains"
+  penalties:
+    - "Says half of the automations are orphaned (that is Lumen's former Zapier estate, CALL-011)"
   evidence:
     - "CALL-003 [02:39] Marcus Lee more than sixty"
     - "CALL-003 [04:11] about a quarter touch Zendesk / [04:37] Shopify, Klaviyo, Airtable"
     - "CALL-003 [02:53] 'When a customer complains.'"
   should_abstain: false
-  notes: "Near-duplicate trap: Lumen Retail (CALL-011 [14:43]) also says its former Zapier estate was 'sixty-odd Zaps, half of them orphaned'. Answers mixing in 'half orphaned' have pulled from the wrong company. Fable Media has about twenty Zaps (CALL-006 [03:33])."
+  notes: "Near-duplicate trap: Lumen Retail (CALL-011 [14:43]) also says its former Zapier estate was 'sixty-odd Zaps, half of them orphaned'. Fable Media has about twenty Zaps (CALL-006 [03:33])."
 
 - id: q13
   question: "What run-volume tier is Lumen Retail Group contracted for, and what tier did OrbitFlow recommend at renewal?"
@@ -296,10 +475,16 @@
   expected_calls: [CALL-011]
   acceptable_calls: []
   expected_facts:
-    - "Lumen is on Enterprise with nine builder seats and a run tier of 250,000 a month, expiring 18 October"
-    - "Actual run volume is roughly 280,000 a month, and Lumen exceeded its contracted volume in four of the last six months (June was 22% over)"
-    - "Maya Chen recommended the 400,000 tier. 350,000 would give only about 20% headroom; 400,000 covers a year plus supplier-onboarding instrumentation"
-    - "With seven seats, the 7% uplift and the 400,000 tier, the total is roughly 9% above this year (about 14% if they kept nine seats)"
+    - core: "Lumen is contracted for a run tier of 250,000 a month"
+      details: ["on Enterprise", "nine builder seats", "expiring 18 October"]
+    - core: "Actual run volume is roughly 280,000 a month, and Lumen exceeded its contracted volume in four of the last six months"
+      details: ["June was 22% over"]
+    - core: "Maya Chen recommended the 400,000 tier"
+      details: ["350,000 would give only about 20% headroom", "400,000 covers a year plus supplier-onboarding instrumentation"]
+    - core: "With seven seats, the 7% uplift and the 400,000 tier, the total is roughly 9% above this year"
+      details: ["about 14% if they kept nine seats"]
+  penalties:
+    - "Says the recommended tier is 350,000"
   evidence:
     - "CALL-011 [08:02] contract terms / [00:23] ~280,000 a month"
     - "CALL-011 [02:03] overages, June 22% over"
@@ -318,7 +503,8 @@
     - "The renewal date is 29 November"
     - "The contract auto-renews with sixty days' notice, so the notice deadline is 30 September"
     - "Leo Grant advised Graham Attwood to serve notice anyway to preserve optionality, then negotiate separately"
-    - "The alternative offered was a six-month renewal at the annual rate pro-rata (no uplift) with enablement included"
+    - core: "The alternative offered was a six-month renewal at the annual rate pro-rata"
+      details: ["no uplift", "enablement included"]
   evidence:
     - "CALL-012 [00:17] Ruth Adeyemi renewal on the twenty-ninth of November"
     - "CALL-012 [12:38] Leo Grant sixty days' notice, thirtieth of September"
@@ -335,15 +521,18 @@
   expected_facts:
     - "The DeltaWorks questionnaire has 240 questions"
     - "Works council (Betriebsrat) approval takes about three months optimistically and six months realistically if the use case is contested"
-    - "It applies when a workflow monitors individual employee activity, e.g. reporting how long a named person took to approve"
+    - core: "It applies when a workflow monitors individual employee activity"
+      details: ["e.g. reporting how long a named person took to approve"]
     - "OrbitFlow offered a note on team-level versus individual-level visibility to support the works council case"
+  penalties:
+    - "Claims OrbitFlow offers a German data region (it has an EU region but no German region)"
   evidence:
     - "CALL-004 [04:25] Anika Bose two hundred and forty questions"
     - "CALL-004 [05:26] three months optimistic, six realistic"
     - "CALL-004 [05:02] / [05:53] Herr Müller example"
     - "CALL-004 [06:38]-[06:49] / [37:34] visibility note"
   should_abstain: false
-  notes: "Specific numbers that only CALL-004 contains. Also in this call: OrbitFlow has an EU region but no German region [02:39]. An answer claiming German residency is a hallucination."
+  notes: "Specific numbers that only CALL-004 contains. Also in this call: OrbitFlow has an EU region but no German region [02:39]."
 
 - id: q16
   question: "What did Priya say about her team's automation backlog?"
@@ -351,17 +540,21 @@
   expected_calls: [CALL-002]
   acceptable_calls: [CALL-010, CALL-018]
   expected_facts:
-    - "Priya Shah (Head of Business Systems, BrightPath Health) said the backlog is about eleven weeks for anything non-trivial, up from six in January"
-    - "When the backlog gets long, business teams route around her group, e.g. building something in Power Automate that becomes nobody's when the creator leaves"
+    - core: "Priya Shah (BrightPath Health) said the backlog is about eleven weeks for anything non-trivial"
+      details: ["she is Head of Business Systems", "up from six weeks in January"]
+    - core: "When the backlog gets long, business teams route around her group"
+      details: ["e.g. building something in Power Automate that becomes nobody's when the creator leaves"]
     - "She later said half of what she said about the backlog was from memory, so the figures are estimates"
-    - "There are other Priyas: Priya Menon (Beacon Housing Trust applications manager, CALL-018) and a Priya at Juniper who is out for two weeks (CALL-010); neither discusses a backlog"
+    - core: "The answer notes that there are other Priyas who do not discuss a backlog"
+      details: ["Priya Menon at Beacon Housing Trust (CALL-018)", "a Priya at Juniper who is out for two weeks (CALL-010)"]
+      min_details: 1
   evidence:
     - "CALL-002 [08:32] eleven weeks, six in January"
     - "CALL-002 [08:44] route around us, Power Automate"
     - "CALL-002 [32:16] half of what I said about the backlog was from memory"
     - "CALL-018 [08:15] Priya Menon; CALL-010 [24:44]-[24:46] Priya out for two weeks"
   should_abstain: false
-  notes: "First-name collision. A good answer resolves to Priya Shah and briefly notes the other Priyas (plus Priyanka at Lumen, CALL-011 [17:13]). Number trap: 'eleven' appears in many unrelated contexts (Harbor 11-day record, Juniper 11 days to ship, Kestrel 11 orders, Trafford 11 practices)."
+  notes: "First-name collision. A good answer resolves to Priya Shah and briefly notes the other Priyas (plus Priyanka at Lumen, CALL-011 [17:13]). Number trap: 'eleven' appears in many unrelated contexts."
 
 - id: q17
   question: "Is Ember Financial likely to choose OrbitFlow over Tray.io?"
@@ -371,17 +564,22 @@
   acceptable_calls: []
   expected_facts:
     - "The evidence is genuinely mixed and the transcript gives no decision"
-    - "For OrbitFlow: Noah Williams wants to move and asked for sandbox access and a six-week pilot proposal, and Hannah Cole said her two gates (model risk, auditability) were addressed as far as a call can"
-    - "Against: Tray's PoC has a six-week head start, Tray's connector breadth is 'genuinely good', and 'keep the scripts and document them better' is a cheaper option someone senior may like"
-    - "The deciding factors named were debugging experience and genuinely programmatic audit export; connector breadth is a tie"
+    - core: "For OrbitFlow: the sponsor Noah Williams wants to move"
+      details: ["he asked for sandbox access and a six-week pilot proposal", "Hannah Cole said her two gates (model risk, auditability) were addressed as far as a call can"]
+    - core: "Against: Tray's PoC has a six-week head start"
+      details: ["Tray's connector breadth is 'genuinely good'", "'keep the scripts and document them better' is a cheaper option someone senior may like"]
+    - core: "The deciding factors named were debugging experience and genuinely programmatic audit export"
+      details: ["connector breadth is a tie"]
     - "A known OrbitFlow gap was recorded: the platform cannot enforce that AI outputs stay leaf nodes (convention plus review only)"
+  penalties:
+    - "Predicts the outcome (yes or no) without caveats"
   evidence:
     - "CALL-005 [27:03] Noah Williams sandbox and six-week pilot / [08:13] Hannah Cole gates addressed"
     - "CALL-005 [29:49] six-week head start / [00:39] connector breadth good / [26:08] keep the scripts"
     - "CALL-005 [25:52] debugging and audit trail, connector breadth a tie"
     - "CALL-005 [06:01] / [28:15] leaf-node limitation"
   should_abstain: false
-  notes: "AMBIGUOUS by design. The correct behaviour is to present both sides and decline to predict confidently. Answers that say 'yes, likely' or 'no' without caveats are overconfident."
+  notes: "AMBIGUOUS by design. The correct behaviour is to present both sides and decline to predict confidently."
 
 - id: q18
   question: "Are Inkwell Learning's account-health scores reliable enough to drive the at-risk workflow?"
@@ -390,17 +588,20 @@
   expected_calls: [CALL-009]
   acceptable_calls: []
   expected_facts:
-    - "Inkwell's people disagree: Olivia Grant treats the scores as directionally useful, while Darren Wu calls them 'noise with a trend in them'"
-    - "Darren claims fewer than half of CSMs update the underlying fields consistently, but later admits this is an impression, not a measurement"
+    - core: "Inkwell's people disagree about the scores"
+      details: ["Olivia Grant treats them as directionally useful", "Darren Wu calls them 'noise with a trend in them'"]
+    - core: "Darren's claim that fewer than half of CSMs update the underlying fields consistently is, by his own admission, an impression, not a measurement"
     - "The agreed design is to let machine-generated signals (Snowflake usage, structured Zendesk data) carry the flag and show human-maintained Salesforce fields only as context"
     - "Whether the signal exists at all is untested; Darren will backtest past escalations before any purchase"
+  penalties:
+    - "States flatly, without reporting the disagreement or the untested signal, that the scores are reliable or unreliable (a hedged 'probably not' that reports both is fine)"
   evidence:
     - "CALL-009 [02:18] Darren Wu fewer than half / [02:52] Olivia Grant directionally useful / [03:00] noise with a trend"
     - "CALL-009 [27:04] 'an impression, not a measurement'"
     - "CALL-009 [04:08] Maya Chen weight signals by how they're produced / [04:26]"
     - "CALL-009 [04:47]-[05:35] backward analysis / [24:27]"
   should_abstain: false
-  notes: "AMBIGUOUS. Internal disagreement plus an admitted estimate. A good answer reports the disagreement and the uncertainty; it should not state 'the scores are unreliable' as fact."
+  notes: "AMBIGUOUS. Internal disagreement plus an admitted estimate."
 
 # ---------------------------------------------------------------------------
 # Call-type-restricted questions
@@ -413,17 +614,33 @@
   expected_calls: [CALL-011, CALL-012, CALL-013]
   acceptable_calls: []
   expected_facts:
-    - "Lumen: 22 production workflows (up from 6), error rate 1.4% down from 4.1% (mostly fixed in April via store-data validation), and depot-exception median time to first action of 40 minutes, down from 2-6 hours"
-    - "Pinewood: 14 production workflows, 6 of which haven't run successfully in 90 days; a 'TEMP - do not use' workflow has failed every four hours since January; usage dropped about 40% since March"
-    - "Halberd: usage healthy, six builders all active, error rate under one percent; client onboarding cut from eleven days to four"
-    - "Pinewood's failure alerts were going to a departed employee's unread mailbox, and OrbitFlow does not proactively monitor at that account tier"
+    - core: "Lumen: 22 production workflows and an error rate of 1.4%, down from 4.1%"
+      details:
+        - "up from 6 workflows"
+        - "most of the improvement came in April"
+        - "depot-exception median time to first action is 40 minutes (Ruth)"
+    - core: "Pinewood: 14 production workflows, 6 of which haven't run successfully in 90 days"
+      details:
+        - "a 'TEMP - do not use' workflow has failed every four hours since January"
+        - "usage dropped about 40% since March"
+    - core: "Halberd: six builders, all active, and an error rate under one percent"
+      details: ["usage healthy"]
+    - core: "Pinewood's failure alerts were going to a departed employee's unread mailbox"
+      details: ["OrbitFlow does not proactively monitor at that account tier"]
+  bonus_facts:
+    - "Halberd's client onboarding went from eleven days to four (sometimes twenty before), attributed to the customer (Tobias Lund)"
+    - "Lumen's depot exceptions used to take two to six hours, attributed to the customer (Devan Shah)"
+  penalties:
+    - "Attributes Halberd's eleven-to-four-day onboarding figure to OrbitFlow"
+    - "Attributes Lumen's 'two to six hours' baseline to OrbitFlow"
+    - "Pulls in figures from churn calls (Oakhill's four users, Verity)"
   evidence:
-    - "CALL-011 [00:23] / [00:43]-[00:53] / [01:10]-[01:20]"
+    - "CALL-011 [00:23] / [00:43] Ruth error rate / [00:53] Devan: April fix was ours / [01:10] Ruth 40 minutes / [01:20] Devan two to six hours"
     - "CALL-012 [01:58] / [02:14]-[02:33] / [00:17] usage down forty percent"
-    - "CALL-013 [00:24] / [16:34] eleven days to four"
+    - "CALL-013 [00:24] Ruth six builders, under one percent / [16:34]-[16:51] Tobias Lund eleven days to four, used to be twenty"
     - "CALL-012 [02:40] Ravi's mailbox / [03:10] not proactively at your tier"
   should_abstain: false
-  notes: "Restricted to renewals (CALL-011..013). Pulling in Oakhill's 'four users' or Verity figures (churn calls) is a scope error. Halberd's 11-to-4 days figure comes from the customer, not OrbitFlow; acceptable if attributed correctly."
+  notes: "Restricted to renewals (CALL-011..013), and to what OrbitFlow reported. Customer-supplied figures are fine only when attributed to the customer (review d08)."
 
 - id: q20
   question: "In the churn post-mortems, what did the departing customers say OrbitFlow could have done differently?"
@@ -432,11 +649,16 @@
   expected_calls: [CALL-014, CALL-015]
   acceptable_calls: []
   expected_facts:
-    - "Verity: someone should have sat with two of their operations people for a week in the first quarter to ship something real; Kwame thinks they would still be a customer"
+    - core: "Verity: someone should have sat with two of their operations people for a week in the first quarter to ship something real"
+      details: ["Kwame thinks they would still be a customer"]
     - "Verity: when Sarah raised the settlement connector problem in April, the right response was about three days of an SE (as Workato gave), not an email saying there was no template"
-    - "Verity: ask 'who will build the fifth workflow' and price in the cost of making that person real (e.g. eighty thousand for the platform plus twenty-five for six months of someone sitting with the team)"
+    - core: "Verity: ask 'who will build the fifth workflow' and price in the cost of making that person real"
+      details: ["e.g. eighty thousand for the platform plus twenty-five for six months of someone sitting with the team"]
     - "Oakhill: someone should have noticed after six months that only four people used a thirty-user plan and said something, not sold something"
-    - "Oakhill: offer a smaller plan (around 500-600 a month); Hazel would buy one only if it kept approval forms, which with run history are 'the whole product' for them"
+    - core: "Oakhill: offer a smaller plan"
+      details: ["around 500-600 a month", "Hazel would buy one only if it kept approval forms, which with run history are 'the whole product' for them"]
+  penalties:
+    - "Presents Pinewood (CALL-012) as a churned customer"
   evidence:
     - "CALL-014 [04:56] / [05:10]"
     - "CALL-014 [13:06]-[13:40]"
@@ -444,64 +666,75 @@
     - "CALL-015 [05:46]"
     - "CALL-015 [06:19] / [12:22]-[12:37]"
   should_abstain: false
-  notes: "Churn-only. Pinewood (CALL-012) also criticises OrbitFlow, but it is an at-risk renewal; including it as a churned customer is a scope error."
+  notes: "Churn-only. Pinewood (CALL-012) also criticises OrbitFlow, but it is an at-risk renewal."
 
 # ---------------------------------------------------------------------------
-# Conflicts (cross-call, within-call, header vs body)
+# Conflicts and near-conflicts. After the gold review (d01-d03) q21-q23 are
+# re-scoped as single-call lookups: the apparent conflicts are bonus material.
 # ---------------------------------------------------------------------------
 
 - id: q21
   question: "How much was Verity Payments paying OrbitFlow per year?"
-  kind: conflict
-  tags: [call_type:churn]
+  kind: single_call
+  tags: [call_type:churn, former_conflict]
   expected_calls: [CALL-014]
   acceptable_calls: []
   expected_facts:
-    - "Ruth Adeyemi twice calls Verity an eighty-thousand-pound account, and Kwame later says 'eighty thousand for the platform'"
-    - "Earlier, Sarah Lindqvist said one of the two maintenance burdens 'costs a hundred thousand a year', implying about 100,000"
-    - "When Maya asked whether that was the Workato price, Kwame said Workato costs 'less, not dramatically less'"
-    - "The answer should report about £80,000 as the best-supported figure and flag the 100,000 statement as inconsistent or rounded"
+    - core: "Verity was an account of about £80,000 a year"
+      details: ["Ruth Adeyemi calls it an eighty-thousand-pound account", "Kwame confirms 'eighty thousand for the platform'"]
+      min_details: 1
+  bonus_facts:
+    - "Notes the gap between Sarah Lindqvist's 'costs a hundred thousand a year' and £80K"
+  penalties:
+    - "Presents 'a hundred thousand a year' as what Verity paid OrbitFlow without a caveat"
   evidence:
     - "CALL-014 [11:40] / [13:46] Ruth Adeyemi eighty-thousand-pound account"
     - "CALL-014 [18:52] Kwame Boateng eighty thousand for the platform"
-    - "CALL-014 [06:56] Sarah Lindqvist a hundred thousand a year"
-    - "CALL-014 [07:13]-[07:16] Workato less, not dramatically less"
+    - "CALL-014 [06:56] Sarah Lindqvist a hundred thousand a year (no currency) / [07:13] Maya relates it to Workato / [07:16] Kwame 'Less. Not dramatically less.'"
   should_abstain: false
-  notes: "Within-call numeric conflict. A system that returns only 'a hundred thousand' (the first number it finds) fails."
+  notes: "Review d02: the hundred thousand is rhetorical, has no currency (£80K is close to $100K) and Maya herself relates it to Workato, so flagging it is a bonus, not a requirement."
 
 - id: q22
   question: "When did Ruth Adeyemi take over the Verity Payments account?"
-  kind: conflict
-  tags: [call_type:churn]
+  kind: single_call
+  tags: [call_type:churn, former_conflict]
   expected_calls: [CALL-014]
   acceptable_calls: [CALL-012]
   expected_facts:
-    - "Ruth says she took over the account in January, about eight months before the September call"
-    - "Kwame confirms 'until you arrived in January' and that she offered sessions in January"
-    - "At the end of the call Kwame says 'You weren't there in February', which contradicts the January takeover"
-    - "Ruth also frames arriving 'in month twenty' of a two-year relationship, which doesn't fit a January takeover on a contract ending 31 October"
+    - core: "Ruth took over the account in January"
+      details: ["about eight months before the September call", "Kwame confirms 'until you arrived in January'"]
+      min_details: 1
+    - core: "Enablement only appeared in January with Ruth's arrival, and Kwame declined it"
+      details: ["before that there was only a two-day onboarding at the start"]
+  bonus_facts:
+    - "Reads Kwame's 'You weren't there in February' as absolving Ruth of the February settlement failure, with Ruth's 'I was there in April' pointing to the April episode where she emailed that there was no template"
+  penalties:
+    - "States that Ruth was not on the account in February"
+    - "Answers May (that is when Ruth took over Pinewood, CALL-012)"
   evidence:
     - "CALL-014 [00:41] / [01:21] Ruth Adeyemi January"
-    - "CALL-014 [04:24] Kwame Boateng 'until you arrived in January'"
-    - "CALL-014 [20:34] 'You weren't there in February' / [20:37] 'I was there in April'"
-    - "CALL-014 [04:48] month twenty / [15:06] contract ends thirty-first of October"
+    - "CALL-014 [04:13]-[04:31] two-day onboarding; 'until you arrived in January and offered some sessions'; 'Which I declined'"
+    - "CALL-014 [13:06]-[13:23] the April connector question and Ruth's email"
+    - "CALL-014 [20:30] 'I'm sorry about February' / [20:34] 'You weren't there in February' / [20:37] 'I was there in April'"
+    - "CALL-012 [01:35] Ruth took over Pinewood in May"
   should_abstain: false
-  notes: "Within-call contradiction. Correct answer: January, with the inconsistency flagged. Trap: in CALL-012 Ruth says she took over the Pinewood account in May [01:35]. Answering 'May' is a cross-account mix-up."
+  notes: "Review d01: 'You weren't there in February' is Kwame taking the February failure off Ruth, not a contradiction, so a system that finds no contradiction is right. 'Month twenty' is dropped: on a two-year contract ending 31 October, January is about month fifteen, so the figure does not reconcile and is not required."
 
 - id: q23
   question: "How many employees does Greenline Energy Services have?"
-  kind: conflict
+  kind: single_call
+  tags: [former_conflict]
   expected_calls: [CALL-007]
   acceptable_calls: []
   expected_facts:
-    - "The call header and manifest list Greenline as 2,300 employees"
-    - "Carlos Mendes says his six-person team is 'supporting two and a half thousand'"
-    - "The answer should give 2,300 per metadata and note the speaker's approximately 2,500 figure"
+    - "Greenline has 2,300 employees (call header and manifest)"
+  penalties:
+    - "Presents 2,500 as Greenline's employee count"
   evidence:
     - "CALL-007 header COMPANY SIZE: 2,300 employees; manifest.json CALL-007 company_size"
-    - "CALL-007 [06:49] Carlos Mendes 'my team is six people supporting two and a half thousand'"
+    - "CALL-007 [06:49] Carlos Mendes 'my team is six people supporting two and a half thousand' (the load on his team, rounded)"
   should_abstain: false
-  notes: "Header-vs-body mismatch. Low stakes, but it tests whether the system reads metadata and transcript together and surfaces the discrepancy."
+  notes: "Review d03: Carlos describes how many people his six-person team supports, not the company headcount. Not flagging it is fine; it is not even a bonus."
 
 - id: q24
   question: "Is SSO available on OrbitFlow's Growth plan?"
@@ -509,17 +742,21 @@
   expected_calls: [CALL-006, CALL-012]
   acceptable_calls: [CALL-001, CALL-002, CALL-004, CALL-005, CALL-007, CALL-008, CALL-009, CALL-010]
   expected_facts:
-    - "Alastair McCrae told Fable Media that SSO is included on all plans, then said he was only 'fairly sure' and would confirm"
+    - core: "Alastair McCrae told Fable Media that SSO is included on all plans"
+      details: ["when challenged he said he was only 'fairly sure' and would confirm"]
     - "Leo Grant told Pinewood that SAML SSO is Enterprise, so moving to Growth would lose it"
     - "Solutions engineers consistently say SAML SSO and SCIM are on Enterprise"
-    - "The weight of evidence says SAML SSO is Enterprise-only. Whether simpler Google login is on Growth is never answered"
+    - "The answer weighs the evidence and concludes that SAML SSO is Enterprise-only (not on Growth)"
+  bonus_facts:
+    - "Alastair may have meant simpler Google login, which Ben Foster asked about; whether Google login is on Growth is never confirmed"
+  penalties:
+    - "Answers 'yes, SSO is on Growth' from CALL-006 alone"
   evidence:
-    - "CALL-006 [07:23] / [14:50] Alastair McCrae"
-    - "CALL-012 [08:09] Leo Grant"
-    - "CALL-001 [20:05]; CALL-002 [01:59]; CALL-004 [02:09]; CALL-005 [06:49]; CALL-008 [10:56] SAML SSO on Enterprise"
-    - "CALL-006 [07:00] Ben Foster asked for 'Google login or SAML'"
+    - "CALL-006 [07:00] Ben Foster asked for 'Google login or SAML' / [07:23] / [14:50] Alastair McCrae"
+    - "CALL-012 [08:09]-[08:24] Leo Grant"
+    - "Enterprise statements: CALL-001 [20:05]; CALL-002 [01:59]; CALL-004 [02:09]; CALL-005 [06:49]; CALL-007 [16:22]; CALL-008 [10:56]; CALL-009 [17:29]; CALL-010 [17:41]"
   should_abstain: false
-  notes: "Direct vendor contradiction. Failure modes: answering 'yes' from CALL-006 alone, or answering 'no' without mentioning that a rep claimed otherwise."
+  notes: "Direct vendor contradiction, but lopsided: eight SE/AE statements plus the deal-relevant one at Pinewood, against one hesitant rep who backs off. 'It cannot be determined' is false balance: grade it partly, and it is not a decline (review d10)."
 
 # ---------------------------------------------------------------------------
 # Unanswerable (should abstain)
@@ -533,12 +770,15 @@
   acceptable_calls: [CALL-001, CALL-002, CALL-004, CALL-005, CALL-008, CALL-009, CALL-010]
   expected_facts:
     - "The transcripts don't mention ISO 27001 (or any ISO certification)"
-    - "The only certification stated is SOC 2 Type II as the baseline (plus Alastair's unqualified 'fully GDPR compliant' claim)"
+    - core: "The only certification stated is SOC 2 Type II as the baseline"
+      details: ["plus Alastair's unqualified 'fully GDPR compliant' claim"]
+  penalties:
+    - "Infers that OrbitFlow holds ISO 27001"
   evidence:
     - "grep -w 'ISO' and '27001' across data/: no matches"
     - "CALL-001 [20:05] Jon Bell 'Baseline is SOC 2 Type II'; CALL-006 [07:23] GDPR claim"
   should_abstain: true
-  notes: "NEAR-MISS: a related compliance fact (SOC 2 Type II) is everywhere. The system should say ISO 27001 isn't mentioned and may mention SOC 2 as the only stated certification, but must not infer ISO."
+  notes: "NEAR-MISS: a related compliance fact (SOC 2 Type II) is everywhere."
 
 - id: q26
   question: "Which ERP system does Kestrel Robotics use?"
@@ -547,13 +787,17 @@
   expected_calls: []
   acceptable_calls: [CALL-020]
   expected_facts:
-    - "Kestrel's ERP is never named: Rafael Santos says only that it is a niche mid-market manufacturing ERP and declines to name it on a cold call"
-    - "Tray has no connector for it, and their developer estimates three weeks to build against its API (Rafael expects six)"
+    - core: "Kestrel's ERP is never named"
+      details: ["Rafael Santos says only that it is a niche mid-market manufacturing ERP", "he declines to name it on a cold call"]
+    - core: "Tray has no connector for it"
+      details: ["their developer estimates three weeks to build against its API (Rafael expects six)"]
+  penalties:
+    - "Names SAP (that is DeltaWorks) or another ERP as Kestrel's"
   evidence:
     - "CALL-020 [03:02] mid-market, quite niche / [03:34] 'I'd rather not say on a cold call'"
     - "CALL-020 [03:19]-[03:25] three weeks, six"
   should_abstain: true
-  notes: "NEAR-MISS: ERP is discussed but its name is explicitly withheld. Traps: DeltaWorks runs SAP S/4HANA (CALL-004), and Quarry Ridge finished an unnamed ERP migration in March (CALL-016). Answering 'SAP' borrows from the wrong company."
+  notes: "NEAR-MISS: ERP is discussed but its name is explicitly withheld. Quarry Ridge finished an unnamed ERP migration in March (CALL-016)."
 
 - id: q27
   question: "What percentage discount did OrbitFlow offer Cedar & Finch for an annual prepay?"
@@ -563,11 +807,14 @@
   acceptable_calls: [CALL-003]
   expected_facts:
     - "No percentage was given"
-    - "Leo Grant said an annual prepay 'can' change the number: 'a meaningful discount, not a transformation', and it would not halve the price"
+    - core: "Leo Grant said an annual prepay 'can' change the number: 'a meaningful discount, not a transformation'"
+      details: ["it would not halve the price"]
+  penalties:
+    - "Repurposes another number (7% uplift, 22% overage, 9%) as the discount"
   evidence:
     - "CALL-003 [07:09]-[07:16] Sophie Reed / Leo Grant"
   should_abstain: true
-  notes: "NEAR-MISS. Also no figure for Lumen's multi-year discount (CALL-011 [11:06]-[11:08]). Numbers that are present (7% uplift, 22% overage, 9%) must not be repurposed as a discount."
+  notes: "NEAR-MISS. Also no figure for Lumen's multi-year discount (CALL-011 [11:06]-[11:08])."
 
 - id: q28
   question: "Which prospects mentioned UiPath, and what did they say about it?"
@@ -576,10 +823,12 @@
   acceptable_calls: []
   expected_facts:
     - "No call mentions UiPath; the system should say so rather than name a prospect"
+  penalties:
+    - "Names a prospect as having mentioned UiPath, or lists other competitors as UiPath-like without saying UiPath is absent"
   evidence:
     - "grep -i 'UiPath' across data/: no matches (also no Boomi, n8n, Celonis, Pipedream)"
   should_abstain: true
-  notes: "Plain absent-entity question. Competitors that are actually mentioned: Zapier, Make, Workato, Tray.io, Power Automate, MuleSoft, Gainsight, Retool Workflows, Step Functions. Listing any of them as 'UiPath-like' without saying UiPath is absent is a failure."
+  notes: "Plain absent-entity question."
 
 - id: q29
   question: "What is the list price of OrbitFlow's Enterprise tier?"
@@ -589,30 +838,41 @@
   acceptable_calls: [CALL-001, CALL-004, CALL-005, CALL-011, CALL-014]
   expected_facts:
     - "No Enterprise price is given in any call; it is always described as custom priced"
-    - "Only the Growth price is stated: 1,800 a month for up to 30 users on an annual agreement"
+    - core: "Only the Growth price is stated: 1,800 a month"
+      details: ["for up to 30 users", "on an annual agreement"]
+  penalties:
+    - "Presents Verity's ~£80K account value as the Enterprise price"
   evidence:
     - "CALL-001 [04:50] 'Enterprise is custom'; CALL-004 [20:23]; CALL-005 [20:25]"
     - "CALL-014 [11:40] Verity's eighty-thousand-pound account value (tier not stated)"
   should_abstain: true
-  notes: "NEAR-MISS. Verity's ~£80K/year account value and Lumen's renewal percentages are not an Enterprise list price. Presenting £80K as 'the Enterprise price' is an unsupported inference."
+  notes: "NEAR-MISS. Verity's account value and Lumen's renewal percentages are not an Enterprise list price."
 
 # ---------------------------------------------------------------------------
-# Cross-call inference
+# Cross-call inference (bonus: reported separately, review d05)
 # ---------------------------------------------------------------------------
 
 - id: q30
   question: "In the Verity Payments post-mortem, Maya says someone reviewed an exported workflow definition 'last month'. Which prospect was that most likely, and what did they ask for?"
   kind: multi_call
+  bonus_question: true
   expected_calls: [CALL-014, CALL-010]
   acceptable_calls: [CALL-009]
   expected_facts:
     - "In the Verity call (18 September), Maya says 'Someone did that to us last month' about having an engineer read the exported definition of a real workflow"
-    - "The most likely match is Juniper Cloud Tools (call dated 12 August): staff engineer Ava Sinclair asked for three exported definitions (one trivial, one with branching, one with a custom step) to review diffs"
-    - "Ava also made 'review the exported definition as though it were a pull request' a pass/fail evaluation criterion"
-    - "The transcript never names the prospect, so the attribution is an inference and should be hedged; Inkwell Learning (4 August) is a weaker alternative, since Darren Wu asked about version control and diffs but did not ask to read an exported definition"
+    - core: "The most likely match is Juniper Cloud Tools: staff engineer Ava Sinclair asked for exported workflow definitions to review"
+      details:
+        - "three definitions, one of them with branching"
+        - "reviewing the export like a pull request is a pass/fail evaluation criterion"
+        - "the call was on 12 August, i.e. 'last month', and Maya's 'It's ongoing' fits Juniper's running evaluation"
+      min_details: 2
+    - "The answer says CALL-014 never names the prospect, so the attribution is an inference"
+  penalties:
+    - "States Juniper as fact without any hedge"
+    - "Names Inkwell Learning as the main answer"
   evidence:
-    - "CALL-014 [18:11]-[18:39] Sarah Lindqvist / Maya Chen"
+    - "CALL-014 [18:11]-[18:39] Sarah Lindqvist / Maya Chen; [18:39] 'It's ongoing'"
     - "CALL-010 [01:28]-[01:48] Ava Sinclair three definitions / [26:28] fourth criterion"
     - "manifest.json dates: CALL-010 2026-08-12, CALL-014 2026-09-18"
   should_abstain: false
-  notes: "Multi-hop: needs the call date plus content from another call. A good answer names Juniper with an explicit hedge. Stating it as fact, or failing to find any link, both lose credit. Juniper fits best: Ava asked for three exported definitions to read the diffs herself (exactly Sarah's advice), and its four-week evaluation matches Maya's 'It's ongoing' [18:39]. Inkwell (CALL-009 [27:40]-[28:36]) also falls in 'last month' and Maya attended that call, but nobody there asked to read an export, so it is a weaker candidate."
+  notes: "Multi-hop. Review d05: Inkwell is no longer a candidate: Darren only asked about diffs [CALL-009 28:18], nobody exported or read anything, and Maya's presence there is no argument ('to us' = OrbitFlow). Bonus question, reported outside the headline numbers."

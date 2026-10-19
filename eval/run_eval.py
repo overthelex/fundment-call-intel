@@ -5,22 +5,28 @@ What is measured, per question:
   cited_recall    share of the gold calls the answer actually cites            (use of evidence, deterministic)
   citation_valid  share of citations whose quote is found in the transcript    (grounding, deterministic)
   correct         does the answer get the main point right                     (correctness, LLM judge)
-  fact_recall     gold facts stated: supported 1, partial 0.5                  (completeness, LLM judge)
+  core_recall     required core claims stated                                  (completeness, LLM judge)
+  atomic_recall   cores plus details, k of n for enumerations                  (completeness, LLM judge)
+  penalties       statements the gold set says a correct answer must not make  (LLM judge)
   abstention      did it decline exactly when the data has no answer           (uncertainty, LLM judge)
-plus tokens and latency.
+plus tokens and latency. Questions marked bonus_question are left out of the headline numbers.
 
 Usage:
   uv run python eval/run_eval.py                    # auto mode
   uv run python eval/run_eval.py --mode full        # whole dataset in context (baseline)
   uv run python eval/run_eval.py --only q03,q07     # subset
+  uv run python eval/run_eval.py --regrade eval/results/<file>.json   # re-check and re-judge saved answers
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
 import sys
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -33,49 +39,175 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from callqa.cli import to_dict  # noqa: E402
-from callqa.pipeline import Pipeline, Result  # noqa: E402
+from callqa.pipeline import Answer, Context, Pipeline, Plan, Result, assess  # noqa: E402
 
 JUDGE_SYSTEM = """You grade an answer produced by a question-answering system over sales-call transcripts.
-You get the question, the system's answer, and a list of expected facts written by a human annotator.
-For each expected fact give a verdict:
-  supported     the answer states it or something equivalent (paraphrase and extra detail are fine)
-  partial       the answer states the core of it but misses some of its parts (facts often bundle details)
-  missing       the answer does not state it, or only hints at it vaguely
-  contradicted  the answer says something incompatible with it
-If an expected fact describes an absence ("the transcripts do not mention X"), it is supported when the
-answer says the information was not found. Judge only what the answer text says.
+You get the question, the system's answer, and the rubric written by a human annotator:
 
-Then give one overall verdict, `correct`: does the answer get the question right, judged against the
-expected facts? Missing background detail is fine; what matters is whether the main point is right and
-nothing important is wrong or invented. yes = right; partly = main point right but an important part
-missing or hedged where the facts are clear; no = wrong, contradicts the facts, or wrongly declines.
+REQUIRED FACTS. Each has a core claim and sometimes lettered details.
+  core: supported     the answer states the core claim or something equivalent (paraphrase is fine)
+        missing       the answer does not state it, or only hints at it vaguely
+        contradicted  the answer asserts something incompatible with it (declining to draw a
+                      conclusion is missing, not contradicted)
+  details_covered: the numbers of the details the answer states (empty list if none).
+  If a fact describes an absence ("the transcripts do not mention X"), it is supported when the
+  answer says the information was not found.
+BONUS FACTS. hit = true if the answer states it. They are never required.
+PENALTIES. Statements the answer must not make. hit = true if the answer makes that statement.
 
-Finally, `declines`: true if the answer's main message is that the transcripts do not contain the
-requested information (it may still cite related material), false if it provides the information."""
+Then `correct`, the overall verdict:
+  yes     the main point is right: for a question with one answer every required core is supported;
+          for a broad question with several themes or items, the large majority of cores are
+          supported and none is contradicted. Details and bonus facts never decide this.
+  partly  the main point is right but a required core is missing, or the answer hedges where the
+          required facts say the evidence clearly points one way, or a penalty is hit outside the
+          main point
+  no      wrong, contradicts the required facts, a penalty is hit on the main point, or the answer
+          wrongly declines
+Do not grade the order of ranked items unless a required fact asks for it.
 
-SCORE = {"supported": 1.0, "partial": 0.5, "missing": 0.0, "contradicted": 0.0}
+Finally, `declines`: true only if the answer's main message is that the transcripts do not contain
+the requested information (it may still cite related material). An answer that reports evidence on
+both sides and says it cannot conclude is NOT a decline: declines = false, and grade `correct` by the
+rule above (typically partly when the required facts say the evidence points one way). Judge only what the answer text says."""
 
 
 class FactVerdict(BaseModel):
-    fact: str
-    verdict: Literal["supported", "partial", "missing", "contradicted"]
+    n: int
+    core: Literal["supported", "missing", "contradicted"]
+    details_covered: list[int]
+    reason: str
+
+
+class ExtraVerdict(BaseModel):
+    n: int
+    hit: bool
     reason: str
 
 
 class Judgement(BaseModel):
-    verdicts: list[FactVerdict]
+    facts: list[FactVerdict]
+    bonus: list[ExtraVerdict]
+    penalties: list[ExtraVerdict]
     correct: Literal["yes", "partly", "no"]
     correct_reason: str
     declines: bool
 
 
-def answer_text(r: Result) -> str:
-    a = r.answer
-    lines = [f"SUMMARY: {a.summary}", f"CONFIDENCE: {r.confidence} ({a.confidence_reason})"]
+JUDGE_BACKEND = os.environ.get("JUDGE_BACKEND", "openai")  # "openai" (JUDGE_MODEL via LLM_*) or "claude-cli"
+CLAUDE_JUDGE_MODEL = os.environ.get("CLAUDE_JUDGE_MODEL", "opus")
+
+
+def judge(pipe: Pipeline, user: str) -> Judgement:
+    """The judge can be a different vendor from the answering model, so it does not share its blind spots.
+    claude-cli runs Claude Code headless (`claude -p`) under the local login, with tools disabled."""
+    if JUDGE_BACKEND != "claude-cli":
+        return pipe.llm.structured(JUDGE_SYSTEM, user, Judgement, model=pipe.llm.judge_model, reasoning_effort="low")
+    cmd = [
+        "claude", "-p", "--model", CLAUDE_JUDGE_MODEL, "--system-prompt", JUDGE_SYSTEM,
+        "--tools", "", "--strict-mcp-config", "--setting-sources", "", "--no-session-persistence",
+        "--output-format", "json", "--json-schema", json.dumps(Judgement.model_json_schema()),
+    ]
+    for attempt in range(3):
+        out = subprocess.run(cmd, input=user, capture_output=True, text=True, timeout=600)
+        try:
+            data = json.loads(out.stdout)
+            if not data.get("is_error") and data.get("structured_output"):
+                return Judgement.model_validate(data["structured_output"])
+        except (json.JSONDecodeError, ValueError):
+            pass
+        time.sleep(5 * (attempt + 1))
+    raise RuntimeError(f"claude judge failed: {out.stderr[:300] or out.stdout[:300]}")
+
+
+def norm_fact(f: str | dict) -> dict:
+    if isinstance(f, str):
+        return {"core": f, "details": [], "min_details": 0}
+    details = f.get("details") or []
+    return {"core": f["core"], "details": details, "min_details": f.get("min_details") or len(details)}
+
+
+def rubric(item: dict) -> str:
+    out = ["REQUIRED FACTS"]
+    for i, f in enumerate(map(norm_fact, item.get("expected_facts") or []), 1):
+        out.append(f"{i}. {f['core']}")
+        if f["details"]:
+            k = f"any {f['min_details']} of {len(f['details'])} is full coverage" if f["min_details"] < len(f["details"]) else "all"
+            out.append(f"   details ({k}): " + "; ".join(f"({j}) {d}" for j, d in enumerate(f["details"], 1)))
+    for title, key in (("BONUS FACTS", "bonus_facts"), ("PENALTIES", "penalties")):
+        xs = item.get(key) or []
+        out.append(f"\n{title}" + ("" if xs else "\n(none)"))
+        out += [f"{i}. {x}" for i, x in enumerate(xs, 1)]
+    return "\n".join(out)
+
+
+def fact_scores(item: dict, j: Judgement) -> dict:
+    """Three views of completeness from the same verdicts:
+    core      share of required core claims stated (the headline: did it get the points)
+    atomic    cores plus details as separate atoms, enumerations capped at min_details (k of n)
+    compound  the old scoring: 1 if core and every detail, 0.5 if core only, else 0"""
+    facts = [norm_fact(f) for f in item.get("expected_facts") or []]
+    by_n = {v.n: v for v in j.facts}
+    core = atoms = hits = compound = 0.0
+    for i, f in enumerate(facts, 1):
+        v = by_n.get(i)
+        ok = bool(v and v.core == "supported")
+        covered = len({d for d in (v.details_covered if v else []) if 1 <= d <= len(f["details"])})
+        core += ok
+        atoms += 1 + f["min_details"]
+        hits += ok + min(covered, f["min_details"])
+        compound += (1.0 if covered == len(f["details"]) else 0.5) if ok else 0.0
+    n = len(facts)
+    return {
+        "core_recall": core / n if n else None,
+        "atomic_recall": hits / atoms if atoms else None,
+        "compound_recall": compound / n if n else None,
+    }
+
+
+def answer_text(answer: Answer, confidence: str) -> str:
+    a = answer
+    lines = [f"SUMMARY: {a.summary}", f"CONFIDENCE: {confidence} ({a.confidence_reason})"]
     lines += [f"- {c.statement}" + "".join(f' [{x.call_id} {x.timestamp} "{x.quote}"]' for x in c.citations) for c in a.claims]
     lines += [f"CONFLICT: {c.description}" for c in a.conflicts]
     lines += [f"NOT FOUND: {x}" for x in a.not_found]
     return "\n".join(lines)
+
+
+def grade(pipe: Pipeline, item: dict, r: Result) -> dict:
+    """Everything except generation, so saved answers can be re-graded against a revised gold set."""
+    gold = set(item.get("expected_calls") or [])
+    ctx = set(r.context.call_ids)
+    cited = set(r.cited_calls)
+    checks = [c for cs in r.claim_checks + r.conflict_checks for c in cs]
+    should_abstain = bool(item.get("should_abstain"))
+
+    user = f"QUESTION\n{item['question']}\n\nANSWER\n{answer_text(r.answer, r.confidence)}\n\n{rubric(item)}"
+    j = judge(pipe, user)
+    return {
+        "id": item["id"],
+        "kind": item["kind"],
+        "bonus_question": bool(item.get("bonus_question")),
+        "question": item["question"],
+        "context_recall": len(gold & ctx) / len(gold) if gold else None,
+        "cited_recall": len(gold & cited) / len(gold) if gold else None,
+        "missed_calls": sorted(gold - cited),
+        "citation_valid": sum(c.ok for c in checks) / len(checks) if checks else None,
+        "citations": len(checks),
+        "citation_status": dict(Counter(c.status for c in checks)),
+        **fact_scores(item, j),
+        "contradicted": sum(v.core == "contradicted" for v in j.facts),
+        "penalties_hit": [p.model_dump() for p in j.penalties if p.hit],
+        "bonus_hit": sum(b.hit for b in j.bonus),
+        "bonus_total": len(item.get("bonus_facts") or []),
+        "correct": j.correct,
+        "correct_reason": j.correct_reason,
+        "verdicts": [v.model_dump() for v in j.facts],
+        "should_abstain": should_abstain,
+        "abstained": j.declines,
+        "abstention_correct": j.declines == should_abstain,
+        "confidence": r.confidence,
+    }
 
 
 def evaluate(pipe: Pipeline, item: dict, mode: str) -> dict:
@@ -84,50 +216,35 @@ def evaluate(pipe: Pipeline, item: dict, mode: str) -> dict:
         r = pipe.ask(item["question"], mode=mode)
     except Exception as e:  # keep the run going; report the failure
         return {"id": item["id"], "kind": item["kind"], "error": repr(e), "seconds": time.time() - t0}
-
-    gold = set(item.get("expected_calls") or [])
-    ctx = set(r.context.call_ids)
-    cited = set(r.cited_calls)
-    checks = [c for cs in r.claim_checks + r.conflict_checks for c in cs]
-    should_abstain = bool(item.get("should_abstain"))
-
-    facts = item.get("expected_facts") or []
-    verdicts: list[dict] = []
-    correct: str | None
-    declined: bool
-    if facts:
-        user = (
-            f"QUESTION\n{item['question']}\n\nANSWER\n{answer_text(r)}\n\nEXPECTED FACTS\n"
-            + "\n".join(f"{i + 1}. {f}" for i, f in enumerate(facts))
-        )
-        j = pipe.llm.structured(JUDGE_SYSTEM, user, Judgement, model=pipe.llm.judge_model, reasoning_effort="low")
-        verdicts = [v.model_dump() for v in j.verdicts]
-        correct, correct_reason, declined = j.correct, j.correct_reason, j.declines
-    else:
-        correct, correct_reason, declined = None, "", r.confidence == "insufficient"
-
     return {
-        "id": item["id"],
-        "kind": item["kind"],
-        "question": item["question"],
-        "context_recall": len(gold & ctx) / len(gold) if gold else None,
-        "cited_recall": len(gold & cited) / len(gold) if gold else None,
-        "missed_calls": sorted(gold - cited),
-        "citation_valid": sum(c.ok for c in checks) / len(checks) if checks else None,
-        "citations": len(checks),
-        "fact_recall": sum(SCORE[v["verdict"]] for v in verdicts) / len(verdicts) if verdicts else None,
-        "contradicted": sum(v["verdict"] == "contradicted" for v in verdicts),
-        "correct": correct,
-        "correct_reason": correct_reason,
-        "verdicts": verdicts,
-        "should_abstain": should_abstain,
-        "abstained": declined,
-        "abstention_correct": declined == should_abstain,
-        "confidence": r.confidence,
+        **grade(pipe, item, r),
         "prompt_tokens": r.usage["prompt_tokens"],
         "completion_tokens": r.usage["completion_tokens"],
         "seconds": round(r.seconds, 1),
         "result": to_dict(r),
+    }
+
+
+def regrade(pipe: Pipeline, item: dict, saved: dict) -> dict:
+    """Re-check the saved answer's citations with the current verifier and re-judge it; no generation."""
+    if "error" in saved:
+        return saved
+    res = saved["result"]
+    answer = Answer.model_validate(res["answer"])
+    context = Context(res["context"]["mode"], res["context"]["call_ids"], [], "")
+    claim_checks = [pipe.check(c.citations, context) for c in answer.claims]
+    conflict_checks = [pipe.check(c.citations, context) for c in answer.conflicts]
+    confidence, warnings = assess(answer, claim_checks, conflict_checks)
+    plan = Plan.model_validate(res["plan"]) if res.get("plan") else None
+    r = Result(res["question"], plan, context, answer, claim_checks, conflict_checks,
+               confidence, warnings, res["usage"], res["seconds"])
+    result = {**to_dict(r), "context": res["context"]}
+    return {
+        **grade(pipe, item, r),
+        "prompt_tokens": saved["prompt_tokens"],
+        "completion_tokens": saved["completion_tokens"],
+        "seconds": saved["seconds"],
+        "result": result,
     }
 
 
@@ -141,37 +258,46 @@ def fmt(x: float | None) -> str:
 
 
 def summarise(rows: list[dict], mode: str) -> str:
-    ok = [r for r in rows if "error" not in r]
+    ran = [r for r in rows if "error" not in r]
+    ok = [r for r in ran if not r.get("bonus_question")]  # headline numbers exclude bonus questions
     answerable = [r for r in ok if not r["should_abstain"]]
     unanswerable = [r for r in ok if r["should_abstain"]]
+    status = Counter(s for r in ok for s, n in r["citation_status"].items() for _ in range(n))
+    failed = {k: v for k, v in status.items() if k not in ("exact", "shifted", "fuzzy")}
     out = [
-        f"## Mode: {mode}  ({len(ok)}/{len(rows)} questions ran)",
+        f"## Mode: {mode}  ({len(ran)}/{len(rows)} questions ran; headline over {len(ok)}, bonus questions listed separately)",
         "",
         "| metric | value |",
         "|---|---|",
         f"| context recall (gold calls reached the model) | {fmt(mean([r['context_recall'] for r in answerable]))} |",
         f"| cited recall (gold calls cited in the answer) | {fmt(mean([r['cited_recall'] for r in answerable]))} |",
         f"| citation validity (quote found verbatim) | {fmt(mean([r['citation_valid'] for r in ok]))} |",
+        f"| failed citations by kind | {', '.join(f'{k} {v}' for k, v in sorted(failed.items())) or 'none'} |",
         f"| answer correct (LLM judge): yes / partly / no | "
         f"{'/'.join(str(sum(r['correct'] == v for r in ok)) for v in ('yes', 'partly', 'no'))} |",
-        f"| fact recall, completeness (LLM judge) | {fmt(mean([r['fact_recall'] for r in answerable]))} |",
-        f"| facts contradicted by the answer | {sum(r['contradicted'] for r in ok)} |",
+        f"| core fact recall (LLM judge) | {fmt(mean([r['core_recall'] for r in answerable]))} |",
+        f"| atomic fact recall: cores + details, k of n for lists | {fmt(mean([r['atomic_recall'] for r in answerable]))} |",
+        f"| compound fact recall: old scoring, 1 / 0.5 / 0 | {fmt(mean([r['compound_recall'] for r in answerable]))} |",
+        f"| core facts contradicted | {sum(r['contradicted'] for r in ok)} |",
+        f"| penalties hit | {sum(len(r['penalties_hit']) for r in ok)} |",
+        f"| bonus facts stated | {sum(r['bonus_hit'] for r in ok)}/{sum(r['bonus_total'] for r in ok)} |",
         f"| correct abstention on unanswerable | {sum(r['abstained'] for r in unanswerable)}/{len(unanswerable)} |",
         f"| false abstention on answerable | {sum(r['abstained'] for r in answerable)}/{len(answerable)} |",
         f"| mean prompt tokens / question | {mean([r['prompt_tokens'] for r in ok]) or 0:,.0f} |",
         f"| mean latency (s) | {fmt(mean([r['seconds'] for r in ok]))} |",
         "",
-        "| id | kind | correct | ctx recall | cited recall | cit. valid | fact recall | abstain ok | conf | missed calls |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        "| id | kind | correct | ctx recall | cited recall | cit. valid | core | atomic | penalties | abstain ok | conf | missed calls |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         if "error" in r:
-            out.append(f"| {r['id']} | {r['kind']} | ERROR: {r['error'][:60]} |||||||")
+            out.append(f"| {r['id']} | {r['kind']} | ERROR: {r['error'][:60]} ||||||||||")
             continue
         out.append(
-            f"| {r['id']} | {r['kind']} | {r['correct'] or '-'} | {fmt(r['context_recall'])} | {fmt(r['cited_recall'])} | "
-            f"{fmt(r['citation_valid'])} | {fmt(r['fact_recall'])} | {'✓' if r['abstention_correct'] else '✗'} | "
-            f"{r['confidence']} | {', '.join(r['missed_calls'])} |"
+            f"| {r['id']}{' (bonus)' if r.get('bonus_question') else ''} | {r['kind']} | {r['correct'] or '-'} | "
+            f"{fmt(r['context_recall'])} | {fmt(r['cited_recall'])} | {fmt(r['citation_valid'])} | "
+            f"{fmt(r['core_recall'])} | {fmt(r['atomic_recall'])} | {len(r['penalties_hit']) or ''} | "
+            f"{'✓' if r['abstention_correct'] else '✗'} | {r['confidence']} | {', '.join(r['missed_calls'])} |"
         )
     return "\n".join(out)
 
@@ -182,6 +308,9 @@ def main() -> None:
     ap.add_argument("--only", help="comma-separated question ids")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--questions", type=Path, default=ROOT / "eval" / "questions.yaml")
+    ap.add_argument("--regrade", type=Path, metavar="RESULTS_JSON",
+                    help="re-check citations and re-judge the answers saved in a results file, without generating")
+    ap.add_argument("--suffix", default="regraded", help="output name suffix for --regrade")
     args = ap.parse_args()
 
     items = yaml.safe_load(args.questions.read_text())
@@ -190,18 +319,27 @@ def main() -> None:
         items = [i for i in items if i["id"] in wanted]
 
     pipe = Pipeline(ROOT / "data")
-    with ThreadPoolExecutor(args.workers) as pool:
-        rows = list(pool.map(lambda it: evaluate(pipe, it, args.mode), items))
+    if args.regrade:
+        saved = {r["id"]: r for r in json.loads(args.regrade.read_text())}
+        mode = args.regrade.stem.rsplit("-", 1)[-1]
+        items = [i for i in items if i["id"] in saved]
+        with ThreadPoolExecutor(args.workers) as pool:
+            rows = list(pool.map(lambda it: regrade(pipe, it, saved[it["id"]]), items))
+        label = f"{args.regrade.stem}-{args.suffix}"
+    else:
+        mode = args.mode
+        with ThreadPoolExecutor(args.workers) as pool:
+            rows = list(pool.map(lambda it: evaluate(pipe, it, mode), items))
+        label = f"{time.strftime('%Y%m%d-%H%M%S')}-{mode}"
 
     out_dir = ROOT / "eval" / "results"
     out_dir.mkdir(exist_ok=True)
-    stamp = time.strftime("%Y%m%d-%H%M%S")
-    (out_dir / f"{stamp}-{args.mode}.json").write_text(json.dumps(rows, indent=2, ensure_ascii=False))
-    report = summarise(rows, args.mode)
-    (out_dir / f"{stamp}-{args.mode}.md").write_text(report + "\n")
+    (out_dir / f"{label}.json").write_text(json.dumps(rows, indent=2, ensure_ascii=False))
+    report = summarise(rows, mode)
+    (out_dir / f"{label}.md").write_text(report + "\n")
     print(report)
     print(f"\nTotal tokens: {pipe.llm.usage.snapshot()}")
-    print(f"Saved eval/results/{stamp}-{args.mode}.json")
+    print(f"Saved eval/results/{label}.json")
 
 
 if __name__ == "__main__":

@@ -93,6 +93,23 @@ class Result:
         return list(seen)
 
 
+def assess(
+    answer: Answer, claim_checks: list[list[CitationCheck]], conflict_checks: list[list[CitationCheck]]
+) -> tuple[Confidence, list[str]]:
+    """Confidence after verification: the model cannot keep high confidence on claims nothing supports."""
+    warnings, confidence = [], answer.confidence
+    unsupported = [i for i, checks in enumerate(claim_checks) if not any(c.ok for c in checks)]
+    if unsupported:
+        warnings.append(f"{len(unsupported)} of {len(claim_checks)} claims have no verifiable quote")
+    if claim_checks and len(unsupported) == len(claim_checks) and confidence in ("high", "medium"):
+        confidence = "low"
+        warnings.append("confidence lowered: no claim could be verified against the transcripts")
+    bad = sum(1 for checks in claim_checks + conflict_checks for c in checks if not c.ok)
+    if bad:
+        warnings.append(f"{bad} citation(s) failed verification (quote not found or wrong speaker)")
+    return confidence, warnings
+
+
 def call_header(call: Call) -> str:
     # the header exactly as in the file, so a quoted header line can be checked like a turn
     raw = "\n".join(t.text for t in call.header if t.text != "TRANSCRIPT")
@@ -199,17 +216,7 @@ class Pipeline:
         answer = self.answer(question, context, plan, usage)
         claim_checks = [self.check(c.citations, context) for c in answer.claims]
         conflict_checks = [self.check(c.citations, context) for c in answer.conflicts]
-
-        warnings, confidence = [], answer.confidence
-        unsupported = [i for i, checks in enumerate(claim_checks) if not any(c.ok for c in checks)]
-        if unsupported:
-            warnings.append(f"{len(unsupported)} of {len(claim_checks)} claims have no verifiable quote")
-        if claim_checks and len(unsupported) == len(claim_checks) and confidence in ("high", "medium"):
-            confidence = "low"
-            warnings.append("confidence lowered: no claim could be verified against the transcripts")
-        bad = sum(1 for checks in claim_checks + conflict_checks for c in checks if not c.ok)
-        if bad:
-            warnings.append(f"{bad} citation(s) failed verification (quote not found or wrong speaker)")
+        confidence, warnings = assess(answer, claim_checks, conflict_checks)
 
         return Result(
             question, plan, context, answer, claim_checks, conflict_checks,

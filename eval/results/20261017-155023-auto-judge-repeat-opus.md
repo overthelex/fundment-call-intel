@@ -1,0 +1,52 @@
+## Mode: auto  (30/30 questions ran; headline over 29, bonus questions listed separately)
+
+| metric | value |
+|---|---|
+| context recall (gold calls reached the model) | 1.00 |
+| cited recall (gold calls cited in the answer) | 0.91 |
+| citation validity (quote found verbatim) | 1.00 |
+| failed citations by kind | not_found 1 |
+| answer correct (LLM judge): yes / partly / no | 8/20/1 |
+| core fact recall (LLM judge) | 0.62 |
+| atomic fact recall: cores + details, k of n for lists | 0.52 |
+| compound fact recall: old scoring, 1 / 0.5 / 0 | 0.42 |
+| core facts contradicted | 0 |
+| penalties hit | 0 |
+| bonus facts stated | 0/14 |
+| correct abstention on unanswerable | 5/5 |
+| false abstention on answerable | 1/24 |
+| mean prompt tokens / question | 13,050 |
+| mean latency (s) | 12.91 |
+
+| id | kind | correct | ctx recall | cited recall | cit. valid | core | atomic | penalties | abstain ok | conf | missed calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| q01 | aggregate | yes | 1.00 | 1.00 | 1.00 | 0.83 | 0.65 |  | ✓ | medium |  |
+| q02 | aggregate | yes | 1.00 | 1.00 | 1.00 | 0.80 | 0.40 |  | ✓ | high |  |
+| q03 | aggregate | partly | 1.00 | 1.00 | 1.00 | 0.67 | 0.50 |  | ✓ | high |  |
+| q04 | aggregate | yes | 1.00 | 0.88 | 0.94 | 1.00 | 0.67 |  | ✓ | high | CALL-003 |
+| q05 | aggregate | partly | 1.00 | 1.00 | 1.00 | 0.50 | 0.60 |  | ✓ | medium |  |
+| q06 | entity_resolution | partly | 1.00 | 1.00 | 1.00 | 0.67 | 0.56 |  | ✓ | high |  |
+| q07 | aggregate | partly | 1.00 | 1.00 | 1.00 | 0.60 | 0.64 |  | ✓ | medium |  |
+| q08 | multi_call | partly | 1.00 | 1.00 | 1.00 | 0.67 | 0.50 |  | ✓ | high |  |
+| q09 | multi_call | partly | 1.00 | 0.50 | 1.00 | 0.20 | 0.27 |  | ✓ | high | CALL-001, CALL-013 |
+| q10 | aggregate | partly | 1.00 | 1.00 | 1.00 | 0.71 | 0.64 |  | ✓ | medium |  |
+| q11 | conflict | no | 1.00 | 0.00 | 1.00 | 0.00 | 0.00 |  | ✗ | insufficient | CALL-001, CALL-006, CALL-012 |
+| q12 | single_call | partly | 1.00 | 1.00 | 1.00 | 0.50 | 0.29 |  | ✓ | medium |  |
+| q13 | single_call | partly | 1.00 | 1.00 | 1.00 | 0.50 | 0.36 |  | ✓ | high |  |
+| q14 | single_call | partly | 1.00 | 1.00 | 1.00 | 0.50 | 0.33 |  | ✓ | high |  |
+| q15 | single_call | partly | 1.00 | 1.00 | 1.00 | 0.50 | 0.40 |  | ✓ | high |  |
+| q16 | entity_resolution | partly | 1.00 | 1.00 | 1.00 | 0.50 | 0.50 |  | ✓ | high |  |
+| q17 | single_call | partly | 1.00 | 1.00 | 1.00 | 0.80 | 0.50 |  | ✓ | medium |  |
+| q18 | single_call | partly | 1.00 | 1.00 | 1.00 | 0.50 | 0.50 |  | ✓ | medium |  |
+| q19 | multi_call | partly | 1.00 | 1.00 | 1.00 | 0.75 | 0.64 |  | ✓ | high |  |
+| q20 | multi_call | partly | 1.00 | 1.00 | 1.00 | 0.80 | 0.67 |  | ✓ | high |  |
+| q21 | single_call | yes | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |  | ✓ | medium |  |
+| q22 | single_call | partly | 1.00 | 1.00 | 1.00 | 0.50 | 0.50 |  | ✓ | high |  |
+| q23 | single_call | yes | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |  | ✓ | high |  |
+| q24 | conflict | partly | 1.00 | 0.50 | 1.00 | 0.50 | 0.40 |  | ✓ | low | CALL-012 |
+| q25 | unanswerable | yes | - | - | - | 1.00 | 0.67 |  | ✓ | insufficient |  |
+| q26 | unanswerable | partly | - | - | 1.00 | 0.50 | 0.60 |  | ✓ | insufficient |  |
+| q27 | unanswerable | yes | - | - | 1.00 | 1.00 | 1.00 |  | ✓ | insufficient |  |
+| q28 | unanswerable | yes | - | - | 1.00 | 1.00 | 1.00 |  | ✓ | insufficient |  |
+| q29 | unanswerable | partly | - | - | 1.00 | 0.50 | 0.25 |  | ✓ | insufficient |  |
+| q30 (bonus) | multi_call | no | 0.50 | 0.00 | - | 0.67 | 0.40 |  | ✗ | insufficient | CALL-010, CALL-014 |
