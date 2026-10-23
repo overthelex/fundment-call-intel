@@ -179,7 +179,9 @@ def answer_text(answer: Answer, confidence: str) -> str:
     a = answer
     lines = [f"SUMMARY: {a.summary}", f"CONFIDENCE: {confidence} ({a.confidence_reason})"]
     lines += [f"- {c.statement}" + "".join(f' [{x.call_id} {x.timestamp} "{x.quote}"]' for x in c.citations) for c in a.claims]
-    lines += [f"CONFLICT: {c.description}" for c in a.conflicts]
+    lines += [f"CONFLICT: {c.description}"
+              + (f" | BETTER SUPPORTED: {c.better_supported}" + (f" ({c.why})" if c.why else "") if c.better_supported else "")
+              for c in a.conflicts]
     lines += [f"NOT FOUND: {x}" for x in a.not_found]
     return "\n".join(lines)
 
@@ -195,6 +197,11 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
 
     user = f"QUESTION\n{item['question']}\n\nANSWER\n{answer_text(r.answer, r.confidence)}\n\n{rubric(item)}"
     j = judge(pipe, user) if use_judge else None
+    # a verdict missing for a fact would count as "not stated"; ask again rather than score the gap
+    for _ in range(2):
+        if j is None or len({v.n for v in j.facts}) >= len(item.get("expected_facts") or []):
+            break
+        j = judge(pipe, user)
     row = {
         "id": item["id"],
         "kind": item["kind"],
@@ -249,6 +256,9 @@ def regrade(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> 
     if "error" in saved:
         return saved
     res = saved["result"]
+    for c in res["answer"]["conflicts"]:  # runs saved before conflicts were weighed
+        c.setdefault("better_supported", "")
+        c.setdefault("why", "")
     answer = Answer.model_validate(res["answer"])
     context = Context(res["context"]["mode"], res["context"]["call_ids"], [], "")
     claim_checks = [pipe.check(c.citations, context) for c in answer.claims]

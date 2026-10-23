@@ -15,6 +15,11 @@ Rules:
 - vendor_consistency: true only when the question asks whether OrbitFlow staff contradict themselves or
   each other, give inconsistent/conflicting answers, or change their story across calls. False for
   questions about a single fact, even one where statements might differ ("Is SSO on Growth?").
+- product_topics: when the question asks what is true of OrbitFlow's product or commercial terms
+  (features, which plan includes what, prices, limits, security, integrations, support, roadmap), the
+  matching topics (one to three); every statement OrbitFlow staff made on them will be added. Empty for
+  questions about customers, deals, needs or what a named call said ("Which customers asked about SSO?"
+  and "What capabilities do prospects want?" are about customers).
 - search_queries: 2-4 short queries phrased the way people actually talk on calls (paraphrases,
   synonyms, product/competitor names). Do not answer the question."""
 
@@ -34,7 +39,16 @@ Grounding rules:
 4. If the transcripts do not contain the answer, say so plainly, set confidence to "insufficient" and
    leave claims empty (or cite only the closest related material and say it does not answer the question).
 5. If calls (or speakers) contradict each other, report it in `conflicts` with citations on both sides
-   instead of silently picking one.
+   instead of silently picking one. Then weigh them: set `better_supported` to the side the evidence
+   favours and `why` to the reasons, using only these criteria:
+   - how many different people say each side, and in how many calls;
+   - which statement is more specific (names the tier, the figure, the condition);
+   - whether a statement was later hedged, corrected or retracted by its speaker;
+   - who says it (a solutions engineer on a technical point vs an offhand remark);
+   - which is more recent, when the others are equal.
+   If the criteria do not clearly favour one side, set `better_supported` to "cannot tell". Weighing
+   does not settle it: the summary states the conflict first, then which side is better supported and
+   why, and confidence stays at most "medium".
 6. Judgement questions (e.g. "most likely to buy") are interpretations: name the signals you relied on
    and cite them; say what would change the assessment.
 7. When CONTEXT MODE is "excerpts", you only see retrieved parts of calls: do not claim that something
@@ -42,15 +56,17 @@ Grounding rules:
 8. Numbers, dates, names and commitments: before answering, look for every place in the transcripts
    that states them. If two statements differ (even within one call, or a rounded vs exact figure),
    give the best-supported value AND put the discrepancy in `conflicts`.
-9. When CONTEXT MODE is "claims", you see every statement OrbitFlow staff made about the product,
+9. A "VENDOR STATEMENTS ON THIS TOPIC" block lists every statement OrbitFlow staff made on the topic in
+   any call. Use it to answer product questions from all statements, not only the excerpts above it.
+10. When CONTEXT MODE is "claims", you see every statement OrbitFlow staff made about the product,
    grouped by topic, each as the full turn with its call. Compare the statements within each topic and
    report as `conflicts` every pair that cannot both be true: a feature on all plans vs only on one
    tier, "fully no-code" vs "some workflows need code", different prices or limits. A hedge that the
    same rep later corrects still counts; say so. Differences in detail or emphasis are not conflicts.
    Go through every topic before answering and report all such pairs, not only the clearest one.
    Cite both sides, naming the reps and calls. If no topic has such a pair, say so.
-10. Cover every call in the context that bears on the question; do not stop at the first few examples.
-11. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
+11. Cover every call in the context that bears on the question; do not stop at the first few examples.
+12. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
 
 confidence:
 - high: direct, unambiguous evidence that covers the question

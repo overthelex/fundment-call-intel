@@ -127,13 +127,15 @@ class ClaimStore:
             self._claims = [c for cs in pool.map(one, self.calls.values()) for c in cs]
         return self._claims
 
-    def context(self, usage: Usage | None = None) -> tuple[str, list[Turn]]:
-        """Every vendor claim grouped by topic, each shown as the full turn it came from."""
+    def context(self, usage: Usage | None = None, topics: list[str] | None = None) -> tuple[str, list[Turn]]:
+        """Every vendor claim grouped by topic (or only the given topics), each shown as the full turn it came from."""
         by_topic: dict[str, list[StoredClaim]] = {}
         for c in self.load(usage):
             by_topic.setdefault(c.topic, []).append(c)
         parts, turns, seen = [], [], set()
         for topic in Topic.__args__:
+            if topics is not None and topic not in topics:
+                continue
             items = sorted(by_topic.get(topic, []), key=lambda c: (c.call_id, c.turn_idx))
             if not items:
                 continue

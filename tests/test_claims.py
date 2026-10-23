@@ -41,3 +41,14 @@ def test_context_groups_by_topic_and_returns_cited_turns(tmp_path):
     text, turns = store.context()
     assert text.index("## TOPIC: SSO, SCIM and identity") < text.index("## TOPIC: no-code vs code")
     assert [t.ts for t in turns] == ["07:23", "11:30"]
+
+
+def test_context_can_be_limited_to_topics(tmp_path):
+    store = ClaimStore(list(CALLS.values()), FakeLLM([]), cache_dir=tmp_path)
+    store._claims = extract(CALLS["CALL-006"], CALLS, FakeLLM([
+        claim("07:23", "Alastair McCrae", "SSO's included on all our plans"),
+        claim("11:30", "Alastair McCrae", "it's completely no-code", topic="no-code vs code, technical skills needed"),
+    ]))
+    text, turns = store.context(topics=["SSO, SCIM and identity"])
+    assert "no-code" not in text
+    assert [t.ts for t in turns] == ["07:23"]

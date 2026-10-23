@@ -40,6 +40,9 @@ def render(pipe: Pipeline, r: Result) -> str:
         for conflict, checks in zip(a.conflicts, r.conflict_checks):
             out.append(f"  - {conflict.description}")
             out.extend(_cite_line(pipe, c) for c in checks)
+            if conflict.better_supported:
+                why = f": {conflict.why}" if conflict.why else ""
+                out.append(f"    → better supported: {conflict.better_supported}{why}")
     if a.not_found:
         out.append("\nNot found in the transcripts")
         out.extend(f"  - {x}" for x in a.not_found)

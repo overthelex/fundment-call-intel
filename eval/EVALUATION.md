@@ -123,7 +123,8 @@ citation caught by the checker, abstention 5/5 and ~13K tokens per question.
 
 - **q11 "Has anyone from the vendor given inconsistent answers?"**: wrong in every run of the first
   version; fixed on 23.10 by the vendor-claims context (example 3).
-- **q24 "Is SSO on Growth?"**: finds both sides but will not conclude (example 2).
+- **q24 "Is SSO on Growth?"**: found both sides but would not conclude; fixed on 23.10 by weighing
+  conflicts over every vendor statement on the topic (example 2).
 - **q30 (bonus, two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the
   question and the Juniper call to answer it. The planner routes to Verity only, so the pipeline
   declines; the baseline answers it.
@@ -131,7 +132,7 @@ citation caught by the checker, abstention 5/5 and ~13K tokens per question.
 
 ## Three worked examples
 
-From run `20261017-155023-auto-regraded`, abridged.
+From run `20261017-155023-auto-regraded`, abridged; examples 2 and 3 also show the answer after the fix.
 
 ### 1. Correct, and the baseline gets it wrong: q21
 
@@ -152,7 +153,7 @@ mixed up two churned accounts; the checker flags it because the words are not in
 The gold set also rewards (bonus) noting that Verity's engineering manager said the platform "costs a hundred thousand a year", and
 penalises presenting 100K as the price without a caveat; this answer gets neither.
 
-### 2. Partly: false balance, q24
+### 2. Partly: false balance, then fixed, q24
 
 > Is SSO available on OrbitFlow's Growth plan?
 
@@ -169,6 +170,31 @@ lost on Growth *missing*; engineers saying Enterprise-only *supported*; weighing
 conclude Enterprise-only *missing*. The answer finds the conflict but treats one hesitant rep (who
 said he was "fairly sure" and would confirm) as equal to every engineer. Reporting a conflict is right;
 refusing to weigh it is not.
+
+Two things were missing, and a prompt alone would fix only one. The model saw two or three of the
+statements, because retrieval returns the passages most similar to the question; in the data, SAML SSO
+is called Enterprise in nine calls by three reps. And it had no rule for weighing.
+
+**The fix.** The planner names the product topics of a question (one to three of the 12 claim topics),
+and the answer step also gets every vendor statement on them from the claims table. Each conflict now
+carries `better_supported` and `why`, decided on fixed criteria (how many people, how specific, later
+hedged or corrected, who said it, recency) or "cannot tell"; both sides are still cited and confidence
+stays at most medium. Run `results/20261023-204145-auto-weighing`, verdict **yes**:
+
+> Best-supported answer: no, OrbitFlow's SSO is described as an Enterprise-only feature, not a
+> Growth-plan feature, although one AE once said it was on all plans.
+> ✓ CALL-006 [07:23] Alastair McCrae (AE): "SSO's included on all our plans, that's standard."
+> ✓ CALL-002 [01:59] Jon Bell (SE), CALL-004 [02:09] Jon Bell, CALL-008 [10:56] Nina Patel (SE),
+> CALL-012 [08:09] Leo Grant (AE): SAML SSO on Enterprise
+> → better supported: Enterprise-only. Five statements across multiple calls and two different reps;
+> only one AE said all plans, and he later hedged: "I'm fairly sure it's all plans. But yeah, I'll confirm."
+
+The first full run with this change routed a broad question (q05, "what capabilities matter to
+prospects?") to all 12 topics, and the vendor statements crowded out the prospects' words. Only
+"specific" questions with at most three topics now get the table (`MAX_PRODUCT_TOPICS`); "which
+customers asked about SSO?" is about customers. The same run showed a
+judge glitch: it returned a verdict for one of q24's four facts, and missing verdicts counted as "not
+stated"; the evaluator now asks again when verdicts are missing.
 
 ### 3. Wrong, then fixed: a cross-call question retrieval cannot see, q11
 
@@ -210,7 +236,8 @@ product questions to "prospect" calls (that cut out the renewal call holding the
 named in the question each get one excerpt even for narrow questions; figures that differ across
 statements must go into `conflicts`; header metadata became citable; abstention scoring moved from a
 heuristic to the judge; and after an audit of the results the checker started verifying the speaker and
-the call, because one run credited Sarah's words to Maya.
+the call, because one run credited Sarah's words to Maya; q11 led to the vendor-claims table, and q24
+to giving product questions every vendor statement on the topic and weighing conflicts.
 
 ## Where the gold set comes from
 

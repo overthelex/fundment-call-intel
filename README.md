@@ -49,10 +49,13 @@ question
   ├─ 1. plan (LLM, structured)      which calls? (named companies, call kinds) · specific vs across · search queries
   │                                 · name mismatches ("Acme Corp" → Acme Logistics, flagged)
   │                                 · does it ask whether the vendor contradicts itself?
+  │                                 · is it about a product fact? which of 12 topics?
   ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic
   │                                 candidate calls fit in 12K words? → send whole transcripts
   │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
+  │                                 product fact? → plus every vendor statement on that topic, from all calls
   ├─ 3. answer (LLM, structured)    summary · claims[] each with verbatim quotes · conflicts[] · not_found[]
+  │                                 · each conflict weighed: better-supported side + why, or "cannot tell"
   │                                 · confidence (high / medium / low / insufficient) + reason
   └─ 4. verify (code)               each quote looked up in the parsed transcript → exact / shifted / fuzzy
                                     / wrong speaker / wrong call / not found
@@ -74,10 +77,12 @@ question
 - **Vendor claims** (`callqa/claims.py`): at index time, one extraction pass per call lists what
   OrbitFlow staff assert about the product (plans, SSO, pricing, no-code, limits, support…) under 12
   fixed topics, each with a verbatim quote. Every quote is run through the citation checker and kept
-  only if it verifies and was said by vendor staff (587 claims). Cached per call content.
+  only if it verifies and was said by vendor staff (587 claims). Cached per call content. Used whole
+  for consistency questions, and by topic for product-fact questions ("Is SSO on Growth?").
 - **Answering** (`callqa/prompts.py`): the model sees whose side each speaker is on. It is told that a
   vendor's product statement is a claim, not a fact. It is told to report contradictions instead of
-  picking one side. When it only saw excerpts, it must say "not found in the retrieved excerpts", not
+  picking one side silently, and then to weigh them on fixed criteria: how many people say each side,
+  how specific each is, whether its speaker later hedged or corrected it, who said it, and recency. When it only saw excerpts, it must say "not found in the retrieved excerpts", not
   "never said".
 
 ## Key decisions
@@ -106,6 +111,12 @@ question
    every vendor statement on a topic side by side makes a contradiction visible: "SSO is on all plans"
    (one AE) next to statements in nine other calls that SAML SSO is Enterprise. The planner switches to this
    context only for questions about the vendor's consistency.
+   The same table answers product-fact questions: retrieval gives the passages most similar to the
+   question, so a fact stated in nine calls and contradicted in one can reach the model as one statement
+   against one, and it cannot weigh what it does not see. For a question on one to three product topics
+   the answer step also gets every vendor statement on them. A conflict is then reported with both
+   sides cited *and* with the better-supported side and the reason, or "cannot tell"; confidence stays
+   at most medium.
 7. **One OpenAI-compatible client.** It runs on OpenAI or Azure by changing env vars; no framework.
 
 ## Assumptions
@@ -158,7 +169,8 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 ### Results
 
 29 headline questions, `gpt-5.4-mini` answering, pipeline run 3 times, baseline once. These runs
-(17.10) predate the vendor-claims context; the current code's run is the paragraph after the table.
+(17.10) predate the vendor-claims context and conflict weighing; the current code's run is the last
+paragraph after the table (15 / 14 / 0).
 Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/README.md).
 
 | | pipeline (`auto`) | whole dataset in prompt (`full`) |
@@ -181,6 +193,13 @@ no-code"), in 4 of 4 manual runs and in the eval run (`eval/results/20261023-122
 13 / 15 / 1 overall, citation validity 1.00, abstention 5/5). Only q11 is routed to the new context;
 the one "no" in that run is q05, a long list that stopped early, which was "partly" before.
 
+**After weighing conflicts (23.10)**, q24 ("Is SSO on Growth?") is answered correctly for the first
+time: it reports the conflict, then says Enterprise-only is better supported because nine calls and
+three reps say so, while the single "all plans" came from one AE who later said he was only "fairly
+sure". Run `eval/results/20261023-204145-auto-weighing.md`: yes / partly / no **15 / 14 / 0**, citation
+validity 1.00 with no failed citations, abstention 5/5 with no false abstentions, ~14.5K prompt tokens.
+Within the judge noise band, but q11 and q24 are now both "yes".
+
 What I take from it:
 
 - **Retrieval is not the bottleneck**: every gold call reaches the model in every run. Misses happen
@@ -191,8 +210,9 @@ What I take from it:
 - **Unanswerable and near-miss questions work** in all runs (Kestrel's ERP, ISO 27001, Enterprise price).
 - **Known failures**: q11 ("has the vendor given inconsistent answers?") was wrong in every run of the
   first version: the two sides of each contradiction sit in different calls and similarity search
-  does not find disagreement. It is fixed by the vendor-claims context (above). q24 finds both sides
-  of the SSO question but will not weigh them. q30 (bonus) needs a second retrieval hop.
+  does not find disagreement. It is fixed by the vendor-claims context (above). q24 found both sides
+  of the SSO question but would not weigh them; fixed by weighing (above). q30 (bonus) needs a second
+  retrieval hop.
 
 The gold set was drafted by an LLM, every citation checked against the source, and the 19 disputed
 points decided by a human (`eval/review/`).
@@ -223,7 +243,6 @@ With another day:
    could list competitors, integrations, pricing reactions, objections, buying signals and the outcome,
    each with a turn reference. "Which customers…" and "what did successful cold calls have in common"
    then become queries over notes instead of hoping similarity search surfaces every relevant turn.
-   The same notes would let a question like "Is SSO on Growth?" weigh all vendor statements at once.
 2. **A map step for "across" questions**: ask each candidate call "what does this call say about X?"
    in parallel (small model, ~20 calls), then synthesise. This trades tokens for recall on exhaustive
    lists, and gives an explicit "no mention" per call, which makes "this list is complete" a claim the

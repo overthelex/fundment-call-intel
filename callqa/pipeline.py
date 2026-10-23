@@ -9,12 +9,17 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .claims import ClaimStore
+from .claims import ClaimStore, Topic
 from .index import Chunk, Index, turn_line
 from .llm import LLM, Usage
 from .parse import Call, Turn, load_calls
 from .prompts import ANSWER_SYSTEM, PLANNER_SYSTEM
 from .verify import CitationCheck, check_citation
+
+# A product-fact question is "specific" and touches one or two topics. A planner that marks more topics,
+# or an "across" question ("which customers asked about SSO?", "what do prospects ask for?"), is
+# describing customers, where every vendor statement would only crowd the excerpts.
+MAX_PRODUCT_TOPICS = 3
 
 # If the candidate calls fit in this many words, send them whole instead of
 # retrieving excerpts. The whole dataset is ~51K words, a single call at most ~5K.
@@ -33,6 +38,9 @@ class Plan(BaseModel):
     vendor_consistency: bool = Field(
         description="True only when the question asks whether OrbitFlow's own statements agree with each other"
     )
+    product_topics: list[Topic] = Field(
+        description="Topics of a question about what is true of OrbitFlow's product or terms; empty otherwise"
+    )
 
 
 class Citation(BaseModel):
@@ -50,6 +58,10 @@ class Claim(BaseModel):
 class Conflict(BaseModel):
     description: str
     citations: list[Citation]
+    better_supported: str = Field(
+        description='Which side the evidence favours, one short phrase, or "cannot tell"'
+    )
+    why: str = Field(description="The reasons, from the weighing criteria; empty if cannot tell")
 
 
 class Answer(BaseModel):
@@ -68,6 +80,7 @@ class Context:
     turns: list[Turn]
     text: str
     chunks: list[Chunk] = field(default_factory=list)
+    claim_topics: list[str] = field(default_factory=list)  # vendor statements appended for these topics
 
     @property
     def words(self) -> int:
@@ -187,6 +200,20 @@ class Pipeline:
         text, turns = self.claims.context(usage)
         return Context("claims", sorted({t.call_id for t in turns}), turns, text)
 
+    def with_vendor_statements(self, context: Context, topics: list[str], usage: Usage | None = None) -> Context:
+        """Add every vendor statement on the question's product topics, from all calls. Retrieval returns
+        the passages most similar to the question, so a product fact stated in six calls and contradicted
+        in one may reach the model as one statement against one; the claims table has all of them."""
+        text, turns = self.claims.context(usage, topics)
+        if not turns:
+            return context
+        have = {(t.call_id, t.idx) for t in context.turns}
+        new = [t for t in turns if (t.call_id, t.idx) not in have]
+        block = ("VENDOR STATEMENTS ON THIS TOPIC (every product statement by OrbitFlow staff on these topics, "
+                 "across all calls)\n" + text)
+        return Context(context.mode, sorted(set(context.call_ids) | {t.call_id for t in turns}),
+                       context.turns + new, context.text + "\n\n" + block, context.chunks, topics)
+
     def answer(self, question: str, context: Context, plan: Plan | None, usage: Usage | None = None) -> Answer:
         notes = ""
         if plan and plan.entity_notes:
@@ -194,6 +221,8 @@ class Pipeline:
         shown = {"full": "whole transcripts", "excerpts": "retrieved excerpts only",
                  "claims": "every product statement by OrbitFlow staff, grouped by topic"}[context.mode]
         scope = f"CONTEXT MODE: {context.mode} ({len(context.call_ids)} of {len(self.calls)} calls shown, {shown})"
+        if context.claim_topics:
+            scope += "\nPlus every OrbitFlow statement on: " + "; ".join(context.claim_topics)
         user = f"{scope}\n\n{notes}TRANSCRIPTS\n{context.text}\n\nQUESTION\n{question}"
         return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort="medium", usage=usage)
 
@@ -222,6 +251,9 @@ class Pipeline:
                 context = self.full_context(ids)
             else:
                 context = self.excerpt_context(question, plan, ids, usage)
+            if (plan.product_topics and len(plan.product_topics) <= MAX_PRODUCT_TOPICS
+                    and plan.scope == "specific" and context.mode != "claims" and not plan.call_ids):
+                context = self.with_vendor_statements(context, plan.product_topics, usage)
 
         answer = self.answer(question, context, plan, usage)
         claim_checks = [self.check(c.citations, context) for c in answer.claims]
