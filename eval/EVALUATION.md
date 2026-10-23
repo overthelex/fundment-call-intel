@@ -129,6 +129,12 @@ citation caught by the checker, abstention 5/5 and ~13K tokens per question.
   question and the Juniper call to answer it. The planner routes to Verity only, so the pipeline
   declines; the baseline answers it.
 - **Long cross-call lists (q02, q05)**: the right calls are in context, but the answer stops early.
+- **Name mismatches (q06 "Acme Corp", q16 "Priya")**: the mapping was made but sat in a note at the
+  bottom that the judge never saw, and the planner could not know about people only mentioned in
+  passing. Fixed on 23.10: first names are checked against every transcript in code
+  (`callqa/names.py`), the notes are printed under the answer and passed to the judge, and the answer
+  is told to open with the reading it chose. q06 became "yes"; for "Priya" the model still often does not
+  repeat the note, so the note itself, from code, is what the user reads.
 
 ## Three worked examples
 
@@ -237,7 +243,8 @@ named in the question each get one excerpt even for narrow questions; figures th
 statements must go into `conflicts`; header metadata became citable; abstention scoring moved from a
 heuristic to the judge; and after an audit of the results the checker started verifying the speaker and
 the call, because one run credited Sarah's words to Maya; q11 led to the vendor-claims table, and q24
-to giving product questions every vendor statement on the topic and weighing conflicts.
+to giving product questions every vendor statement on the topic and weighing conflicts; q06 and q16 to
+checking first names in code and showing the notes on names under the answer.
 
 ## Where the gold set comes from
 

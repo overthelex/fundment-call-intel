@@ -30,6 +30,9 @@ def render(pipe: Pipeline, r: Result) -> str:
     out = [f"\nAnswer  (confidence: {r.confidence}{'' if r.confidence == a.confidence else f', model said {a.confidence}'})"]
     out.append(a.summary)
     out.append(f"  why this confidence: {a.confidence_reason}")
+    if r.plan and r.plan.entity_notes:
+        out.append("\nNotes on names")
+        out.extend(f"  - {x}" for x in r.plan.entity_notes)
     if a.claims:
         out.append("\nEvidence")
         for i, (claim, checks) in enumerate(zip(a.claims, r.claim_checks), 1):
@@ -46,9 +49,6 @@ def render(pipe: Pipeline, r: Result) -> str:
     if a.not_found:
         out.append("\nNot found in the transcripts")
         out.extend(f"  - {x}" for x in a.not_found)
-    if r.plan and r.plan.entity_notes:
-        out.append("\nNotes")
-        out.extend(f"  - {x}" for x in r.plan.entity_notes)
     if r.warnings:
         out.append("\nWarnings")
         out.extend(f"  ! {w}" for w in r.warnings)

@@ -8,16 +8,17 @@ Each quote is then matched against the transcript in code, not taken on trust.
 $ uv run callqa ask "What did Acme Corp say about their current workflow?"
 
 Answer  (confidence: high)
-Acme said its current workflow is fragmented across systems, with handoffs handled in spreadsheets
-and Slack rather than a single workflow layer. ...
+Taking "Acme Corp" to mean Acme Logistics, they said their current workflow is spread across systems:
+sales, onboarding and customer success handoffs are managed through spreadsheets and Slack reminders ...
+
+Notes on names
+  - "Acme Corp" appears to refer to Acme Logistics in CALL-001.
 
 Evidence
   1. Their current workflow is spread across systems, and handoffs are managed through spreadsheets ...
     ✓ CALL-001 [01:51] Rachel Morgan (VP Revenue Operations, Acme Logistics): "All of that is managed through spreadsheets and Slack reminders."
        data/calls/call-001_acme_logistics.txt:31
   ...
-Notes
-  - 'Acme Corp' appears to refer to Acme Logistics in the catalogue.
 
 [full: 1 calls, 4,999 words in context · 2 API calls · 9,266 in / 1,156 out tokens · 7.3s]
 ```
@@ -48,6 +49,7 @@ question
   │
   ├─ 1. plan (LLM, structured)      which calls? (named companies, call kinds) · specific vs across · search queries
   │                                 · name mismatches ("Acme Corp" → Acme Logistics, flagged)
+  │                                 · ambiguous first names, checked in code ("Priya": who speaks, who is only mentioned)
   │                                 · does it ask whether the vendor contradicts itself?
   │                                 · is it about a product fact? which of 12 topics?
   ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic
@@ -100,6 +102,10 @@ question
 3. **The planner sees a catalogue, not the data.** 20 lines of call metadata are enough to resolve
    "Acme Corp", "customers who left" (= churn) or "renewals vs new business" to the right calls. A
    question about something absent from the catalogue (an unknown company) is flagged up front.
+   The catalogue lists only participants, so first names are also checked in code against every
+   transcript (`callqa/names.py`): "Priya" is Priya Shah, the only Priya who speaks on a call, but a
+   Priya Menon (Beacon) and a Priya at Juniper are mentioned. Both kinds of note are printed right
+   under the answer, and the answer is told to open with the reading it chose.
 4. **Confidence is part of the answer contract.** `insufficient` is an expected output, not a failure.
    The verifier can lower confidence but never raise it.
 5. **The baseline is in the code (`--mode full`).** At this dataset size, the whole corpus fits in one
@@ -169,8 +175,8 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 ### Results
 
 29 headline questions, `gpt-5.4-mini` answering, pipeline run 3 times, baseline once. These runs
-(17.10) predate the vendor-claims context and conflict weighing; the current code's run is the last
-paragraph after the table (15 / 14 / 0).
+(17.10) predate the vendor-claims context, conflict weighing and name checks; the runs of the
+current code are the paragraphs after the table.
 Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/README.md).
 
 | | pipeline (`auto`) | whole dataset in prompt (`full`) |
@@ -199,6 +205,16 @@ three reps say so, while the single "all plans" came from one AE who later said 
 sure". Run `eval/results/20261023-204145-auto-weighing.md`: yes / partly / no **15 / 14 / 0**, citation
 validity 1.00 with no failed citations, abstention 5/5 with no false abstentions, ~14.5K prompt tokens.
 Within the judge noise band, but q11 and q24 are now both "yes".
+
+**After the name checks (23.10)**, q06 ("Acme Corp") is "yes" for the first time: the answer opens
+with "Taking Acme Corp to mean Acme Logistics", and the note sits under the answer, where the judge
+now sees it too. For q16 ("Priya") the required mention of the other Priyas is now met by the note,
+from code; the answer still leaves out that her figures were from memory, so it stays "partly". Run
+`eval/results/20261023-210435-auto-names.md`: 14 / 14 / 1. The changes do not touch q05, q11 and
+q29, which moved anyway: q05 is the long list that stops early, q11 found only the SSO contradiction
+this time (both in the previous runs), and q29 was judged as not declining although it says
+"no Enterprise list price, custom priced". That is the noise this eval measures: compare per question,
+not the totals.
 
 What I take from it:
 

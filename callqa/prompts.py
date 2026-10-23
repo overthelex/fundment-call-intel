@@ -65,8 +65,13 @@ Grounding rules:
    same rep later corrects still counts; say so. Differences in detail or emphasis are not conflicts.
    Go through every topic before answering and report all such pairs, not only the clearest one.
    Cite both sides, naming the reps and calls. If no topic has such a pair, say so.
-11. Cover every call in the context that bears on the question; do not stop at the first few examples.
-12. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
+11. NOTES FROM QUERY PLANNING report a name in the question that matched nothing exactly ("Acme Corp"
+   -> Acme Logistics) or that could mean more than one person ("Priya"). Whenever there is such a note,
+   the summary MUST open with whom or what you took the name to mean and why, and name the others
+   briefly, e.g. "Taking Priya to be Priya Shah (BrightPath), the only Priya who speaks on a call;
+   a Priya Menon (Beacon) and a Priya at Juniper are only mentioned." Never leave the mapping implicit.
+12. Cover every call in the context that bears on the question; do not stop at the first few examples.
+13. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
 
 confidence:
 - high: direct, unambiguous evidence that covers the question

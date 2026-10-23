@@ -175,9 +175,11 @@ def fact_scores(item: dict, j: Judgement) -> dict:
     }
 
 
-def answer_text(answer: Answer, confidence: str) -> str:
+def answer_text(answer: Answer, confidence: str, notes: list[str] | None = None) -> str:
+    """What the user sees, including the notes on names printed under the answer."""
     a = answer
     lines = [f"SUMMARY: {a.summary}", f"CONFIDENCE: {confidence} ({a.confidence_reason})"]
+    lines += [f"NOTE ON NAMES: {n}" for n in notes or []]
     lines += [f"- {c.statement}" + "".join(f' [{x.call_id} {x.timestamp} "{x.quote}"]' for x in c.citations) for c in a.claims]
     lines += [f"CONFLICT: {c.description}"
               + (f" | BETTER SUPPORTED: {c.better_supported}" + (f" ({c.why})" if c.why else "") if c.better_supported else "")
@@ -195,7 +197,7 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
     checks = [c for cs in r.claim_checks + r.conflict_checks for c in cs]
     should_abstain = bool(item.get("should_abstain"))
 
-    user = f"QUESTION\n{item['question']}\n\nANSWER\n{answer_text(r.answer, r.confidence)}\n\n{rubric(item)}"
+    user = f"QUESTION\n{item['question']}\n\nANSWER\n{answer_text(r.answer, r.confidence, r.plan.entity_notes if r.plan else None)}\n\n{rubric(item)}"
     j = judge(pipe, user) if use_judge else None
     # a verdict missing for a fact would count as "not stated"; ask again rather than score the gap
     for _ in range(2):

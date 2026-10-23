@@ -50,3 +50,15 @@ def test_chunks_cover_every_turn_and_stay_in_one_call(calls):
         covered = {t.idx for ch in chunks for t in ch.turns}
         assert covered == set(range(len(c.turns)))
         assert all(t.call_id == c.call_id for ch in chunks for t in ch.turns)
+
+
+def test_ambiguous_first_name_lists_speakers_and_mentions():
+    from callqa.names import ambiguous_names
+
+    calls = load_calls(DATA)
+    [note] = ambiguous_names("What did Priya say about her team's backlog?", calls)
+    assert "Priya Shah" in note and "CALL-002" in note
+    assert "Priya Menon at Beacon Housing Trust (CALL-018" in note and "CALL-010" in note
+    assert ambiguous_names("What did Priya Shah say?", calls) == []
+    assert ambiguous_names("What did Maya promise?", calls) == []  # vendor staff: one person across calls
+    assert "Marcus Chen" in ambiguous_names("What did Marcus say?", calls)[0]

@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from .claims import ClaimStore, Topic
 from .index import Chunk, Index, turn_line
 from .llm import LLM, Usage
+from .names import ambiguous_names
 from .parse import Call, Turn, load_calls
 from .prompts import ANSWER_SYSTEM, PLANNER_SYSTEM
 from .verify import CitationCheck, check_citation
@@ -155,6 +156,7 @@ class Pipeline:
         user = f"CALL CATALOGUE\n{catalogue(self.calls_list)}\n\nQUESTION\n{question}"
         plan = self.llm.structured(PLANNER_SYSTEM, user, Plan, reasoning_effort="low", usage=usage)
         plan.call_ids = [c for c in (x.strip().upper() for x in plan.call_ids) if c in self.calls]
+        plan.entity_notes += ambiguous_names(question, self.calls_list)
         return plan
 
     def candidates(self, plan: Plan) -> list[str]:
@@ -223,7 +225,7 @@ class Pipeline:
         scope = f"CONTEXT MODE: {context.mode} ({len(context.call_ids)} of {len(self.calls)} calls shown, {shown})"
         if context.claim_topics:
             scope += "\nPlus every OrbitFlow statement on: " + "; ".join(context.claim_topics)
-        user = f"{scope}\n\n{notes}TRANSCRIPTS\n{context.text}\n\nQUESTION\n{question}"
+        user = f"{scope}\n\nTRANSCRIPTS\n{context.text}\n\n{notes}QUESTION\n{question}"
         return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort="medium", usage=usage)
 
     def check(self, citations: list[Citation], context: Context) -> list[CitationCheck]:

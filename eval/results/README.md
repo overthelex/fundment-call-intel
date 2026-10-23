@@ -14,7 +14,8 @@ in a `Judge:` line; the older ones predate that line, so their judge is listed h
 | `comparison.md` | per-question comparison of the regraded runs (`compare.py`) | - | reviewed | which questions are unstable |
 | `20261023-120606-auto-fresh-clone` | pipeline run from a fresh clone, following the README | Claude Opus | reviewed | reproduction check |
 | `20261023-122047-auto-vendor-claims` | with the vendor-claims context | Claude Opus | reviewed | q11 fixed |
-| `20261023-204145-auto-weighing` | current code: product questions get every vendor statement on the topic, conflicts weighed | Claude Opus | reviewed | **the current numbers** (q11 and q24 fixed) |
+| `20261023-204145-auto-weighing` | product questions get every vendor statement on the topic, conflicts weighed | Claude Opus | reviewed | q24 fixed (15/14/0) |
+| `20261023-210435-auto-names` | current code: plus first-name checks in code, notes on names under the answer and shown to the judge | Claude Opus | reviewed | **the current numbers** (q06 fixed; 14/14/1, see README for what moved) |
 
 The raw 17.10 summaries (7/21/2, 5/24/1, 8/20/2) differ from the headline 14/14/1 because both the
 judge and the rubric changed afterwards: the gold set was reviewed (`../review/`), facts were split
