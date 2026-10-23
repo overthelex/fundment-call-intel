@@ -63,7 +63,7 @@ you count:
 baseline once. All four sets of answers were then re-checked and re-judged against the reviewed gold
 set without regenerating them (`--regrade`). Files in `results/`: `*-auto.*` / `*-full.*` are the
 original runs, `*-regraded.*` the numbers below, `comparison.md` the per-question comparison,
-`*-judge-repeat-opus.*` and `*-judge-gpt54.*` the judge-reliability checks.
+`*-judge-repeat-opus.*` and `*-judge-gpt54.*` the judge-reliability checks. `results/README.md` lists every file with its judge.
 
 Over 29 questions (q30 excluded):
 
@@ -89,7 +89,7 @@ Re-judging the *same* answers of one run with the same Claude judge moved 6 of 3
 between yes and partly (14/14/1 became 8/20/1). So the yes/partly boundary is noise of about ±6 questions, and the identical 14/14/1 in the
 three runs is partly luck. The yes-vs-no line, the abstentions and the deterministic metrics (context
 recall, citation validity, tokens) are stable. Taking the majority of three judge passes would cut the
-noise; the judge has not yet been calibrated against human grades (see the end of this file).
+noise.
 
 A one-off cross-check with `gpt-5.4` as the judge (`results/*-judge-gpt54.*`) agreed with Claude on
 22 of 30 and was stricter on the yes/partly line. It is kept as evidence of how much the choice of
@@ -224,6 +224,4 @@ now requires the two product contradictions and treats commercial concessions as
 graded by tiers, not order; facts were split into core and details.
 
 The choice of what counts as the main point in the undisputed questions has not been reviewed by a
-human, and that review is not a calibration of the judge. The planned calibration: 10 answers,
-stratified by verdict and question type, graded blind by a human, reporting the raw agreement rate and
-explaining every disagreement.
+human.

@@ -126,6 +126,7 @@ uv run python eval/run_eval.py                    # pipeline, all 30 questions
 uv run python eval/run_eval.py --mode full        # baseline: whole dataset in the prompt
 uv run python eval/run_eval.py --only q11,q24     # a subset
 uv run python eval/run_eval.py --regrade eval/results/<run>.json   # re-check and re-judge saved answers, no generation
+uv run python eval/run_eval.py --no-judge         # deterministic metrics only, no Claude Code needed
 uv run python eval/compare.py --auto A1.json A2.json A3.json --full F.json   # per-question comparison
 ```
 
@@ -135,8 +136,9 @@ verdict) and a `.md` summary that names the judge.
 The judge is Claude Opus, a different vendor from the answering model, so it does not grade its own
 blind spots. It runs through a local, logged-in [Claude Code](https://claude.com/claude-code)
 (`claude -p`, tools disabled, structured output), so it needs `claude` on the PATH and no extra key.
-Without it, `run_eval.py` stops before generating any answers. The pipeline itself (`callqa ask`)
-needs only the OpenAI key.
+Without it, `run_eval.py` stops before generating any answers; `--no-judge` still runs everything and
+reports the metrics computed by code (context and cited recall, citation validity, tokens, latency),
+marking the judged ones "not judged". The pipeline itself (`callqa ask`) needs only the OpenAI key.
 
 ### What it measures and why
 
@@ -155,7 +157,9 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 
 ### Results
 
-29 headline questions, `gpt-5.4-mini` answering, pipeline run 3 times, baseline once:
+29 headline questions, `gpt-5.4-mini` answering, pipeline run 3 times, baseline once. These runs
+(17.10) predate the vendor-claims context; the current code's run is the paragraph after the table.
+Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/README.md).
 
 | | pipeline (`auto`) | whole dataset in prompt (`full`) |
 |---|---|---|
@@ -191,8 +195,7 @@ What I take from it:
   of the SSO question but will not weigh them. q30 (bonus) needs a second retrieval hop.
 
 The gold set was drafted by an LLM, every citation checked against the source, and the 19 disputed
-points decided by a human (`eval/review/`). The judge itself is not yet calibrated against human
-grades; the plan for that is in `eval/EVALUATION.md`.
+points decided by a human (`eval/review/`).
 
 ## Known limitations
 
@@ -208,8 +211,8 @@ grades; the plan for that is in `eval/EVALUATION.md`.
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
 - **Header vs body disagreements** are only surfaced when the question touches them.
 - **The gold set is small (30) and LLM-drafted** (see `eval/EVALUATION.md`). The judge is
-  from a different vendor than the answering model, but it is still an LLM, it is noisy on the
-  yes/partly boundary, and it has not been calibrated against human grades.
+  from a different vendor than the answering model, but it is still an LLM and it is noisy on the
+  yes/partly boundary.
 - Single-turn, English, no auth. The transcripts are sent to an external LLM API.
 
 ## With more time
@@ -230,8 +233,8 @@ With another day:
 4. **Entailment check on citations**: a small model checks that each quote supports its claim, not just
    that it exists.
 5. **Better eval**: a majority of 3 judge passes per answer (the judge alone moves ~6 of 30 verdicts),
-   3–5 repeats of the baseline too, a blind human-graded subset to calibrate the judge, and separate
-   retrieval-only tests that need no LLM.
+   3–5 repeats of the baseline too, and a blind human-graded subset (about 10 answers, stratified by
+   verdict and question type) to measure how often the judge agrees with a person.
 
 For production:
 
