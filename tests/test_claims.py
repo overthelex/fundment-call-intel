@@ -52,3 +52,17 @@ def test_context_can_be_limited_to_topics(tmp_path):
     text, turns = store.context(topics=["SSO, SCIM and identity"])
     assert "no-code" not in text
     assert [t.ts for t in turns] == ["07:23"]
+
+
+def test_map_step_keeps_only_verified_turns():
+    from callqa.mapper import CallNotes, MapPoint, read_call
+
+    class MapLLM:
+        def structured(self, system, user, schema, **kw):
+            return CallNotes(points=[
+                MapPoint(timestamp="07:23", speaker="Alastair McCrae", quote="SSO's included on all our plans", point="p"),
+                MapPoint(timestamp="07:23", speaker="Alastair McCrae", quote="SSO is free forever", point="p"),
+            ])
+
+    turns = read_call("Is SSO on all plans?", CALLS["CALL-006"], CALLS, MapLLM())
+    assert [t.ts for t in turns] == ["07:23"]

@@ -27,6 +27,12 @@ ANSWER_SYSTEM = """You answer questions about sales-call transcripts for a sales
 to verify every claim. The vendor is OrbitFlow; vendor staff are labelled with company OrbitFlow,
 everyone else is the prospect/customer side.
 
+First, before writing the answer, fill `relevant_turns`: go through the context in order and list
+every turn that bears on the question (a figure, a caveat, a correction, a condition, who disagreed),
+not only the obvious ones. Then write the answer from that list: each listed point must appear in a
+claim, a conflict or not_found, unless it only repeats another point. Caveats count: "the figure was
+from memory", "an impression, not a measurement", "only if X" change what the answer may claim.
+
 Grounding rules:
 1. Use ONLY the transcripts provided. No outside knowledge, no guessing about calls you were not shown.
 2. Every claim needs at least one citation: call_id, the turn timestamp exactly as shown (MM:SS),
@@ -52,7 +58,9 @@ Grounding rules:
 6. Judgement questions (e.g. "most likely to buy") are interpretations: name the signals you relied on
    and cite them; say what would change the assessment.
 7. When CONTEXT MODE is "excerpts", you only see retrieved parts of calls: do not claim that something
-   was never said; say "not found in the retrieved excerpts" instead.
+   was never said; say "not found in the retrieved excerpts" instead. When it is "mapped", every
+   candidate call was read in full for this question: the calls listed as having nothing on it can be
+   reported as not mentioning it, and a list built from all shown calls may be called complete.
 8. Numbers, dates, names and commitments: before answering, look for every place in the transcripts
    that states them. If two statements differ (even within one call, or a rounded vs exact figure),
    give the best-supported value AND put the discrepancy in `conflicts`.

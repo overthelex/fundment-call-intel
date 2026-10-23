@@ -141,8 +141,11 @@ citation caught by the checker, abstention 5/5 and ~13K tokens per question.
 - **q30 (bonus, two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the
   question and the Juniper call to answer it. The planner routes to Verity only, so the pipeline
   declines; the baseline answers it.
-- **Long cross-call lists (q01, q05, q09)**: the right calls are in context but most supporting turns
-  are not (evidence recall 0.08–0.36); first failed step "retrieval".
+- **Long cross-call lists (q01, q05, q09)**: the right calls were in context but most supporting turns
+  were not (evidence recall 0.08–0.36); first failed step "retrieval". The map step (each candidate
+  call read in full by a cheap pass, `callqa/mapper.py`) raised cross-call evidence recall to 0.89 and
+  q01 and q04 to "yes" (`results/20261023-224354-auto-map`). q09 ("how do renewals differ from new
+  business?") stays at 0.50: a reader of one call cannot see a pattern that only shows across calls.
 - **Name mismatches (q06 "Acme Corp", q16 "Priya")**: the mapping was made but sat in a note at the
   bottom that the judge never saw, and the planner could not know about people only mentioned in
   passing. Fixed on 23.10: first names are checked against every transcript in code
@@ -258,7 +261,9 @@ statements must go into `conflicts`; header metadata became citable; abstention 
 heuristic to the judge; and after an audit of the results the checker started verifying the speaker and
 the call, because one run credited Sarah's words to Maya; q11 led to the vendor-claims table, and q24
 to giving product questions every vendor statement on the topic and weighing conflicts; q06 and q16 to
-checking first names in code and showing the notes on names under the answer.
+checking first names in code and showing the notes on names under the answer; turn-level evidence
+recall to the map step for cross-call questions, and the 7 answer-step failures to an inventory of
+relevant turns written before the answer (tested with `--replay`, so retrieval was held fixed).
 
 ## Where the gold set comes from
 

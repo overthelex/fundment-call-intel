@@ -332,6 +332,7 @@ def regrade(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> 
     if "error" in saved:
         return saved
     res = saved["result"]
+    res["answer"].setdefault("relevant_turns", [])  # runs saved before the inventory
     for c in res["answer"]["conflicts"]:  # runs saved before conflicts were weighed
         c.setdefault("better_supported", "")
         c.setdefault("why", "")

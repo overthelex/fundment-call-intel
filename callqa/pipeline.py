@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from .claims import ClaimStore, Topic
 from .index import Chunk, Index, turn_line
 from .llm import LLM, Usage
+from .mapper import map_calls
 from .names import ambiguous_names
 from .parse import Call, Turn, load_calls
 from .prompts import ANSWER_SYSTEM, PLANNER_SYSTEM
@@ -21,6 +22,11 @@ from .verify import CitationCheck, check_citation
 # or an "across" question ("which customers asked about SSO?", "what do prospects ask for?"), is
 # describing customers, where every vendor statement would only crowd the excerpts.
 MAX_PRODUCT_TOPICS = 3
+
+# The map step reads every candidate call in full for each question: about 6K tokens per call. Above
+# this many candidates it costs more than it is worth at query time, and retrieval is used instead;
+# at scale the same reading belongs at ingestion (README, "Scaling to thousands of calls").
+MAX_MAP_CALLS = 25
 
 # If the candidate calls fit in this many words, send them whole instead of
 # retrieving excerpts. The whole dataset is ~51K words, a single call at most ~5K.
@@ -65,7 +71,18 @@ class Conflict(BaseModel):
     why: str = Field(description="The reasons, from the weighing criteria; empty if cannot tell")
 
 
+class RelevantTurn(BaseModel):
+    call_id: str
+    timestamp: str
+    point: str = Field(description="What this turn contributes to the answer, a few words")
+
+
 class Answer(BaseModel):
+    # Generated first, before the answer: an inventory of every turn that bears on the question, so
+    # the answer is written from a full list instead of from the first few points the model recalls.
+    relevant_turns: list[RelevantTurn] = Field(
+        description="Every turn in the context that bears on the question, in transcript order"
+    )
     summary: str
     claims: list[Claim]
     conflicts: list[Conflict]
@@ -76,7 +93,7 @@ class Answer(BaseModel):
 
 @dataclass
 class Context:
-    mode: Literal["full", "excerpts", "claims"]
+    mode: Literal["full", "excerpts", "claims", "mapped"]
     call_ids: list[str]
     turns: list[Turn]
     text: str
@@ -182,21 +199,45 @@ class Pipeline:
         # vendor can sit in any call, often in a single turn that global top-k misses.
         per_call = 0 if plan.call_ids else (2 if plan.scope == "across" else 1)
         hits = self.index.search(queries, call_ids=call_ids, per_call=per_call, usage=usage)
-        by_call: dict[str, dict[int, Turn]] = {}
+        by_call: dict[str, set[int]] = {}
         for chunk, _ in hits:
-            by_call.setdefault(chunk.call_id, {}).update({t.idx: t for t in chunk.turns})
+            by_call.setdefault(chunk.call_id, set()).update(t.idx for t in chunk.turns)
+        text, turns = self.excerpt_text(by_call)
+        return Context("excerpts", sorted(by_call), turns, text, [c for c, _ in hits])
+
+    def excerpt_text(self, by_call: dict[str, set[int]]) -> tuple[str, list[Turn]]:
         parts, turns = [], []
         for cid in sorted(by_call):
-            call, picked = self.calls[cid], by_call[cid]
+            call, picked = self.calls[cid], sorted(by_call[cid])
             lines, prev = [], None
-            for i in sorted(picked):
+            for i in picked:
                 if prev is not None and i != prev + 1:
                     lines.append("[...]")
-                lines.append(turn_line(call, picked[i]))
+                lines.append(turn_line(call, call.turns[i]))
                 prev = i
             parts.append(call_header(call) + "\n" + "\n".join(lines))
-            turns.extend(picked[i] for i in sorted(picked))
-        return Context("excerpts", sorted(by_call), turns, "\n\n".join(parts), [c for c, _ in hits])
+            turns.extend(call.turns[i] for i in picked)
+        return "\n\n".join(parts), turns
+
+    def mapped_context(
+        self, question: str, plan: Plan, call_ids: list[str], usage: Usage | None = None
+    ) -> Context:
+        """Retrieved excerpts plus, from every candidate call read in full by the map step, each
+        relevant turn with its neighbours (so a reply keeps its question)."""
+        retrieved = self.excerpt_context(question, plan, call_ids, usage)
+        found = map_calls(question, call_ids, self.calls, self.llm, usage)
+        by_call: dict[str, set[int]] = {}
+        for t in retrieved.turns:
+            by_call.setdefault(t.call_id, set()).add(t.idx)
+        for cid, turns in found.items():
+            n = len(self.calls[cid].turns)
+            for t in turns:
+                by_call.setdefault(cid, set()).update(i for i in (t.idx - 1, t.idx, t.idx + 1) if 0 <= i < n)
+        text, turns = self.excerpt_text(by_call)
+        empty = [f"{cid} ({self.calls[cid].company})" for cid, ts in found.items() if not ts]
+        if empty:
+            text += "\n\nCALLS READ IN FULL WITH NOTHING ON THIS QUESTION: " + ", ".join(empty)
+        return Context("mapped", sorted(by_call), turns, text, retrieved.chunks)
 
     def claims_context(self, usage: Usage | None = None) -> Context:
         text, turns = self.claims.context(usage)
@@ -221,7 +262,9 @@ class Pipeline:
         if plan and plan.entity_notes:
             notes = "NOTES FROM QUERY PLANNING\n" + "\n".join(f"- {n}" for n in plan.entity_notes) + "\n\n"
         shown = {"full": "whole transcripts", "excerpts": "retrieved excerpts only",
-                 "claims": "every product statement by OrbitFlow staff, grouped by topic"}[context.mode]
+                 "claims": "every product statement by OrbitFlow staff, grouped by topic",
+                 "mapped": "every candidate call was read in full for this question; shown are the relevant "
+                           "turns with neighbours, plus retrieved excerpts"}[context.mode]
         scope = f"CONTEXT MODE: {context.mode} ({len(context.call_ids)} of {len(self.calls)} calls shown, {shown})"
         if context.claim_topics:
             scope += "\nPlus every OrbitFlow statement on: " + "; ".join(context.claim_topics)
@@ -251,6 +294,8 @@ class Pipeline:
                 context = self.claims_context(usage)
             elif size <= FULL_TEXT_WORD_BUDGET:
                 context = self.full_context(ids)
+            elif plan.scope == "across" and len(ids) <= MAX_MAP_CALLS:
+                context = self.mapped_context(question, plan, ids, usage)
             else:
                 context = self.excerpt_context(question, plan, ids, usage)
             if (plan.product_topics and len(plan.product_topics) <= MAX_PRODUCT_TOPICS

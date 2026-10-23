@@ -54,9 +54,12 @@ question
   │                                 · is it about a product fact? which of 12 topics?
   ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic
   │                                 candidate calls fit in 12K words? → send whole transcripts
+  │                                 question across calls, ≤25 candidates? → map step: each call read in full
+  │                                   by a cheap pass, relevant turns kept (+ retrieved excerpts)
   │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
   │                                 product fact? → plus every vendor statement on that topic, from all calls
-  ├─ 3. answer (LLM, structured)    summary · claims[] each with verbatim quotes · conflicts[] · not_found[]
+  ├─ 3. answer (LLM, structured)    first an inventory of every relevant turn, then the answer from it:
+  │                                 summary · claims[] each with verbatim quotes · conflicts[] · not_found[]
   │                                 · each conflict weighed: better-supported side + why, or "cannot tell"
   │                                 · confidence (high / medium / low / insufficient) + reason
   └─ 4. verify (code)               each quote looked up in the parsed transcript → exact / shifted / fuzzy
@@ -228,6 +231,19 @@ not the totals.
 when excerpts are retrieved (8 cross-call questions; q05 0.08, q01 0.32, q09 0.36, q04 0.41). First
 failed step: answer 7, retrieval 6, attribution 1.
 
+**With the map step and the turn inventory (23.10)**, run `eval/results/20261023-224354-auto-map.md`:
+**20 / 9 / 0**, the first result clearly outside the judge noise band (14–15 "yes" before). Evidence
+recall 0.94 (cross-call questions 0.89, was 0.54), core fact recall 0.81 (was 0.70), abstention 5/5.
+The costs are real: mean prompt tokens 47K per question (was 14.5K; a mapped question reads every
+candidate call, ~139K tokens, about the same as the whole-dataset baseline at 20 calls), mean latency
+42 s under the eval's 4 parallel questions (mapped ones ~90 s), and 6 failed citations instead of 1
+(three quotes from Ember's Noah Williams attached to other calls in mapped answers, three in whole-call
+answers), all caught and marked ✗ by the checker. The inventory alone, replayed on the 7 questions that
+failed in the answer step, raised core recall 0.64 → 0.69 and atomic 0.48 → 0.56 (two replays each),
+without changing verdicts: the facts it still misses are context around a correct direct answer.
+The map step is capped at 25 candidate calls; why it does not scale and what replaces it is in
+*Scaling to thousands of calls*.
+
 What I take from it:
 
 - **Two different bottlenecks.** Questions about one or a few calls get whole transcripts, so
@@ -235,7 +251,7 @@ What I take from it:
   across all calls get retrieved excerpts, and there retrieval is the bottleneck: about half the
   supporting turns never reach the model. Earlier versions of this README said "retrieval is not the
   bottleneck", based on call-level recall only; turn-level recall showed that was wrong for
-  cross-call questions. The fix is in *With more time* (a map step over every candidate call).
+  cross-call questions. The map step closes most of that gap (0.54 → 0.89), at query-time cost.
 - **The pipeline is no worse than the brute-force baseline at ~1/9 of the tokens, and its quotes are
   more reliable.** Not "better": re-judging the same answers with the same judge moved 6 of 30
   verdicts between yes and partly. The deterministic metrics and the yes-vs-no line are stable; the yes/partly split is not.
@@ -288,15 +304,14 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
 
 With another day:
 
-1. **More per-call notes at index time.** Vendor claims are already extracted this way. The same pass
-   could list competitors, integrations, pricing reactions, objections, buying signals and the outcome,
-   each with a turn reference. "Which customers…" and "what did successful cold calls have in common"
-   then become queries over notes instead of hoping similarity search surfaces every relevant turn.
-2. **A map step for "across" questions**: ask each candidate call "what does this call say about X?"
-   in parallel (small model, ~20 calls), then synthesise. This trades tokens for recall on exhaustive
-   lists, and gives an explicit "no mention" per call, which makes "this list is complete" a claim the
-   system can back. This is the first thing I would do: evidence recall on retrieved excerpts is 0.54
-   against 0.96 on whole calls, and `--replay` plus evidence recall would show whether it closes the gap.
+1. **Per-call notes at index time instead of the map step.** The map step proves the point (evidence
+   recall on cross-call questions 0.54 → 0.87) but pays for it on every question. Vendor claims are
+   already extracted once per call; the same pass could list competitors, integrations, pricing
+   reactions, objections, buying signals and the outcome, each with a turn reference. "Which
+   customers…" then becomes a query over notes, at the cost of retrieval, not of reading every call.
+2. **A full-context control for the map step**: the same 8 cross-call questions with all transcripts in
+   the prompt (same token cost at 20 calls), to show whether reading call by call beats one big prompt
+   on completeness and misattribution, not only on evidence recall.
 3. **A second retrieval hop**: let the answer step request more context ("need: the call where an
    engineer reviewed an exported definition") before answering; this fixes q30-type questions.
 4. **Entailment check on citations**: a small model checks that each quote supports its claim, not just
@@ -305,15 +320,28 @@ With another day:
    3–5 repeats of the baseline too, and a blind human-graded subset (about 10 answers, stratified by
    verdict and question type) to measure how often the judge agrees with a person.
 
-For production:
+### Scaling to thousands of calls
+
+The rule: reading calls is paid for once, at ingestion, not on every question; a question should
+cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per question:
+
+| part | now | at thousands of calls | what to do instead |
+|---|---|---|---|
+| map step (read each candidate call) | ~120K tokens, ~80 s | ~6K tokens × every call: millions of tokens, minutes | per-call notes at ingestion, queried with filters; map only over a shortlist of 20–50 calls (already capped at 25) |
+| all vendor claims in one prompt (q11) | 587 claims | tens of thousands, does not fit | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
+| every vendor statement on a topic (q24) | 9 calls on SSO | hundreds per topic | the same table: "SAML SSO: Enterprise, 9 calls / 3 reps; all plans, 1 call, later hedged"; weighing becomes counting |
+| catalogue in the planner prompt | 20 lines | does not fit | metadata filters plus fuzzy search over companies and people |
+| per-call excerpt quota | 20 calls | thousands of excerpts | quota after filtering, on the top-N calls |
+| name check over all transcripts | ms | slow | a name index built at ingestion |
+| claim extraction, embeddings | once per call | once per call, incremental | fine as is: cached by content hash |
+| citation check, inventory, eval | per answer | per answer | fine as is |
+
+### Production
 
 - **Ingestion**: new calls arrive as events; parse → chunk → embed → extract notes per call,
   idempotent by call id + content hash (the embedding cache already works this way). A proper store
   (Postgres + pgvector or a vector DB) replaces in-memory numpy/BM25, with metadata filters (date,
   segment, rep, stage) in the query.
-- **Scale**: at thousands of calls, the planner cannot see a catalogue in its prompt; it becomes a
-  structured filter step over call metadata plus notes. Per-call quotas need a cap (top-N calls by
-  relevance first). The full-context mode stops being an option.
 - **Security and privacy**: transcripts hold customer PII and commercial terms. That means
   tenant/role-based access applied as a retrieval filter (a rep sees their own accounts, a manager
   their team's), a region-pinned LLM endpoint with no training on data and zero/limited retention,

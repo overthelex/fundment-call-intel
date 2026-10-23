@@ -16,7 +16,11 @@ in a `Judge:` line; the older ones predate that line, so their judge is listed h
 | `20261023-122047-auto-vendor-claims` | with the vendor-claims context | Claude Opus | reviewed | q11 fixed |
 | `20261023-204145-auto-weighing` | product questions get every vendor statement on the topic, conflicts weighed | Claude Opus | reviewed | q24 fixed (15/14/0) |
 | `20261023-210435-auto-names` | plus first-name checks in code, notes on names under the answer and shown to the judge | Claude Opus | reviewed | q06 fixed (14/14/1) |
-| `20261023-214420-auto-diagnostics` | current code; saves the exact context; adds evidence recall and the failed step per question | Claude Opus | reviewed | **the current numbers** (14/15/0; evidence recall 0.82, excerpts 0.54) |
+| `20261023-214420-auto-diagnostics` | saves the exact context; adds evidence recall and the failed step per question | Claude Opus | reviewed | 14/15/0; evidence recall 0.82, excerpts 0.54 |
+| `…-diagnostics-replay-base`, `-base2` | the 7 answer-step failures re-answered on the saved contexts, code unchanged | Claude Opus | reviewed | variance of the answer step alone |
+| `…-diagnostics-replay-inv-a`, `-inv-b` | the same, with the turn inventory | Claude Opus | reviewed | effect of the inventory (core 0.64 → 0.69) |
+| `20261023-223336-auto-map-subset` | the 8 cross-call questions with the map step | Claude Opus | reviewed | evidence recall 0.54 → 0.87 on them |
+| `20261023-224354-auto-map` | current code: map step (≤25 calls) and turn inventory | Claude Opus | reviewed | **the current numbers** (20/9/0; evidence recall 0.94; 47K tokens/question) |
 
 The raw 17.10 summaries (7/21/2, 5/24/1, 8/20/2) differ from the headline 14/14/1 because both the
 judge and the rubric changed afterwards: the gold set was reviewed (`../review/`), facts were split
