@@ -320,6 +320,20 @@ is in `--json` → `steps`, and the eval reports p50/p95 and the answer step's o
 | answer step output tokens, mean | 6.3K | 1.3K |
 | yes / partly / no · core · atomic | 16 / 13 / 0 · 0.79 · 0.67 | 18 / 10 / 1 · 0.80 · 0.67 |
 
+The 11 example questions from the task, run one at a time (`--only q01,…,q11 --workers 1`):
+
+| | medium (`…-002657-auto-examples-medium`) | low (`…-001127-auto-examples-low`) |
+|---|---|---|
+| mean / median / slowest | 72.9 / 61.3 / 175.5 s | **17.1 / 18.2 / 26.3 s** (4.3× faster) |
+| all 11 in a row | 13.4 min | 3.2 min |
+| yes / partly / no · core recall | 8 / 3 / 0 · 0.82 | 6 / 4 / 1 · 0.84 |
+
+On these 11, completeness is the same but three verdicts moved down (q02 and q05 to "partly", q10 to
+"no", the recurring "all five cold calls got a follow-up") and one up (q08); on the full 29 the
+direction was the opposite (18 vs 16 "yes"). Both are within the judge noise, so the honest summary
+is: 3–4× faster, same completeness, verdicts within noise and slightly lower on the task's examples.
+If that matters more than speed, medium reasoning can be used for cross-call questions only.
+
 What was tried, measured on the full eval:
 
 - **Shorter inventory** (call and timestamp only, no description per turn): no gain. Most output

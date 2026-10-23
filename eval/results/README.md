@@ -24,6 +24,7 @@ in a `Judge:` line; the older ones predate that line, so their judge is listed h
 | `20261023-231007-auto-notes` | cross-call questions use notes written at ingestion | Claude Opus | reviewed | 16/13/0; evidence recall 0.86; 17K tokens/question |
 | `20261023-235550-auto-compact` | inventory as call + timestamp only; adds per-step timings | Claude Opus | reviewed | 16/13/0; latency 36 s mean, 129 s p95 |
 | `20261023-235835-auto-effort-low` | current code: low reasoning in the answer step | Claude Opus | reviewed | **the current numbers** (18/10/1; core 0.80; latency 9.9 s mean, 21.7 s p95) |
+| `20261024-001127-auto-examples-low`, `20261024-002657-auto-examples-medium` | the task's 11 example questions, one at a time, low vs medium reasoning | Claude Opus | reviewed | latency 17.1 s vs 72.9 s mean; 6/4/1 vs 8/3/0 |
 
 The raw 17.10 summaries (7/21/2, 5/24/1, 8/20/2) differ from the headline 14/14/1 because both the
 judge and the rubric changed afterwards: the gold set was reviewed (`../review/`), facts were split
