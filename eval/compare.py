@@ -1,7 +1,7 @@
 """Paired, per-question comparison of graded runs.
 
   uv run python eval/compare.py --auto A1.json A2.json A3.json --full F.json \
-      [--agree "judge repeat" A1.json A1-again.json] [--agree "opus vs gpt-5.4" A1.json A1-gpt.json]
+      [--agree "judge repeat" A1.json A1-again.json] [--agree "two judges" A1.json A1-other.json]
 
 Shows, per question, the verdict of every auto run and of the full-context baseline, flags questions
 where the auto runs disagree with each other (unstable) and where the baseline differs from the auto

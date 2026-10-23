@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -94,57 +95,23 @@ class Judgement(BaseModel):
     declines: bool
 
 
-# "openai": JUDGE_MODEL on the same OpenAI-compatible API as the pipeline.
-# "anthropic": Claude through the Anthropic API (ANTHROPIC_API_KEY); the default whenever that key is set.
-# "claude-cli": Claude through a local, logged-in Claude Code (`claude -p`), no API key needed.
-JUDGE_BACKEND = os.environ.get("JUDGE_BACKEND") or ("anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "openai")
-CLAUDE_JUDGE_MODEL = os.environ.get("CLAUDE_JUDGE_MODEL") or ("opus" if JUDGE_BACKEND == "claude-cli" else "claude-opus-5-5")
+# The judge is Claude Opus, a different vendor from the answering model, run through a local,
+# logged-in Claude Code (`claude -p`) with tools, MCP servers and settings disabled.
+CLAUDE_JUDGE_MODEL = os.environ.get("CLAUDE_JUDGE_MODEL", "opus")
 
 
-def inline_refs(schema: dict) -> dict:
-    """Pydantic puts nested models under $defs; inline them so the schema is self-contained."""
-    defs = schema.get("$defs", {})
-
-    def walk(x):
-        if isinstance(x, dict):
-            if "$ref" in x:
-                return walk(defs[x["$ref"].split("/")[-1]])
-            return {k: walk(v) for k, v in x.items() if k != "$defs"}
-        if isinstance(x, list):
-            return [walk(v) for v in x]
-        return x
-
-    return walk(schema)
+def check_judge() -> None:
+    """Fail before generating any answers, not after."""
+    if not shutil.which("claude"):
+        raise SystemExit("The evaluation judge runs through Claude Code: install it and log in (`claude`), see README.")
 
 
-def judge_anthropic(user: str, client=None) -> Judgement:
-    """Forced tool call: the tool's input schema is the Judgement model, so the reply is structured."""
-    if client is None:
-        import anthropic
-
-        client = anthropic.Anthropic(max_retries=8)
-    tool = {"name": "record_judgement", "description": "Record the grading of the answer.",
-            "input_schema": inline_refs(Judgement.model_json_schema())}
-    msg = client.messages.create(
-        model=CLAUDE_JUDGE_MODEL, max_tokens=4096, system=JUDGE_SYSTEM,
-        messages=[{"role": "user", "content": user}],
-        tools=[tool], tool_choice={"type": "tool", "name": tool["name"]},
-    )
-    block = next(b for b in msg.content if b.type == "tool_use")
-    return Judgement.model_validate(block.input)
-
-
-def judge_name(pipe: Pipeline) -> str:
-    return f"{JUDGE_BACKEND}:{pipe.llm.judge_model if JUDGE_BACKEND == 'openai' else CLAUDE_JUDGE_MODEL}"
+def judge_name() -> str:
+    return f"claude-cli:{CLAUDE_JUDGE_MODEL}"
 
 
 def judge(pipe: Pipeline, user: str) -> Judgement:
-    """The judge can be a different vendor from the answering model, so it does not share its blind spots."""
-    if JUDGE_BACKEND == "anthropic":
-        return judge_anthropic(user)
-    if JUDGE_BACKEND != "claude-cli":
-        return pipe.llm.structured(JUDGE_SYSTEM, user, Judgement, model=pipe.llm.judge_model, reasoning_effort="low")
-    # Claude Code headless under the local login, with tools, MCP servers and settings disabled
+    """A different vendor from the answering model, so the judge does not share its blind spots."""
     cmd = [
         "claude", "-p", "--model", CLAUDE_JUDGE_MODEL, "--system-prompt", JUDGE_SYSTEM,
         "--tools", "", "--strict-mcp-config", "--setting-sources", "", "--no-session-persistence",
@@ -373,6 +340,7 @@ def main() -> None:
     ap.add_argument("--suffix", default="regraded", help="output name suffix for --regrade")
     args = ap.parse_args()
 
+    check_judge()
     items = yaml.safe_load(args.questions.read_text())
     if args.only:
         wanted = set(args.only.split(","))
@@ -393,7 +361,7 @@ def main() -> None:
     out_dir = ROOT / "eval" / "results"
     out_dir.mkdir(exist_ok=True)
     (out_dir / f"{label}.json").write_text(json.dumps(rows, indent=2, ensure_ascii=False))
-    report = summarise(rows, mode, judge_name(pipe))
+    report = summarise(rows, mode, judge_name())
     (out_dir / f"{label}.md").write_text(report + "\n")
     print(report)
     print(f"\nTotal tokens: {pipe.llm.usage.snapshot()}")

@@ -4,7 +4,6 @@ Configuration comes from the environment (or `.env`):
   LLM_API_KEY / OPENAI_API_KEY   API key
   LLM_BASE_URL                   optional, e.g. https://<resource>.openai.azure.com/openai/v1/
   CHAT_MODEL                     model used for planning and answering
-  JUDGE_MODEL                    model used by the evaluator
   EMBED_MODEL                    embedding model
 """
 
@@ -57,7 +56,6 @@ class LLM:
             api_key=api_key, base_url=os.environ.get("LLM_BASE_URL") or None, max_retries=8, timeout=180
         )
         self.chat_model = os.environ.get("CHAT_MODEL", "gpt-5.4-mini")
-        self.judge_model = os.environ.get("JUDGE_MODEL", "gpt-5.4")
         self.embed_model = os.environ.get("EMBED_MODEL", "text-embedding-3-small")
         self.usage = Usage()
 

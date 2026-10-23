@@ -2,8 +2,7 @@
 
   uv run python eval/calibrate.py eval/review/calibration_2026-10-23.json \
       --judge "Claude Opus" eval/results/20261017-155023-auto-regraded.json \
-      --judge "Claude Opus, repeat" eval/results/20261017-155023-auto-judge-repeat-opus.json \
-      --judge "gpt-5.4" eval/results/20261017-155023-auto-judge-gpt54.json
+      --judge "Claude Opus, repeat" eval/results/20261017-155023-auto-judge-repeat-opus.json
 
 The human file maps sample ids (a01..a10) to {"verdict": "yes|partly|no", "note": "..."};
 eval/review/calibration_sample.json maps the sample ids to question ids.

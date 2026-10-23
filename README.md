@@ -39,8 +39,7 @@ uv run pytest                           # offline unit tests (parser, chunking, 
 
 The client speaks the OpenAI API. With a plain OpenAI key, set only `LLM_API_KEY`. For Azure AI Foundry
 (what I ran on), also set `LLM_BASE_URL=https://<resource>.openai.azure.com/openai/v1/`; model names
-are then deployment names. Defaults: `CHAT_MODEL=gpt-5.4-mini`, `JUDGE_MODEL=gpt-5.4`,
-`EMBED_MODEL=text-embedding-3-small`.
+are then deployment names. Defaults: `CHAT_MODEL=gpt-5.4-mini`, `EMBED_MODEL=text-embedding-3-small`.
 
 ## Approach
 
@@ -119,14 +118,13 @@ uv run python eval/compare.py --auto A1.json A2.json A3.json --full F.json   # p
 ```
 
 Each run writes `eval/results/<timestamp>-<mode>.json` (every answer, plan, citation check and
-verdict) and a `.md` summary that names the judge. The judge should not be the answering model's own
-family, so it does not grade its own blind spots:
+verdict) and a `.md` summary that names the judge.
 
-- with `ANTHROPIC_API_KEY` set, the judge is Claude Opus through the Anthropic API (the setup the
-  results below were produced with, there through a local `claude` CLI: `JUDGE_BACKEND=claude-cli`);
-- without it, the judge falls back to `JUDGE_MODEL` (`gpt-5.4`) on the same API, so an OpenAI key
-  alone is enough to run everything. That judge is from the answering model's own family; the fallback
-  trades independence for zero extra setup.
+The judge is Claude Opus, a different vendor from the answering model, so it does not grade its own
+blind spots. It runs through a local, logged-in [Claude Code](https://claude.com/claude-code)
+(`claude -p`, tools disabled, structured output), so it needs `claude` on the PATH and no extra key.
+Without it, `run_eval.py` stops before generating any answers. The pipeline itself (`callqa ask`)
+needs only the OpenAI key.
 
 ### What it measures and why
 
@@ -156,12 +154,9 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 | abstention: right on unanswerable / false on answerable | 5/5 · 0–1 of 24 | 5/5 · 0 of 24 |
 | prompt tokens per question | ~13K | 122K |
 
-**If you rerun it with the default judge (`gpt-5.4`), expect fewer "yes".** A run from a fresh clone
-of this repo on 23.10 (`eval/results/20261023-113918-auto-fresh-clone.md`) gave 8 / 18 / 3, and
-`gpt-5.4` grading the *same* answers as the first pipeline run gave 11 / 16 / 2: it is a stricter judge than
-Claude on the yes/partly line. What reproduces exactly is the deterministic part: context recall
-1.00, citation validity 1.00, abstention 5/5 with no false abstentions, ~13K prompt tokens, and the
-known failures (q11, q30).
+A pipeline run from a fresh clone of this repo on 23.10 reproduced the deterministic part exactly:
+context recall 1.00, citation validity 1.00, abstention 5/5 with no false abstentions, ~13K prompt
+tokens, and the same failures (q11, q30).
 
 What I take from it:
 
@@ -169,7 +164,7 @@ What I take from it:
   in the answer step (long lists stop early) or in questions about *relationships between calls*.
 - **The pipeline is no worse than the brute-force baseline at ~1/9 of the tokens, and its quotes are
   more reliable.** Not "better": re-judging the same answers with the same judge moved 6 of 30
-  verdicts between yes and partly, and two judges (Claude, `gpt-5.4`) agree on 22 of 30. The
+  verdicts between yes and partly. The
   deterministic metrics and the yes-vs-no line are stable; the yes/partly split is not.
 - **Unanswerable and near-miss questions work** in all runs (Kestrel's ERP, ISO 27001, Enterprise price).
 - **Known failures**: q11 ("has the vendor given inconsistent answers?") is wrong in every run: the two

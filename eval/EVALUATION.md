@@ -86,16 +86,16 @@ Over 29 questions (q30 excluded):
 ### How far the judge can be trusted
 
 Re-judging the *same* answers of one run with the same Claude judge moved 6 of 30 verdicts, all
-between yes and partly (14/14/1 became 8/20/1). Claude and `gpt-5.4` agree on 22 of 30 for the same
-answers. So the yes/partly boundary is noise of about ±6 questions, and the identical 14/14/1 in the
+between yes and partly (14/14/1 became 8/20/1). So the yes/partly boundary is noise of about ±6 questions, and the identical 14/14/1 in the
 three runs is partly luck. The yes-vs-no line, the abstentions and the deterministic metrics (context
 recall, citation validity, tokens) are stable. Taking the majority of three judge passes would cut the
 noise; the judge has not yet been calibrated against human grades (see the end of this file).
 
-The default judge is `gpt-5.4`, so that is what a rerun uses. It is stricter on the yes/partly line:
-a run from a fresh clone on 23.10 (`results/20261023-113918-auto-fresh-clone.md`) gave 8 / 18 / 3,
-with context recall 1.00, citation validity 1.00, abstention 5/5 and ~13K tokens per question, the
-same as the Claude-judged runs.
+A one-off cross-check with `gpt-5.4` as the judge (`results/*-judge-gpt54.*`) agreed with Claude on
+22 of 30 and was stricter on the yes/partly line. It is kept as evidence of how much the choice of
+judge moves the numbers; the evaluation uses Claude only, from a different vendor than the answering
+model. A pipeline run from a fresh clone on 23.10 reproduced the deterministic metrics exactly
+(context recall 1.00, citation validity 1.00, abstention 5/5, ~13K tokens per question).
 
 ### Reading the numbers
 
