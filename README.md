@@ -154,9 +154,10 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 | abstention: right on unanswerable / false on answerable | 5/5 · 0–1 of 24 | 5/5 · 0 of 24 |
 | prompt tokens per question | ~13K | 122K |
 
-A pipeline run from a fresh clone of this repo on 23.10 reproduced the deterministic part exactly:
-context recall 1.00, citation validity 1.00, abstention 5/5 with no false abstentions, ~13K prompt
-tokens, and the same failures (q11, q30).
+A fourth run from a fresh clone of this repo on 23.10, following this README
+(`eval/results/20261023-120606-auto-fresh-clone.md`, 3 min): yes / partly / no 12 / 16 / 1, context
+recall 1.00, one citation attached to the wrong call (caught by the checker), abstention 5/5 with no
+false abstentions, ~13K prompt tokens, and the same failures (q11, q30).
 
 What I take from it:
 
@@ -164,8 +165,7 @@ What I take from it:
   in the answer step (long lists stop early) or in questions about *relationships between calls*.
 - **The pipeline is no worse than the brute-force baseline at ~1/9 of the tokens, and its quotes are
   more reliable.** Not "better": re-judging the same answers with the same judge moved 6 of 30
-  verdicts between yes and partly. The
-  deterministic metrics and the yes-vs-no line are stable; the yes/partly split is not.
+  verdicts between yes and partly. The deterministic metrics and the yes-vs-no line are stable; the yes/partly split is not.
 - **Unanswerable and near-miss questions work** in all runs (Kestrel's ERP, ISO 27001, Enterprise price).
 - **Known failures**: q11 ("has the vendor given inconsistent answers?") is wrong in every run: the two
   sides of each contradiction sit in different calls and similarity search does not find

@@ -94,8 +94,9 @@ noise; the judge has not yet been calibrated against human grades (see the end o
 A one-off cross-check with `gpt-5.4` as the judge (`results/*-judge-gpt54.*`) agreed with Claude on
 22 of 30 and was stricter on the yes/partly line. It is kept as evidence of how much the choice of
 judge moves the numbers; the evaluation uses Claude only, from a different vendor than the answering
-model. A pipeline run from a fresh clone on 23.10 reproduced the deterministic metrics exactly
-(context recall 1.00, citation validity 1.00, abstention 5/5, ~13K tokens per question).
+model. A fourth pipeline run from a fresh clone on 23.10 (`results/20261023-120606-auto-fresh-clone.md`,
+Claude judge) gave 12 / 16 / 1, inside that noise band, with context recall 1.00, one wrong-call
+citation caught by the checker, abstention 5/5 and ~13K tokens per question.
 
 ### Reading the numbers
 
