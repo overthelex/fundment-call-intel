@@ -7,12 +7,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
 
+import numpy as np
 from pydantic import BaseModel, Field
 
 from .claims import ClaimStore, Topic
 from .index import Chunk, Index, turn_line
 from .llm import LLM, Usage
 from .mapper import map_calls
+from .notes import NoteField
+from .store import Store
 from .names import ambiguous_names
 from .parse import Call, Turn, load_calls
 from .prompts import ANSWER_SYSTEM, PLANNER_SYSTEM
@@ -23,10 +26,13 @@ from .verify import CitationCheck, check_citation
 # describing customers, where every vendor statement would only crowd the excerpts.
 MAX_PRODUCT_TOPICS = 3
 
-# The map step reads every candidate call in full for each question: about 6K tokens per call. Above
-# this many candidates it costs more than it is worth at query time, and retrieval is used instead;
-# at scale the same reading belongs at ingestion (README, "Scaling to thousands of calls").
+# How questions across calls get their context: "notes" selects the notes written at ingestion (cost
+# independent of the number of calls); "map" reads every candidate call at question time (kept for
+# comparison, capped at MAX_MAP_CALLS); "retrieval" uses excerpts only.
+Across = Literal["notes", "map", "retrieval"]
 MAX_MAP_CALLS = 25
+# At most this many notes go to the answer step, best first by similarity to the question.
+NOTE_BUDGET = 250
 
 # If the candidate calls fit in this many words, send them whole instead of
 # retrieving excerpts. The whole dataset is ~51K words, a single call at most ~5K.
@@ -47,6 +53,9 @@ class Plan(BaseModel):
     )
     product_topics: list[Topic] = Field(
         description="Topics of a question about what is true of OrbitFlow's product or terms; empty otherwise"
+    )
+    note_fields: list[NoteField] = Field(
+        description="For a question across calls, the note fields that hold the answer; empty = all"
     )
 
 
@@ -93,7 +102,7 @@ class Answer(BaseModel):
 
 @dataclass
 class Context:
-    mode: Literal["full", "excerpts", "claims", "mapped"]
+    mode: Literal["full", "excerpts", "claims", "mapped", "notes"]
     call_ids: list[str]
     turns: list[Turn]
     text: str
@@ -160,12 +169,14 @@ def catalogue(calls: list[Call]) -> str:
 
 
 class Pipeline:
-    def __init__(self, data_dir: Path = Path("data"), llm: LLM | None = None) -> None:
+    def __init__(self, data_dir: Path = Path("data"), llm: LLM | None = None, across: Across = "notes") -> None:
         self.llm = llm or LLM()
         self.calls_list = load_calls(data_dir)
         self.calls = {c.call_id: c for c in self.calls_list}
         self.index = Index(self.calls_list, self.llm)
-        self.claims = ClaimStore(self.calls_list, self.llm)
+        self.store = Store(self.calls_list, self.llm)
+        self.claims = ClaimStore(self.calls_list, self.store)
+        self.across = across
 
     # -- steps -------------------------------------------------------------
 
@@ -239,6 +250,34 @@ class Pipeline:
             text += "\n\nCALLS READ IN FULL WITH NOTHING ON THIS QUESTION: " + ", ".join(empty)
         return Context("mapped", sorted(by_call), turns, text, retrieved.chunks)
 
+    def notes_context(
+        self, question: str, plan: Plan, call_ids: list[str], usage: Usage | None = None
+    ) -> Context:
+        """Retrieved excerpts plus the turns behind the ingestion notes in the question's fields, best
+        first by similarity, up to NOTE_BUDGET; a short reply also brings the turn before it."""
+        self.store.ensure(usage)
+        retrieved = self.excerpt_context(question, plan, call_ids, usage)
+        notes, vecs = self.store.notes(call_ids, plan.note_fields or None)
+        if len(notes) > NOTE_BUDGET:
+            qv = np.asarray(self.llm.embed([question], usage=usage)[0], dtype=np.float32)
+            keep = np.argsort(-(vecs @ (qv / np.linalg.norm(qv))))[:NOTE_BUDGET]
+            notes = [notes[i] for i in sorted(keep)]
+        by_call: dict[str, set[int]] = {}
+        for t in retrieved.turns:
+            by_call.setdefault(t.call_id, set()).add(t.idx)
+        for n in notes:
+            turn = self.calls[n.call_id].turns[n.turn_idx]
+            by_call.setdefault(n.call_id, set()).add(n.turn_idx)
+            if n.turn_idx > 0 and len(turn.text.split()) < 20:
+                by_call[n.call_id].add(n.turn_idx - 1)
+        text, turns = self.excerpt_text(by_call)
+        noted = {n.call_id for n in notes}
+        empty = [f"{cid} ({self.calls[cid].company})" for cid in call_ids if cid not in noted]
+        if empty:
+            fields = "; ".join(plan.note_fields) if plan.note_fields else "any field"
+            text += f"\n\nCALLS WITH NO NOTES ON {fields.upper()}: " + ", ".join(empty)
+        return Context("notes", sorted(by_call), turns, text, retrieved.chunks)
+
     def claims_context(self, usage: Usage | None = None) -> Context:
         text, turns = self.claims.context(usage)
         return Context("claims", sorted({t.call_id for t in turns}), turns, text)
@@ -264,7 +303,10 @@ class Pipeline:
         shown = {"full": "whole transcripts", "excerpts": "retrieved excerpts only",
                  "claims": "every product statement by OrbitFlow staff, grouped by topic",
                  "mapped": "every candidate call was read in full for this question; shown are the relevant "
-                           "turns with neighbours, plus retrieved excerpts"}[context.mode]
+                           "turns with neighbours, plus retrieved excerpts",
+                 "notes": "every call was read in full when it was ingested and its points noted by field; shown "
+                          "are the turns behind the notes in the fields this question needs, plus retrieved "
+                          "excerpts"}[context.mode]
         scope = f"CONTEXT MODE: {context.mode} ({len(context.call_ids)} of {len(self.calls)} calls shown, {shown})"
         if context.claim_topics:
             scope += "\nPlus every OrbitFlow statement on: " + "; ".join(context.claim_topics)
@@ -294,7 +336,9 @@ class Pipeline:
                 context = self.claims_context(usage)
             elif size <= FULL_TEXT_WORD_BUDGET:
                 context = self.full_context(ids)
-            elif plan.scope == "across" and len(ids) <= MAX_MAP_CALLS:
+            elif plan.scope == "across" and self.across == "notes":
+                context = self.notes_context(question, plan, ids, usage)
+            elif plan.scope == "across" and self.across == "map" and len(ids) <= MAX_MAP_CALLS:
                 context = self.mapped_context(question, plan, ids, usage)
             else:
                 context = self.excerpt_context(question, plan, ids, usage)

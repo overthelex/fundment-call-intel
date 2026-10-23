@@ -146,6 +146,10 @@ citation caught by the checker, abstention 5/5 and ~13K tokens per question.
   call read in full by a cheap pass, `callqa/mapper.py`) raised cross-call evidence recall to 0.89 and
   q01 and q04 to "yes" (`results/20261023-224354-auto-map`). q09 ("how do renewals differ from new
   business?") stays at 0.50: a reader of one call cannot see a pattern that only shows across calls.
+  Because the map step pays for a full read on every question, the default became notes written at
+  ingestion (`callqa/notes.py`, `callqa/store.py`). On the 7 cross-call questions that use it: 5
+  "yes" (map 4, retrieval 3), core recall 0.75 (map 0.84, retrieval 0.66), evidence recall 0.65 (map
+  0.89, retrieval 0.48), for ~26K tokens each instead of ~139K (`results/20261023-231007-auto-notes`).
 - **Name mismatches (q06 "Acme Corp", q16 "Priya")**: the mapping was made but sat in a note at the
   bottom that the judge never saw, and the planner could not know about people only mentioned in
   passing. Fixed on 23.10: first names are checked against every transcript in code

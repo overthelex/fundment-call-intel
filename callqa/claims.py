@@ -8,16 +8,12 @@ consistency question then sees all statements on each topic side by side, and a 
 statements under the same topic that cannot both be true.
 
 Every extracted quote is checked against the transcript like any citation; ones that fail are dropped.
-Results are cached per call content, model and prompt version.
+Extraction runs once per call at ingestion (`store.py`); the claims live in the ingestion store.
 """
 
 from __future__ import annotations
 
-import hashlib
-import json
-from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
@@ -25,6 +21,9 @@ from .index import turn_line
 from .llm import LLM, Usage
 from .parse import Call, Turn
 from .verify import check_citation
+
+if TYPE_CHECKING:
+    from .store import Store
 
 PROMPT_VERSION = "claims-v2"
 
@@ -83,11 +82,6 @@ class StoredClaim(BaseModel):
     quote: str
 
 
-def _digest(call: Call, llm: LLM) -> str:
-    raw = "\x00".join(t.text for t in call.turns) + llm.chat_model + PROMPT_VERSION
-    return hashlib.sha256(raw.encode()).hexdigest()[:16]
-
-
 def extract(call: Call, calls: dict[str, Call], llm: LLM, usage: Usage | None = None) -> list[StoredClaim]:
     text = "\n".join(turn_line(call, t) for t in call.turns)
     out = llm.structured(CLAIMS_SYSTEM, f"{call.call_id} · {call.company}\n\n{text}", CallClaims,
@@ -104,27 +98,16 @@ def extract(call: Call, calls: dict[str, Call], llm: LLM, usage: Usage | None = 
 
 
 class ClaimStore:
-    def __init__(self, calls: list[Call], llm: LLM, cache_dir: Path = Path(".cache")) -> None:
+    def __init__(self, calls: list[Call], store: Store | None) -> None:
         self.calls = {c.call_id: c for c in calls}
-        self.llm, self.cache_dir = llm, cache_dir
+        self.store = store
         self._claims: list[StoredClaim] | None = None
 
-    def load(self, usage: Usage | None = None, workers: int = 8) -> list[StoredClaim]:
-        """All vendor claims, extracting (in parallel) only calls missing from the cache."""
-        if self._claims is not None:
-            return self._claims
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-        def one(call: Call) -> list[StoredClaim]:
-            path = self.cache_dir / f"claims-{call.call_id}-{_digest(call, self.llm)}.json"
-            if path.exists():
-                return [StoredClaim.model_validate(x) for x in json.loads(path.read_text())]
-            claims = extract(call, self.calls, self.llm, usage)
-            path.write_text(json.dumps([c.model_dump() for c in claims], indent=1))
-            return claims
-
-        with ThreadPoolExecutor(workers) as pool:
-            self._claims = [c for cs in pool.map(one, self.calls.values()) for c in cs]
+    def load(self, usage: Usage | None = None) -> list[StoredClaim]:
+        """All vendor claims from the ingestion store (ingesting any new or changed call first)."""
+        if self._claims is None:
+            self.store.ensure(usage)
+            self._claims = self.store.claims()
         return self._claims
 
     def context(self, usage: Usage | None = None, topics: list[str] | None = None) -> tuple[str, list[Turn]]:

@@ -20,6 +20,11 @@ Rules:
   matching topics (one to three); every statement OrbitFlow staff made on them will be added. Empty for
   questions about customers, deals, needs or what a named call said ("Which customers asked about SSO?"
   and "What capabilities do prospects want?" are about customers).
+- note_fields: when scope is "across", the fields of the per-call notes that hold the answer (1-4):
+  needs and requirements; pains and current process; objections, risks and concerns; competitors and
+  current tools; integrations and systems; pricing, budget and commercial terms; decision process and
+  timeline; buying signals and next steps; outcome and account health; how the OrbitFlow team ran the
+  call. Empty for "specific" questions.
 - search_queries: 2-4 short queries phrased the way people actually talk on calls (paraphrases,
   synonyms, product/competitor names). Do not answer the question."""
 
@@ -61,6 +66,9 @@ Grounding rules:
    was never said; say "not found in the retrieved excerpts" instead. When it is "mapped", every
    candidate call was read in full for this question: the calls listed as having nothing on it can be
    reported as not mentioning it, and a list built from all shown calls may be called complete.
+   When it is "notes", every call was read in full at ingestion and its points noted by field: the
+   calls listed as having no notes on the question's fields can be reported as not mentioning it
+   (as far as the notes go), but do not call a list complete if the question is outside those fields.
 8. Numbers, dates, names and commitments: before answering, look for every place in the transcripts
    that states them. If two statements differ (even within one call, or a rounded vs exact figure),
    give the best-supported value AND put the discrepancy in `conflicts`.

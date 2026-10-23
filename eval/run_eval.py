@@ -357,7 +357,7 @@ def regrade(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> 
 def saved_plan(res: dict) -> Plan | None:
     if not res.get("plan"):
         return None
-    return Plan.model_validate({"product_topics": [], "vendor_consistency": False, **res["plan"]})
+    return Plan.model_validate({"product_topics": [], "note_fields": [], "vendor_consistency": False, **res["plan"]})
 
 
 def replay(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> dict:
@@ -483,6 +483,8 @@ def main() -> None:
     ap.add_argument("--questions", type=Path, default=ROOT / "eval" / "questions.yaml")
     ap.add_argument("--regrade", type=Path, metavar="RESULTS_JSON",
                     help="re-check citations and re-judge the answers saved in a results file, without generating")
+    ap.add_argument("--across", choices=["notes", "map", "retrieval"], default="notes",
+                    help="context for questions across calls: ingestion notes (default), map step, or retrieval only")
     ap.add_argument("--replay", type=Path, metavar="RESULTS_JSON",
                     help="generate new answers on the contexts saved in a results file (answer step only)")
     ap.add_argument("--suffix", default=None, help="output name suffix for --regrade / --replay")
@@ -498,7 +500,7 @@ def main() -> None:
         wanted = set(args.only.split(","))
         items = [i for i in items if i["id"] in wanted]
 
-    pipe = Pipeline(ROOT / "data")
+    pipe = Pipeline(ROOT / "data", across=args.across)
     if args.regrade or args.replay:
         src = args.regrade or args.replay
         fn, suffix = (regrade, "regraded") if args.regrade else (replay, "replay")
@@ -510,7 +512,7 @@ def main() -> None:
     else:
         mode = args.mode
         rows = run_all(lambda it: evaluate(pipe, it, mode, use_judge), items, args.workers)
-        label = f"{time.strftime('%Y%m%d-%H%M%S')}-{mode}"
+        label = f"{time.strftime('%Y%m%d-%H%M%S')}-{mode}" + ("" if args.across == "notes" else f"-{args.across}")
     if not use_judge:
         label += "-nojudge"
 

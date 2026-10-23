@@ -30,7 +30,8 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 ```bash
 uv sync
 cp .env.example .env        # then set LLM_API_KEY (an OpenAI key works as is)
-uv run callqa index         # once: embeds the transcripts and extracts vendor claims (~4 min, cached in .cache/)
+uv run callqa index         # once: ingests the calls (embeddings, vendor claims, per-call notes; ~5 min,
+                            # stored in .cache/callqa.db; re-running reads only new or changed calls)
 uv run callqa ask "Which competitors were mentioned, and in what context?"
 uv run callqa ask "..." --mode full     # baseline: whole dataset in the prompt
 uv run callqa ask "..." --json          # raw result, including the plan and every citation check
@@ -52,10 +53,11 @@ question
   │                                 · ambiguous first names, checked in code ("Priya": who speaks, who is only mentioned)
   │                                 · does it ask whether the vendor contradicts itself?
   │                                 · is it about a product fact? which of 12 topics?
+  │                                 · across calls? which note fields hold the answer?
   ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic
   │                                 candidate calls fit in 12K words? → send whole transcripts
-  │                                 question across calls, ≤25 candidates? → map step: each call read in full
-  │                                   by a cheap pass, relevant turns kept (+ retrieved excerpts)
+  │                                 question across calls? → the turns behind the notes written at ingestion
+  │                                   in those fields (+ retrieved excerpts), and the calls with none
   │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
   │                                 product fact? → plus every vendor statement on that topic, from all calls
   ├─ 3. answer (LLM, structured)    first an inventory of every relevant turn, then the answer from it:
@@ -79,11 +81,17 @@ question
   over the original question plus the planner's rewrites. For questions about the whole dataset, every
   candidate call also gets its best 2 chunks. Without that quota, long calls crowd short ones out of the
   top-k.
-- **Vendor claims** (`callqa/claims.py`): at index time, one extraction pass per call lists what
-  OrbitFlow staff assert about the product (plans, SSO, pricing, no-code, limits, support…) under 12
-  fixed topics, each with a verbatim quote. Every quote is run through the citation checker and kept
-  only if it verifies and was said by vendor staff (587 claims). Cached per call content. Used whole
-  for consistency questions, and by topic for product-fact questions ("Is SSO on Growth?").
+- **Ingestion** (`callqa/store.py`): each call is read once when it is ingested, and the results go
+  into one SQLite file. The handler is idempotent by call id and a digest of content, model and prompt
+  versions, so an unchanged call costs nothing and a changed one is replaced in one transaction. Two
+  passes per call, every quote checked by the citation checker:
+  - **vendor claims** (`callqa/claims.py`): what OrbitFlow staff assert about the product under 12
+    topics, kept only if said by vendor staff (628 claims). Used whole for consistency questions, by
+    topic for product-fact questions ("Is SSO on Growth?");
+  - **notes** (`callqa/notes.py`): the call's points under 10 fields (needs, pains, objections,
+    competitors, integrations, pricing, decision process, buying signals, outcome, how the team ran
+    the call), each tied to a turn and embedded (1,083 notes). Questions across calls select notes by
+    field and similarity instead of reading the calls.
 - **Answering** (`callqa/prompts.py`): the model sees whose side each speaker is on. It is told that a
   vendor's product statement is a claim, not a fact. It is told to report contradictions instead of
   picking one side silently, and then to weigh them on fixed criteria: how many people say each side,
@@ -126,7 +134,12 @@ question
    the answer step also gets every vendor statement on them. A conflict is then reported with both
    sides cited *and* with the better-supported side and the reason, or "cannot tell"; confidence stays
    at most medium.
-7. **One OpenAI-compatible client.** It runs on OpenAI or Azure by changing env vars; no framework.
+7. **Read calls when they arrive, not when a question is asked.** Questions across calls need turns
+   from every call, and retrieval reached about half of them. Reading every candidate call per
+   question (a map step, still available as `--across map`) fixed that but cost ~139K tokens per such
+   question at 20 calls and grows with every call. Notes written at ingestion keep most of the gain
+   for ~26K tokens, and the cost per question does not grow with the corpus.
+8. **One OpenAI-compatible client.** It runs on OpenAI or Azure by changing env vars; no framework.
 
 ## Assumptions
 
@@ -231,6 +244,28 @@ not the totals.
 when excerpts are retrieved (8 cross-call questions; q05 0.08, q01 0.32, q09 0.36, q04 0.41). First
 failed step: answer 7, retrieval 6, attribution 1.
 
+**Three ways to answer questions across calls (23.10)**, same code otherwise (all with the turn
+inventory except the first):
+
+| | retrieval only | map step at question time | notes at ingestion (default) |
+|---|---|---|---|
+| run | `…-214420-auto-diagnostics` | `…-224354-auto-map` | `…-231007-auto-notes` |
+| yes / partly / no (29) | 14 / 15 / 0 | 20 / 9 / 0 | 16 / 13 / 0 |
+| the 7 cross-call questions that use it: "yes" | 3 | 4 | 5 |
+| evidence recall: all / the 7 | 0.82 / 0.48 | 0.94 / 0.89 | 0.86 / 0.65 |
+| core fact recall: all / the 7 | 0.70 / 0.66 | 0.81 / 0.84 | 0.78 / 0.75 |
+| atomic fact recall, all | 0.57 | 0.66 | 0.68 |
+| prompt tokens per question: mean / the 7 | 14.5K / 18K | 47K / 139K | 17K / 26K |
+| failed citations (all flagged) | 1 | 6 | 4 |
+
+On the cross-call questions the notes default sits between the other two on evidence and core recall
+(notes are written without knowing the question), at about a fifth of the map step's tokens; its 5
+"yes" against the map step's 4 is within the judge noise. One cost the table hides: indexing takes
+~5 min instead of ~4, once. The full-run totals differ within the judge noise
+(±6 on yes/partly). Latency grew to ~36 s per question under 4 parallel questions, mostly from the
+turn inventory's output; dropping it in notes mode halved latency but cut core recall on cross-call
+questions from 0.83 to 0.66 in a test on four questions, so it stays.
+
 **With the map step and the turn inventory (23.10)**, run `eval/results/20261023-224354-auto-map.md`:
 **20 / 9 / 0**, the first result clearly outside the judge noise band (14–15 "yes" before). Evidence
 recall 0.94 (cross-call questions 0.89, was 0.54), core fact recall 0.81 (was 0.70), abstention 5/5.
@@ -304,11 +339,9 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
 
 With another day:
 
-1. **Per-call notes at index time instead of the map step.** The map step proves the point (evidence
-   recall on cross-call questions 0.54 → 0.87) but pays for it on every question. Vendor claims are
-   already extracted once per call; the same pass could list competitors, integrations, pricing
-   reactions, objections, buying signals and the outcome, each with a turn reference. "Which
-   customers…" then becomes a query over notes, at the cost of retrieval, not of reading every call.
+1. **A product-fact table at ingestion**: vendor claims clustered by topic and subject with counts
+   (people, calls, last date, hedged), and conflicts recorded when a call arrives. q11 and q24 then
+   read a table instead of putting every claim on a topic into the prompt (see the scaling table).
 2. **A full-context control for the map step**: the same 8 cross-call questions with all transcripts in
    the prompt (same token cost at 20 calls), to show whether reading call by call beats one big prompt
    on completeness and misattribution, not only on evidence recall.
@@ -327,8 +360,9 @@ cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per qu
 
 | part | now | at thousands of calls | what to do instead |
 |---|---|---|---|
-| map step (read each candidate call) | ~120K tokens, ~80 s | ~6K tokens × every call: millions of tokens, minutes | per-call notes at ingestion, queried with filters; map only over a shortlist of 20–50 calls (already capped at 25) |
-| all vendor claims in one prompt (q11) | 587 claims | tens of thousands, does not fit | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
+| map step (read each candidate call) | ~139K tokens per cross-call question | ~6K tokens × every call: millions of tokens, minutes | **done**: notes at ingestion (default, ~26K tokens per cross-call question, most of the map step's gain); map kept as `--across map`, capped at 25 calls |
+| notes at ingestion | 1,083 notes, top 250 by field and similarity | grows with calls; the answer still gets ≤250 | add metadata filters and a shortlist of calls before ranking notes |
+| all vendor claims in one prompt (q11) | 628 claims | tens of thousands, does not fit | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
 | every vendor statement on a topic (q24) | 9 calls on SSO | hundreds per topic | the same table: "SAML SSO: Enterprise, 9 calls / 3 reps; all plans, 1 call, later hedged"; weighing becomes counting |
 | catalogue in the planner prompt | 20 lines | does not fit | metadata filters plus fuzzy search over companies and people |
 | per-call excerpt quota | 20 calls | thousands of excerpts | quota after filtering, on the top-N calls |
