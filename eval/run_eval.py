@@ -1,21 +1,25 @@
 """Evaluate the pipeline against eval/questions.yaml.
 
 What is measured, per question:
-  context_recall  share of the gold calls that reached the model's context    (retrieval, deterministic)
+  context_recall  share of the gold calls that reached the model's context    (routing, deterministic)
+  evidence_recall share of the gold evidence turns that reached the context    (retrieval, deterministic)
   cited_recall    share of the gold calls the answer actually cites            (use of evidence, deterministic)
+  evidence_cited  share of the gold evidence turns the answer cites            (use of evidence, deterministic)
   citation_valid  share of citations whose quote is found in the transcript    (grounding, deterministic)
   correct         does the answer get the main point right                     (correctness, LLM judge)
   core_recall     required core claims stated                                  (completeness, LLM judge)
   atomic_recall   cores plus details, k of n for enumerations                  (completeness, LLM judge)
   penalties       statements the gold set says a correct answer must not make  (LLM judge)
   abstention      did it decline exactly when the data has no answer           (uncertainty, LLM judge)
-plus tokens and latency. Questions marked bonus_question are left out of the headline numbers.
+plus tokens and latency, and per question the first step that failed (`failure`). Questions marked
+bonus_question are left out of the headline numbers.
 
 Usage:
   uv run python eval/run_eval.py                    # auto mode
   uv run python eval/run_eval.py --mode full        # whole dataset in context (baseline)
   uv run python eval/run_eval.py --only q03,q07     # subset
   uv run python eval/run_eval.py --regrade eval/results/<file>.json   # re-check and re-judge saved answers
+  uv run python eval/run_eval.py --replay eval/results/<file>.json    # new answers on the saved contexts
 """
 
 from __future__ import annotations
@@ -23,6 +27,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -40,6 +45,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from callqa.cli import to_dict  # noqa: E402
+from callqa.llm import Usage  # noqa: E402
+from callqa.parse import Call  # noqa: E402
 from callqa.pipeline import Answer, Context, Pipeline, Plan, Result, assess  # noqa: E402
 
 JUDGE_SYSTEM = """You grade an answer produced by a question-answering system over sales-call transcripts.
@@ -188,6 +195,65 @@ def answer_text(answer: Answer, confidence: str, notes: list[str] | None = None)
     return "\n".join(lines)
 
 
+# Gold evidence is written as "CALL-001 [01:51] Rachel Morgan ... / [02:12] ..." with ranges like
+# "[07:09]-[07:17]"; a timestamp belongs to the last call named before it on the line.
+EVIDENCE_RE = re.compile(r"(CALL-\d{3})|\[(\d{1,3}:\d{2})\](?:-\[(\d{1,3}:\d{2})\])?")
+
+
+def _seconds(ts: str) -> int:
+    m, s = ts.split(":")
+    return int(m) * 60 + int(s)
+
+
+def gold_turns(item: dict, calls: dict[str, Call]) -> set[tuple[str, int]]:
+    """The turns the gold evidence points to, as (call_id, turn index). A timestamp with no exact turn
+    falls back to the turn running at that moment (at most 30 s earlier)."""
+    out: set[tuple[str, int]] = set()
+    for line in item.get("evidence") or []:
+        cur = None
+        for m in EVIDENCE_RE.finditer(line):
+            if m.group(1):
+                cur = m.group(1) if m.group(1) in calls else None
+                continue
+            if cur is None:
+                continue
+            a = _seconds(m.group(2))
+            b = _seconds(m.group(3)) if m.group(3) else a
+            hit = [t for t in calls[cur].turns if a <= t.seconds <= b]
+            if not hit:
+                hit = [t for t in calls[cur].turns if a - 30 <= t.seconds <= a][-1:]
+            out |= {(cur, t.idx) for t in hit}
+    return out
+
+
+def failure(row: dict) -> str:
+    """The first step that failed, in pipeline order, so a bad answer points at what to fix."""
+    if row["should_abstain"]:
+        return "abstention: answered" if row["abstention_correct"] is False else ""
+    if row["abstention_correct"] is False:
+        return "abstention: declined"
+    bad = sum(n for s, n in row["citation_status"].items() if s not in ("exact", "shifted", "fuzzy"))
+    attribution = f"attribution ({bad} failed citation{'s' * (bad > 1)})" if bad else ""
+    if row["correct"] in (None, "yes"):
+        return attribution
+    # Gold evidence lists every supporting turn and a good answer cites a few, so evidence_cited is a
+    # reading aid, not a test: the split here is only whether the model had the evidence at all.
+    ev = row["evidence_recall"]
+    if row["contradicted"]:
+        step = "answer: wrong statement"
+    elif ev is not None and ev < 1:
+        n = len(row["missed_evidence"])
+        step = f"retrieval ({n} evidence turn{'s' * (n > 1)} not in context)"
+    else:
+        step = "answer (evidence was in context)"
+    return "; ".join(x for x in (step, attribution) if x)
+
+
+def saved_context(pipe: Pipeline, ctx: dict) -> Context:
+    turns = [pipe.calls[c].turns[i] for c, i in ctx.get("turns", [])]
+    return Context(ctx["mode"], ctx["call_ids"], turns, ctx.get("text", ""), [], ctx.get("claim_topics", []))
+
+
 def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict:
     """Everything except generation, so saved answers can be re-graded against a revised gold set.
     Without the judge only the deterministic metrics are filled; the judged ones are None."""
@@ -196,6 +262,9 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
     cited = set(r.cited_calls)
     checks = [c for cs in r.claim_checks + r.conflict_checks for c in cs]
     should_abstain = bool(item.get("should_abstain"))
+    evidence = gold_turns(item, pipe.calls)
+    in_context = {(t.call_id, t.idx) for t in r.context.turns}  # empty for runs saved before turns were
+    cited_turns = {(c.turn.call_id, c.turn.idx) for c in checks if c.ok and c.turn}
 
     user = f"QUESTION\n{item['question']}\n\nANSWER\n{answer_text(r.answer, r.confidence, r.plan.entity_notes if r.plan else None)}\n\n{rubric(item)}"
     j = judge(pipe, user) if use_judge else None
@@ -212,6 +281,10 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
         "context_recall": len(gold & ctx) / len(gold) if gold else None,
         "cited_recall": len(gold & cited) / len(gold) if gold else None,
         "missed_calls": sorted(gold - cited),
+        "evidence_recall": len(evidence & in_context) / len(evidence) if evidence and in_context else None,
+        "evidence_cited": len(evidence & cited_turns) / len(evidence) if evidence else None,
+        "missed_evidence": sorted(f"{c} [{pipe.calls[c].turns[i].ts}]" for c, i in evidence - in_context)
+        if in_context else [],
         "citation_valid": sum(c.ok for c in checks) / len(checks) if checks else None,
         "citations": len(checks),
         "citation_status": dict(Counter(c.status for c in checks)),
@@ -219,12 +292,12 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
         "confidence": r.confidence,
     }
     if j is None:
-        return {**row, "core_recall": None, "atomic_recall": None, "compound_recall": None,
+        row |= {"core_recall": None, "atomic_recall": None, "compound_recall": None,
                 "contradicted": 0, "penalties_hit": [], "bonus_hit": 0,
                 "bonus_total": len(item.get("bonus_facts") or []), "correct": None,
                 "correct_reason": None, "verdicts": [], "abstained": None, "abstention_correct": None}
-    return {
-        **row,
+        return row | {"failure": failure(row)}
+    row |= {
         **fact_scores(item, j),
         "contradicted": sum(v.core == "contradicted" for v in j.facts),
         "penalties_hit": [p.model_dump() for p in j.penalties if p.hit],
@@ -236,6 +309,7 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
         "abstained": j.declines,
         "abstention_correct": j.declines == should_abstain,
     }
+    return row | {"failure": failure(row)}
 
 
 def evaluate(pipe: Pipeline, item: dict, mode: str, use_judge: bool = True) -> dict:
@@ -262,11 +336,11 @@ def regrade(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> 
         c.setdefault("better_supported", "")
         c.setdefault("why", "")
     answer = Answer.model_validate(res["answer"])
-    context = Context(res["context"]["mode"], res["context"]["call_ids"], [], "")
+    context = saved_context(pipe, res["context"])
     claim_checks = [pipe.check(c.citations, context) for c in answer.claims]
     conflict_checks = [pipe.check(c.citations, context) for c in answer.conflicts]
     confidence, warnings = assess(answer, claim_checks, conflict_checks)
-    plan = Plan.model_validate(res["plan"]) if res.get("plan") else None
+    plan = saved_plan(res)
     r = Result(res["question"], plan, context, answer, claim_checks, conflict_checks,
                confidence, warnings, res["usage"], res["seconds"])
     result = {**to_dict(r), "context": res["context"]}
@@ -276,6 +350,38 @@ def regrade(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> 
         "completion_tokens": saved["completion_tokens"],
         "seconds": saved["seconds"],
         "result": result,
+    }
+
+
+def saved_plan(res: dict) -> Plan | None:
+    if not res.get("plan"):
+        return None
+    return Plan.model_validate({"product_topics": [], "vendor_consistency": False, **res["plan"]})
+
+
+def replay(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> dict:
+    """A new answer on the exact context of a saved run: isolates the answer step from routing and
+    retrieval, e.g. to test a prompt change on the questions that failed."""
+    if "error" in saved:
+        return saved
+    res = saved["result"]
+    if not res["context"].get("turns"):
+        raise SystemExit(f"{item['id']}: this run predates saved contexts; --replay needs a run made since 23.10")
+    context = saved_context(pipe, res["context"])
+    plan = saved_plan(res)
+    usage, t0 = Usage(), time.time()
+    answer = pipe.answer(item["question"], context, plan, usage)
+    claim_checks = [pipe.check(c.citations, context) for c in answer.claims]
+    conflict_checks = [pipe.check(c.citations, context) for c in answer.conflicts]
+    confidence, warnings = assess(answer, claim_checks, conflict_checks)
+    r = Result(item["question"], plan, context, answer, claim_checks, conflict_checks,
+               confidence, warnings, usage.snapshot(), time.time() - t0)
+    return {
+        **grade(pipe, item, r, use_judge),
+        "prompt_tokens": r.usage["prompt_tokens"],
+        "completion_tokens": r.usage["completion_tokens"],
+        "seconds": round(r.seconds, 1),
+        "result": to_dict(r),
     }
 
 
@@ -296,6 +402,10 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "") -> str:
     status = Counter(s for r in ok for s, n in r["citation_status"].items() for _ in range(n))
     failed = {k: v for k, v in status.items() if k not in ("exact", "shifted", "fuzzy")}
     judged = any(r["correct"] is not None for r in ok)
+    for r in ran:  # recomputed, so a saved run is re-labelled when the rules change
+        r["failure"] = failure(r) if "evidence_recall" in r else ""
+    steps = Counter(r["failure"].split(" (")[0].split(";")[0] for r in ok if r.get("failure"))
+    failures = ", ".join(f"{k} {v}" for k, v in steps.most_common())
 
     def j(value: str) -> str:
         return value if judged else "not judged"
@@ -312,7 +422,9 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "") -> str:
         "| metric | value |",
         "|---|---|",
         f"| context recall (gold calls reached the model) | {fmt(mean([r['context_recall'] for r in answerable]))} |",
+        f"| evidence recall (gold evidence turns reached the model) | {fmt(mean([r.get('evidence_recall') for r in answerable]))} |",
         f"| cited recall (gold calls cited in the answer) | {fmt(mean([r['cited_recall'] for r in answerable]))} |",
+        f"| evidence cited (gold evidence turns cited) | {fmt(mean([r.get('evidence_cited') for r in answerable]))} |",
         f"| citation validity (quote found verbatim) | {fmt(mean([r['citation_valid'] for r in ok]))} |",
         f"| failed citations by kind | {', '.join(f'{k} {v}' for k, v in sorted(failed.items())) or 'none'} |",
         f"| answer correct (LLM judge): yes / partly / no | "
@@ -327,19 +439,21 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "") -> str:
         f"| false abstention on answerable | {j(abst_false)} |",
         f"| mean prompt tokens / question | {mean([r['prompt_tokens'] for r in ok]) or 0:,.0f} |",
         f"| mean latency (s) | {fmt(mean([r['seconds'] for r in ok]))} |",
+        f"| first failed step | {failures or 'none'} |",
         "",
-        "| id | kind | correct | ctx recall | cited recall | cit. valid | core | atomic | penalties | abstain ok | conf | missed calls |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| id | kind | correct | ctx recall | ev. recall | cited recall | ev. cited | cit. valid | core | atomic | penalties | abstain ok | conf | failure |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         if "error" in r:
-            out.append(f"| {r['id']} | {r['kind']} | ERROR: {r['error'][:60]} ||||||||||")
+            out.append(f"| {r['id']} | {r['kind']} | ERROR: {r['error'][:60]} ||||||||||||")
             continue
         out.append(
             f"| {r['id']}{' (bonus)' if r.get('bonus_question') else ''} | {r['kind']} | {r['correct'] or '-'} | "
-            f"{fmt(r['context_recall'])} | {fmt(r['cited_recall'])} | {fmt(r['citation_valid'])} | "
+            f"{fmt(r['context_recall'])} | {fmt(r.get('evidence_recall'))} | {fmt(r['cited_recall'])} | "
+            f"{fmt(r.get('evidence_cited'))} | {fmt(r['citation_valid'])} | "
             f"{fmt(r['core_recall'])} | {fmt(r['atomic_recall'])} | {len(r['penalties_hit']) or ''} | "
-            f"{'-' if r['abstention_correct'] is None else '✓' if r['abstention_correct'] else '✗'} | {r['confidence']} | {', '.join(r['missed_calls'])} |"
+            f"{'-' if r['abstention_correct'] is None else '✓' if r['abstention_correct'] else '✗'} | {r['confidence']} | {r.get('failure', '')} |"
         )
     return "\n".join(out)
 
@@ -368,7 +482,9 @@ def main() -> None:
     ap.add_argument("--questions", type=Path, default=ROOT / "eval" / "questions.yaml")
     ap.add_argument("--regrade", type=Path, metavar="RESULTS_JSON",
                     help="re-check citations and re-judge the answers saved in a results file, without generating")
-    ap.add_argument("--suffix", default="regraded", help="output name suffix for --regrade")
+    ap.add_argument("--replay", type=Path, metavar="RESULTS_JSON",
+                    help="generate new answers on the contexts saved in a results file (answer step only)")
+    ap.add_argument("--suffix", default=None, help="output name suffix for --regrade / --replay")
     ap.add_argument("--no-judge", action="store_true",
                     help="skip the LLM judge: deterministic metrics only (context/cited recall, citations, tokens); no Claude Code needed")
     args = ap.parse_args()
@@ -382,12 +498,14 @@ def main() -> None:
         items = [i for i in items if i["id"] in wanted]
 
     pipe = Pipeline(ROOT / "data")
-    if args.regrade:
-        saved = {r["id"]: r for r in json.loads(args.regrade.read_text())}
-        mode = args.regrade.stem.removesuffix("-nojudge").rsplit("-", 1)[-1]
+    if args.regrade or args.replay:
+        src = args.regrade or args.replay
+        fn, suffix = (regrade, "regraded") if args.regrade else (replay, "replay")
+        saved = {r["id"]: r for r in json.loads(src.read_text())}
+        mode = "full" if "-full" in src.stem else "auto"
         items = [i for i in items if i["id"] in saved]
-        rows = run_all(lambda it: regrade(pipe, it, saved[it["id"]], use_judge), items, args.workers)
-        label = f"{args.regrade.stem}-{args.suffix}"
+        rows = run_all(lambda it: fn(pipe, it, saved[it["id"]], use_judge), items, args.workers)
+        label = f"{src.stem}-{args.suffix or suffix}"
     else:
         mode = args.mode
         rows = run_all(lambda it: evaluate(pipe, it, mode, use_judge), items, args.workers)

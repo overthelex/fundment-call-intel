@@ -144,11 +144,13 @@ uv run python eval/run_eval.py --mode full        # baseline: whole dataset in t
 uv run python eval/run_eval.py --only q11,q24     # a subset
 uv run python eval/run_eval.py --regrade eval/results/<run>.json   # re-check and re-judge saved answers, no generation
 uv run python eval/run_eval.py --no-judge         # deterministic metrics only, no Claude Code needed
+uv run python eval/run_eval.py --replay eval/results/<run>.json --only q05   # new answer on the saved context
 uv run python eval/compare.py --auto A1.json A2.json A3.json --full F.json   # per-question comparison
 ```
 
-Each run writes `eval/results/<timestamp>-<mode>.json` (every answer, plan, citation check and
-verdict) and a `.md` summary that names the judge.
+Each run writes `eval/results/<timestamp>-<mode>.json` (every answer, plan, the exact context the
+answer step saw, citation checks and verdicts) and a `.md` summary that names the judge and labels
+each failed question with the step that failed.
 
 The judge is Claude Opus, a different vendor from the answering model, so it does not grade its own
 blind spots. It runs through a local, logged-in [Claude Code](https://claude.com/claude-code)
@@ -166,11 +168,15 @@ facts, penalties, and whether the system should abstain.
 
 The metrics are chosen to say *which step* failed, deterministic ones first:
 
-- **context recall**: did routing/retrieval put the gold calls in front of the model? (code)
+- **context recall**: did routing put the gold calls in front of the model? (code)
+- **evidence recall**: did retrieval put the gold *turns* in front of the model? (code, from the
+  timestamps in the gold evidence). Call-level recall alone is misleading: every candidate call gets
+  at least one excerpt, so the call is "in context" even when the turn that answers is not.
 - **citation validity**: is each quote really in that call, said by that speaker? (code)
 - **correct** yes / partly / no, **fact recall**, **penalties**: is the answer right and complete? (LLM judge)
 - **abstention**: does it say "not in the data" exactly when it should? (LLM judge)
 - **tokens and latency**, against a baseline that puts all 20 transcripts in the prompt
+- **first failed step** per question (code, from the above): retrieval, answer, attribution or abstention
 
 ### Results
 
@@ -216,10 +222,20 @@ this time (both in the previous runs), and q29 was judged as not declining altho
 "no Enterprise list price, custom priced". That is the noise this eval measures: compare per question,
 not the totals.
 
+**With turn-level evidence recall (23.10)**, run `eval/results/20261023-214420-auto-diagnostics.md`:
+14 / 15 / 0, abstention 5/5, citation validity 1.00. Context recall is 1.00 but evidence recall is
+**0.82**, and it splits by context mode: **0.96** when whole calls are sent (15 questions) and **0.54**
+when excerpts are retrieved (8 cross-call questions; q05 0.08, q01 0.32, q09 0.36, q04 0.41). First
+failed step: answer 7, retrieval 6, attribution 1.
+
 What I take from it:
 
-- **Retrieval is not the bottleneck**: every gold call reaches the model in every run. Misses happen
-  in the answer step (long lists stop early) or in questions about *relationships between calls*.
+- **Two different bottlenecks.** Questions about one or a few calls get whole transcripts, so
+  everything reaches the model and the misses are in the answer step (details left out). Questions
+  across all calls get retrieved excerpts, and there retrieval is the bottleneck: about half the
+  supporting turns never reach the model. Earlier versions of this README said "retrieval is not the
+  bottleneck", based on call-level recall only; turn-level recall showed that was wrong for
+  cross-call questions. The fix is in *With more time* (a map step over every candidate call).
 - **The pipeline is no worse than the brute-force baseline at ~1/9 of the tokens, and its quotes are
   more reliable.** Not "better": re-judging the same answers with the same judge moved 6 of 30
   verdicts between yes and partly. The deterministic metrics and the yes-vs-no line are stable; the yes/partly split is not.
@@ -232,6 +248,23 @@ What I take from it:
 
 The gold set was drafted by an LLM, every citation checked against the source, and the 19 disputed
 points decided by a human (`eval/review/`).
+
+## Diagnosing a bad answer
+
+Each step leaves a record, so a wrong answer can be traced to the step that failed:
+
+1. **Plan**: `callqa ask "..." --json` → `plan`. Wrong `call_ids`, a call-kind filter the question did
+   not ask for, a missed name (`entity_notes`), or product topics on a question about customers.
+2. **Context**: `--json` → `context` holds the mode, the calls, and every turn and line of text the
+   answer step saw. Is the turn that answers the question there? In the eval this is
+   `evidence recall`, and `failure` says `retrieval (n evidence turns not in context)`.
+3. **Answer**: if the evidence was in context but the answer misses it (`failure: answer`), re-run only
+   the answer step on the same context: `run_eval.py --replay <run>.json --only q05`. If a prompt
+   change fixes it on replay, it was the answer step; retrieval noise is out of the picture.
+4. **Citations**: every quote shows ✓ / ✗ with the reason (`wrong_speaker`, `wrong_call` with where
+   the words really are, `not found`); `failure: attribution`.
+5. **Judge**: if the answer looks right, read `correct_reason` and the per-fact verdicts in the results
+   JSON, and re-judge with `--regrade`. The judge moves about 6 of 30 verdicts between yes and partly.
 
 ## Known limitations
 
@@ -262,7 +295,8 @@ With another day:
 2. **A map step for "across" questions**: ask each candidate call "what does this call say about X?"
    in parallel (small model, ~20 calls), then synthesise. This trades tokens for recall on exhaustive
    lists, and gives an explicit "no mention" per call, which makes "this list is complete" a claim the
-   system can back.
+   system can back. This is the first thing I would do: evidence recall on retrieved excerpts is 0.54
+   against 0.96 on whole calls, and `--replay` plus evidence recall would show whether it closes the gap.
 3. **A second retrieval hop**: let the answer step request more context ("need: the call where an
    engineer reviewed an exported definition") before answering; this fixes q30-type questions.
 4. **Entailment check on citations**: a small model checks that each quote supports its claim, not just

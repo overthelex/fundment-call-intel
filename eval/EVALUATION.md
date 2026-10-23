@@ -10,16 +10,26 @@ step, and the cheap deterministic ones come first so the noisy LLM-judged ones a
 
 | metric | what it tells you | how |
 |---|---|---|
-| context recall | did retrieval/routing put the right calls in front of the model? | gold calls ∩ context calls |
+| context recall | did routing put the right calls in front of the model? | gold calls ∩ context calls |
+| evidence recall | did retrieval put the right *turns* in front of the model? | gold evidence turns ∩ context turns |
 | cited recall | did the answer actually use them? | gold calls ∩ calls with a verified citation |
+| evidence cited | which supporting turns did it cite? (reading aid: gold lists all, answers cite a few) | gold evidence turns ∩ cited turns |
 | citation validity | are the quotes real and correctly attributed? | code check against the transcript |
 | correct (yes / partly / no) | is the main point right? | LLM judge against the rubric |
 | core / atomic fact recall | how complete is it? | LLM judge, per core and per detail |
 | penalties | did it make a statement the gold set rules out? | LLM judge |
 | abstention | does it say "not in the data" when, and only when, it should? | LLM judge (`declines`) |
 | tokens, latency | what does it cost? | API usage per question |
+| first failed step | where to look first | rules over the metrics above, in pipeline order |
 
-Reading them together: low context recall means retrieval or routing failed. High context recall with
+Evidence turns come from the timestamps in each question's gold `evidence` ("CALL-001 [01:51] … /
+[02:12] …", ranges like "[07:09]-[07:17]"); all 382 resolve to a turn, 381 exactly. The `failure`
+label is: abstention (declined or answered when it should not), else, for answers not judged "yes",
+"answer: wrong statement" if a core fact is contradicted, "retrieval" if some evidence turn never
+reached the context, otherwise "answer (evidence was in context)"; failed citations add "attribution".
+
+Reading them together: low context recall means routing failed; good context recall with low evidence
+recall means retrieval found the call but not the turn. High context recall with
 low cited recall means the answer step ignored evidence. Low citation validity means invented or
 misattributed quotes. Low fact recall with good citations means the answer is incomplete despite good
 sources. Every run is compared with a brute-force baseline (`--mode full`, all 20 transcripts in the
@@ -100,9 +110,12 @@ citation caught by the checker, abstention 5/5 and ~13K tokens per question.
 
 ### Reading the numbers
 
-- **Routing and retrieval are not the bottleneck.** Every gold call reaches the model in every run.
-  Where cited recall drops (q02 Salesforce, q05 capabilities), the calls were in context but the
-  answer stopped after a few examples.
+- **Routing is not the bottleneck; retrieval is, for cross-call questions.** Every gold call reaches
+  the model in every run, which is what the first version of this file reported. Turn-level evidence
+  recall, added on 23.10 (`results/20261023-214420-auto-diagnostics`), shows the call was often there
+  without the turn: 0.96 when whole calls are sent, 0.54 when excerpts are retrieved (q05 0.08, q01
+  0.32, q09 0.36, q04 0.41). The "long lists stop early" failures (q02, q05) are mostly retrieval:
+  the answer cannot list what it never saw.
 - **The pipeline is at least as good as the baseline at ~1/9 of the input tokens.** The gap in "yes"
   (14 vs 8) is within the judge noise and the baseline's own run-to-run noise is not measured, so the
   honest claim is "no worse", not "better". Per question the baseline is ahead on the two hardest
@@ -128,7 +141,8 @@ citation caught by the checker, abstention 5/5 and ~13K tokens per question.
 - **q30 (bonus, two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the
   question and the Juniper call to answer it. The planner routes to Verity only, so the pipeline
   declines; the baseline answers it.
-- **Long cross-call lists (q02, q05)**: the right calls are in context, but the answer stops early.
+- **Long cross-call lists (q01, q05, q09)**: the right calls are in context but most supporting turns
+  are not (evidence recall 0.08–0.36); first failed step "retrieval".
 - **Name mismatches (q06 "Acme Corp", q16 "Priya")**: the mapping was made but sat in a note at the
   bottom that the judge never saw, and the planner could not know about people only mentioned in
   passing. Fixed on 23.10: first names are checked against every transcript in code

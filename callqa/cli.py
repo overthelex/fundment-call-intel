@@ -79,7 +79,13 @@ def to_dict(r: Result) -> dict:
     return {
         "question": r.question,
         "plan": r.plan.model_dump() if r.plan else None,
-        "context": {"mode": r.context.mode, "call_ids": r.context.call_ids, "words": r.context.words},
+        # everything the answer step saw, so an answer can be traced and re-generated (eval --replay)
+        "context": {
+            "mode": r.context.mode, "call_ids": r.context.call_ids, "words": r.context.words,
+            "claim_topics": r.context.claim_topics,
+            "turns": [[t.call_id, t.idx] for t in r.context.turns],
+            "text": r.context.text,
+        },
         "answer": r.answer.model_dump(),
         "confidence": r.confidence,
         "claim_checks": [checks(c) for c in r.claim_checks],
