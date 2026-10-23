@@ -302,6 +302,22 @@ def summarise(rows: list[dict], mode: str) -> str:
     return "\n".join(out)
 
 
+def run_all(fn, items: list[dict], workers: int) -> list[dict]:
+    """Run fn over the questions in parallel, printing one progress line per finished question."""
+    done = 0
+
+    def one(it: dict) -> dict:
+        nonlocal done
+        r = fn(it)
+        done += 1
+        status = f"ERROR {r['error'][:60]}" if "error" in r else f"correct={r['correct']}"
+        print(f"[{done}/{len(items)}] {it['id']} {status}", file=sys.stderr, flush=True)
+        return r
+
+    with ThreadPoolExecutor(workers) as pool:
+        return list(pool.map(one, items))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=["auto", "full"], default="auto")
@@ -323,13 +339,11 @@ def main() -> None:
         saved = {r["id"]: r for r in json.loads(args.regrade.read_text())}
         mode = args.regrade.stem.rsplit("-", 1)[-1]
         items = [i for i in items if i["id"] in saved]
-        with ThreadPoolExecutor(args.workers) as pool:
-            rows = list(pool.map(lambda it: regrade(pipe, it, saved[it["id"]]), items))
+        rows = run_all(lambda it: regrade(pipe, it, saved[it["id"]]), items, args.workers)
         label = f"{args.regrade.stem}-{args.suffix}"
     else:
         mode = args.mode
-        with ThreadPoolExecutor(args.workers) as pool:
-            rows = list(pool.map(lambda it: evaluate(pipe, it, mode), items))
+        rows = run_all(lambda it: evaluate(pipe, it, mode), items, args.workers)
         label = f"{time.strftime('%Y%m%d-%H%M%S')}-{mode}"
 
     out_dir = ROOT / "eval" / "results"
