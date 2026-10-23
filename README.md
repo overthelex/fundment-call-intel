@@ -29,7 +29,7 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 ```bash
 uv sync
 cp .env.example .env        # then set LLM_API_KEY (an OpenAI key works as is)
-uv run callqa index         # embeds the transcripts once (~343 chunks, cached in .cache/)
+uv run callqa index         # once: embeds the transcripts and extracts vendor claims (~4 min, cached in .cache/)
 uv run callqa ask "Which competitors were mentioned, and in what context?"
 uv run callqa ask "..." --mode full     # baseline: whole dataset in the prompt
 uv run callqa ask "..." --json          # raw result, including the plan and every citation check
@@ -48,7 +48,9 @@ question
   │
   ├─ 1. plan (LLM, structured)      which calls? (named companies, call kinds) · specific vs across · search queries
   │                                 · name mismatches ("Acme Corp" → Acme Logistics, flagged)
-  ├─ 2. context                     candidate calls fit in 12K words? → send whole transcripts
+  │                                 · does it ask whether the vendor contradicts itself?
+  ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic
+  │                                 candidate calls fit in 12K words? → send whole transcripts
   │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
   ├─ 3. answer (LLM, structured)    summary · claims[] each with verbatim quotes · conflicts[] · not_found[]
   │                                 · confidence (high / medium / low / insufficient) + reason
@@ -69,6 +71,10 @@ question
   over the original question plus the planner's rewrites. For questions about the whole dataset, every
   candidate call also gets its best 2 chunks. Without that quota, long calls crowd short ones out of the
   top-k.
+- **Vendor claims** (`callqa/claims.py`): at index time, one extraction pass per call lists what
+  OrbitFlow staff assert about the product (plans, SSO, pricing, no-code, limits, support…) under 12
+  fixed topics, each with a verbatim quote. Every quote is run through the citation checker and kept
+  only if it verifies and was said by vendor staff (587 claims). Cached per call content.
 - **Answering** (`callqa/prompts.py`): the model sees whose side each speaker is on. It is told that a
   vendor's product statement is a claim, not a fact. It is told to report contradictions instead of
   picking one side. When it only saw excerpts, it must say "not found in the retrieved excerpts", not
@@ -94,7 +100,13 @@ question
 5. **The baseline is in the code (`--mode full`).** At this dataset size, the whole corpus fits in one
    prompt. The eval compares the pipeline with that brute-force option, so retrieval has to earn its
    place in quality, cost and latency. It is not assumed to help.
-6. **One OpenAI-compatible client.** It runs on OpenAI or Azure by changing env vars; no framework.
+6. **Contradictions get their own context, not better retrieval.** "Has the vendor given inconsistent
+   answers?" is about a relationship between two turns in different calls, and neither turn looks like
+   the question, so similarity search cannot find it (the first version failed it in every run). Putting
+   every vendor statement on a topic side by side makes a contradiction visible: "SSO is on all plans"
+   (one AE) next to statements in nine other calls that SAML SSO is Enterprise. The planner switches to this
+   context only for questions about the vendor's consistency.
+7. **One OpenAI-compatible client.** It runs on OpenAI or Azure by changing env vars; no framework.
 
 ## Assumptions
 
@@ -159,6 +171,12 @@ A fourth run from a fresh clone of this repo on 23.10, following this README
 recall 1.00, one citation attached to the wrong call (caught by the checker), abstention 5/5 with no
 false abstentions, ~13K prompt tokens, and the same failures (q11, q30).
 
+**After adding the vendor-claims context (23.10)**, q11 is answered correctly: both contradictions
+(SSO on all plans vs Enterprise-only, "completely no-code" vs "we don't claim every workflow is
+no-code"), in 4 of 4 manual runs and in the eval run (`eval/results/20261023-122047-auto-vendor-claims.md`:
+13 / 15 / 1 overall, citation validity 1.00, abstention 5/5). Only q11 is routed to the new context;
+the one "no" in that run is q05, a long list that stopped early, which was "partly" before.
+
 What I take from it:
 
 - **Retrieval is not the bottleneck**: every gold call reaches the model in every run. Misses happen
@@ -167,10 +185,10 @@ What I take from it:
   more reliable.** Not "better": re-judging the same answers with the same judge moved 6 of 30
   verdicts between yes and partly. The deterministic metrics and the yes-vs-no line are stable; the yes/partly split is not.
 - **Unanswerable and near-miss questions work** in all runs (Kestrel's ERP, ISO 27001, Enterprise price).
-- **Known failures**: q11 ("has the vendor given inconsistent answers?") is wrong in every run: the two
-  sides of each contradiction sit in different calls and similarity search does not find
-  disagreement. q24 finds both sides of the SSO question but will not weigh them. q30 (bonus) needs a
-  second retrieval hop.
+- **Known failures**: q11 ("has the vendor given inconsistent answers?") was wrong in every run of the
+  first version: the two sides of each contradiction sit in different calls and similarity search
+  does not find disagreement. It is fixed by the vendor-claims context (above). q24 finds both sides
+  of the SSO question but will not weigh them. q30 (bonus) needs a second retrieval hop.
 
 The gold set was drafted by an LLM, every citation checked against the source, and the 19 disputed
 points decided by a human (`eval/review/`). The judge itself is not yet calibrated against human
@@ -178,9 +196,10 @@ grades; the plan for that is in `eval/EVALUATION.md`.
 
 ## Known limitations
 
-- **Questions about relationships between calls** (contradictions, "who else said X", two-step
-  questions like q30) are the weak spot: retrieval finds passages similar to the question, not passages
-  that disagree with each other.
+- **Questions about relationships between calls** are the weak spot. Vendor contradictions are
+  handled by the claims table, but only for statements by OrbitFlow staff and only as well as the
+  extraction pass caught them; "who else said X" and two-step questions like q30 still rely on
+  retrieval, which finds passages similar to the question, not passages that relate to each other.
 - **Exhaustive lists**: "which customers mentioned X" can miss a call that mentions X once in passing
   if that excerpt ranks low, or if the answer stops early. The answer cannot say "this list is complete".
 - **Judgement questions** ("most likely to buy") are only as good as one model's read of excerpts; the
@@ -197,12 +216,11 @@ grades; the plan for that is in `eval/EVALUATION.md`.
 
 With another day:
 
-1. **Per-call structured notes at index time.** Run one extraction pass per call (cheap, cacheable,
-   incremental): participants and roles, competitors, integrations, pricing reactions, objections,
-   buying signals, outcome/next step, and **vendor claims by topic** (SSO, billing, pricing, no-code,
-   services), each with a turn reference. Cross-call questions (q11, "which customers…", "what did
-   successful cold calls have in common") then become queries over notes, not hoping similarity search
-   surfaces every relevant turn. Contradictions become a group-by on `vendor_claims.topic`.
+1. **More per-call notes at index time.** Vendor claims are already extracted this way. The same pass
+   could list competitors, integrations, pricing reactions, objections, buying signals and the outcome,
+   each with a turn reference. "Which customers…" and "what did successful cold calls have in common"
+   then become queries over notes instead of hoping similarity search surfaces every relevant turn.
+   The same notes would let a question like "Is SSO on Growth?" weigh all vendor statements at once.
 2. **A map step for "across" questions**: ask each candidate call "what does this call say about X?"
    in parallel (small model, ~20 calls), then synthesise. This trades tokens for recall on exhaustive
    lists, and gives an explicit "no mention" per call, which makes "this list is complete" a claim the

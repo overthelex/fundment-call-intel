@@ -121,8 +121,8 @@ citation caught by the checker, abstention 5/5 and ~13K tokens per question.
 
 ### Where it fails
 
-- **q11 "Has anyone from the vendor given inconsistent answers?"**: wrong in every pipeline run
-  (example 3).
+- **q11 "Has anyone from the vendor given inconsistent answers?"**: wrong in every run of the first
+  version; fixed on 23.10 by the vendor-claims context (example 3).
 - **q24 "Is SSO on Growth?"**: finds both sides but will not conclude (example 2).
 - **q30 (bonus, two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the
   question and the Juniper call to answer it. The planner routes to Verity only, so the pipeline
@@ -170,7 +170,7 @@ conclude Enterprise-only *missing*. The answer finds the conflict but treats one
 said he was "fairly sure" and would confirm) as equal to every engineer. Reporting a conflict is right;
 refusing to weigh it is not.
 
-### 3. Wrong: a cross-call question retrieval cannot see, q11
+### 3. Wrong, then fixed: a cross-call question retrieval cannot see, q11
 
 > Has anyone from the vendor given inconsistent answers about the product?
 
@@ -184,8 +184,24 @@ There are two: SSO on all plans (CALL-006) vs Enterprise-only (CALL-012 and the 
 sits in a single turn of a different call, and retrieval by similarity to the question finds turns
 that sound like "inconsistent answers", not turns that disagree with each other. The citations it did
 give are real, so citation validity stays at 1.0 while the answer is wrong, which is why validity
-alone is not a quality metric. The fix is structural (per-call vendor-claim notes grouped by topic, see
-"With more time" in the README), not a prompt change.
+alone is not a quality metric. The fix had to be structural, not a prompt change.
+
+**The fix.** At index time one extraction pass per call lists every product statement by OrbitFlow
+staff under 12 fixed topics, each with a verbatim quote that must pass the citation checker
+(`callqa/claims.py`, 587 claims). The planner flags questions about the vendor's consistency, and
+for those the answer step sees all claims grouped by topic. The same question now gets (run
+`results/20261023-122047-auto-vendor-claims`, verdict **yes**):
+
+> Yes. I found two clear inconsistencies in OrbitFlow staff answers: one about whether SSO is on all
+> plans or only Enterprise, and one about whether the product is completely no-code.
+> ✓ CALL-006 [07:23] Alastair McCrae (AE): "SSO's included on all our plans, that's standard."
+> ✓ CALL-002 [01:59] Jon Bell (SE): "SAML SSO and SCIM provisioning, both on Enterprise."
+> ✓ CALL-006 [11:30] Alastair McCrae (AE): "That's fine, it's completely no-code."
+> ✓ CALL-002 [19:37] Jon Bell (SE): "We don't claim every workflow is no-code."
+
+It found both contradictions in 4 of 4 manual runs. The first version of the extraction prompt missed
+short replies like "it's completely no-code"; telling it that short answers to a customer's question
+count, and that a hedge about SSO is an SSO claim, fixed that (448 → 587 claims).
 
 ## What changed because of the eval
 

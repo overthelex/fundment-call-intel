@@ -97,12 +97,13 @@ def main(argv: list[str] | None = None) -> None:
     ask.add_argument("--mode", choices=["auto", "full"], default="auto",
                      help="auto = plan + whole calls or retrieved excerpts; full = entire dataset in context")
     ask.add_argument("--json", action="store_true", help="print the raw result as JSON")
-    sub.add_parser("index", help="build the embedding cache")
+    sub.add_parser("index", help="build the embedding cache and extract vendor claims (both cached)")
     args = ap.parse_args(argv)
 
     pipe = Pipeline(args.data)
     if args.cmd == "index":
         print(f"indexed {len(pipe.index.chunks)} chunks from {len(pipe.calls)} calls")
+        print(f"extracted {len(pipe.claims.load())} vendor claims")
         return
     if args.cmd == "ask":
         r = pipe.ask(args.question, mode=args.mode)

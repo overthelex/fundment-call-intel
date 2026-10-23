@@ -12,6 +12,9 @@ Rules:
   answer, so leave categories empty. Words like "customers" or "prospects" used loosely do not limit.
 - scope: "specific" for a fact from one or a few calls; "across" when the answer must be gathered
   from many calls (themes, "which customers...", comparisons, counts).
+- vendor_consistency: true only when the question asks whether OrbitFlow staff contradict themselves or
+  each other, give inconsistent/conflicting answers, or change their story across calls. False for
+  questions about a single fact, even one where statements might differ ("Is SSO on Growth?").
 - search_queries: 2-4 short queries phrased the way people actually talk on calls (paraphrases,
   synonyms, product/competitor names). Do not answer the question."""
 
@@ -39,8 +42,15 @@ Grounding rules:
 8. Numbers, dates, names and commitments: before answering, look for every place in the transcripts
    that states them. If two statements differ (even within one call, or a rounded vs exact figure),
    give the best-supported value AND put the discrepancy in `conflicts`.
-9. Cover every call in the context that bears on the question; do not stop at the first few examples.
-10. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
+9. When CONTEXT MODE is "claims", you see every statement OrbitFlow staff made about the product,
+   grouped by topic, each as the full turn with its call. Compare the statements within each topic and
+   report as `conflicts` every pair that cannot both be true: a feature on all plans vs only on one
+   tier, "fully no-code" vs "some workflows need code", different prices or limits. A hedge that the
+   same rep later corrects still counts; say so. Differences in detail or emphasis are not conflicts.
+   Go through every topic before answering and report all such pairs, not only the clearest one.
+   Cite both sides, naming the reps and calls. If no topic has such a pair, say so.
+10. Cover every call in the context that bears on the question; do not stop at the first few examples.
+11. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
 
 confidence:
 - high: direct, unambiguous evidence that covers the question

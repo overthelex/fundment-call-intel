@@ -9,6 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .claims import ClaimStore
 from .index import Chunk, Index, turn_line
 from .llm import LLM, Usage
 from .parse import Call, Turn, load_calls
@@ -29,6 +30,9 @@ class Plan(BaseModel):
     scope: Literal["specific", "across"]
     search_queries: list[str]
     entity_notes: list[str] = Field(description="Name mismatches or unknown entities in the question")
+    vendor_consistency: bool = Field(
+        description="True only when the question asks whether OrbitFlow's own statements agree with each other"
+    )
 
 
 class Citation(BaseModel):
@@ -59,7 +63,7 @@ class Answer(BaseModel):
 
 @dataclass
 class Context:
-    mode: Literal["full", "excerpts"]
+    mode: Literal["full", "excerpts", "claims"]
     call_ids: list[str]
     turns: list[Turn]
     text: str
@@ -130,6 +134,7 @@ class Pipeline:
         self.calls_list = load_calls(data_dir)
         self.calls = {c.call_id: c for c in self.calls_list}
         self.index = Index(self.calls_list, self.llm)
+        self.claims = ClaimStore(self.calls_list, self.llm)
 
     # -- steps -------------------------------------------------------------
 
@@ -178,15 +183,17 @@ class Pipeline:
             turns.extend(picked[i] for i in sorted(picked))
         return Context("excerpts", sorted(by_call), turns, "\n\n".join(parts), [c for c, _ in hits])
 
+    def claims_context(self, usage: Usage | None = None) -> Context:
+        text, turns = self.claims.context(usage)
+        return Context("claims", sorted({t.call_id for t in turns}), turns, text)
+
     def answer(self, question: str, context: Context, plan: Plan | None, usage: Usage | None = None) -> Answer:
         notes = ""
         if plan and plan.entity_notes:
             notes = "NOTES FROM QUERY PLANNING\n" + "\n".join(f"- {n}" for n in plan.entity_notes) + "\n\n"
-        scope = (
-            f"CONTEXT MODE: {context.mode} ({len(context.call_ids)} of {len(self.calls)} calls shown"
-            + (", whole transcripts" if context.mode == "full" else ", retrieved excerpts only")
-            + ")"
-        )
+        shown = {"full": "whole transcripts", "excerpts": "retrieved excerpts only",
+                 "claims": "every product statement by OrbitFlow staff, grouped by topic"}[context.mode]
+        scope = f"CONTEXT MODE: {context.mode} ({len(context.call_ids)} of {len(self.calls)} calls shown, {shown})"
         user = f"{scope}\n\n{notes}TRANSCRIPTS\n{context.text}\n\nQUESTION\n{question}"
         return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort="medium", usage=usage)
 
@@ -197,7 +204,8 @@ class Pipeline:
     # -- entry point -------------------------------------------------------
 
     def ask(self, question: str, mode: Literal["auto", "full"] = "auto") -> Result:
-        """mode="auto": plan, then whole calls or retrieved excerpts depending on size.
+        """mode="auto": plan, then whole calls or retrieved excerpts depending on size, or the vendor-claims
+        table for questions about whether the vendor contradicts itself.
         mode="full": skip planning and put the entire dataset in context (baseline)."""
         t0 = time.time()
         usage = Usage()
@@ -208,7 +216,9 @@ class Pipeline:
             plan = self.plan(question, usage)
             ids = self.candidates(plan)
             size = sum(len(t.text.split()) for cid in ids for t in self.calls[cid].turns)
-            if size <= FULL_TEXT_WORD_BUDGET:
+            if plan.vendor_consistency and not plan.call_ids:
+                context = self.claims_context(usage)
+            elif size <= FULL_TEXT_WORD_BUDGET:
                 context = self.full_context(ids)
             else:
                 context = self.excerpt_context(question, plan, ids, usage)
