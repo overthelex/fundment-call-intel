@@ -385,6 +385,10 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
 - **The checker verifies that the quote exists and that the cited person said it, not that it supports
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
 - **Header vs body disagreements** are only surfaced when the question touches them.
+- **Ingestion is not deterministic.** Four fresh indexes of the same 20 calls gave 522–628 vendor
+  claims and 973–1,185 notes, and one gave three calls no claims at all (now retried, with a
+  warning). Answers that depend on a single statement (q11 needs Alastair's "all plans" in CALL-006)
+  can differ between two people's indexes; the claims and notes are inspectable in `.cache/callqa.db`.
 - **The gold set is small (30) and LLM-drafted** (see `eval/EVALUATION.md`). The judge is
   from a different vendor than the answering model, but it is still an LLM and it is noisy on the
   yes/partly boundary.

@@ -43,6 +43,20 @@ def test_ingest_is_idempotent_and_keeps_verified_notes(tmp_path):
     assert store.notes(["CALL-006"], ["needs and requirements"])[0] == []
 
 
+def test_an_empty_extraction_is_retried(tmp_path):
+    class FlakyLLM(FakeLLM):
+        def structured(self, system, user, schema, **kw):
+            if schema is CallClaims and self.reads == 0:
+                self.reads += 1
+                return CallClaims(claims=[])
+            return super().structured(system, user, schema, **kw)
+
+    llm = FlakyLLM()
+    store = Store(CALLS, llm, path=tmp_path / "db.sqlite")
+    store.ingest()
+    assert llm.reads == 2 and store.counts()["claims"] == 1
+
+
 def test_first_question_from_several_threads_ingests_once(tmp_path):
     from concurrent.futures import ThreadPoolExecutor
 

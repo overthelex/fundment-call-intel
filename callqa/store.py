@@ -67,9 +67,16 @@ class Store:
         return [c for c in self.calls.values() if have.get(c.call_id) != digest(c, self.llm)]
 
     def read(self, call: Call, usage: Usage | None = None) -> tuple[list[StoredClaim], list[StoredNote], np.ndarray]:
-        """The LLM work for one call; no database access, so calls can be read in parallel."""
-        cl = claims_mod.extract(call, self.calls, self.llm, usage)
-        ns = notes_mod.extract(call, self.calls, self.llm, usage)
+        """The LLM work for one call; no database access, so calls can be read in parallel.
+
+        An empty result is retried once: on a fresh index the extraction occasionally came back empty
+        for a whole call (3 of 20 calls without claims in one run, none in the next), and a call with
+        no claims silently removes one side of every contradiction it holds."""
+        cl = claims_mod.extract(call, self.calls, self.llm, usage) or claims_mod.extract(call, self.calls, self.llm, usage)
+        ns = notes_mod.extract(call, self.calls, self.llm, usage) or notes_mod.extract(call, self.calls, self.llm, usage)
+        if not cl or not ns:
+            print(f"warning: {call.call_id} has {len(cl)} vendor claims and {len(ns)} notes after a retry",
+                  file=sys.stderr, flush=True)
         vecs = np.zeros((0, 0), dtype=np.float32)
         if ns:
             vecs = np.asarray(self.llm.embed([f"{n.field}: {n.point}" for n in ns], usage=usage), dtype=np.float32)
