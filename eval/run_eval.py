@@ -94,15 +94,57 @@ class Judgement(BaseModel):
     declines: bool
 
 
-JUDGE_BACKEND = os.environ.get("JUDGE_BACKEND", "openai")  # "openai" (JUDGE_MODEL via LLM_*) or "claude-cli"
-CLAUDE_JUDGE_MODEL = os.environ.get("CLAUDE_JUDGE_MODEL", "opus")
+# "openai": JUDGE_MODEL on the same OpenAI-compatible API as the pipeline.
+# "anthropic": Claude through the Anthropic API (ANTHROPIC_API_KEY); the default whenever that key is set.
+# "claude-cli": Claude through a local, logged-in Claude Code (`claude -p`), no API key needed.
+JUDGE_BACKEND = os.environ.get("JUDGE_BACKEND") or ("anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "openai")
+CLAUDE_JUDGE_MODEL = os.environ.get("CLAUDE_JUDGE_MODEL") or ("opus" if JUDGE_BACKEND == "claude-cli" else "claude-opus-5-5")
+
+
+def inline_refs(schema: dict) -> dict:
+    """Pydantic puts nested models under $defs; inline them so the schema is self-contained."""
+    defs = schema.get("$defs", {})
+
+    def walk(x):
+        if isinstance(x, dict):
+            if "$ref" in x:
+                return walk(defs[x["$ref"].split("/")[-1]])
+            return {k: walk(v) for k, v in x.items() if k != "$defs"}
+        if isinstance(x, list):
+            return [walk(v) for v in x]
+        return x
+
+    return walk(schema)
+
+
+def judge_anthropic(user: str, client=None) -> Judgement:
+    """Forced tool call: the tool's input schema is the Judgement model, so the reply is structured."""
+    if client is None:
+        import anthropic
+
+        client = anthropic.Anthropic(max_retries=8)
+    tool = {"name": "record_judgement", "description": "Record the grading of the answer.",
+            "input_schema": inline_refs(Judgement.model_json_schema())}
+    msg = client.messages.create(
+        model=CLAUDE_JUDGE_MODEL, max_tokens=4096, system=JUDGE_SYSTEM,
+        messages=[{"role": "user", "content": user}],
+        tools=[tool], tool_choice={"type": "tool", "name": tool["name"]},
+    )
+    block = next(b for b in msg.content if b.type == "tool_use")
+    return Judgement.model_validate(block.input)
+
+
+def judge_name(pipe: Pipeline) -> str:
+    return f"{JUDGE_BACKEND}:{pipe.llm.judge_model if JUDGE_BACKEND == 'openai' else CLAUDE_JUDGE_MODEL}"
 
 
 def judge(pipe: Pipeline, user: str) -> Judgement:
-    """The judge can be a different vendor from the answering model, so it does not share its blind spots.
-    claude-cli runs Claude Code headless (`claude -p`) under the local login, with tools disabled."""
+    """The judge can be a different vendor from the answering model, so it does not share its blind spots."""
+    if JUDGE_BACKEND == "anthropic":
+        return judge_anthropic(user)
     if JUDGE_BACKEND != "claude-cli":
         return pipe.llm.structured(JUDGE_SYSTEM, user, Judgement, model=pipe.llm.judge_model, reasoning_effort="low")
+    # Claude Code headless under the local login, with tools, MCP servers and settings disabled
     cmd = [
         "claude", "-p", "--model", CLAUDE_JUDGE_MODEL, "--system-prompt", JUDGE_SYSTEM,
         "--tools", "", "--strict-mcp-config", "--setting-sources", "", "--no-session-persistence",
@@ -257,7 +299,7 @@ def fmt(x: float | None) -> str:
     return "-" if x is None else f"{x:.2f}"
 
 
-def summarise(rows: list[dict], mode: str) -> str:
+def summarise(rows: list[dict], mode: str, judge_label: str = "") -> str:
     ran = [r for r in rows if "error" not in r]
     ok = [r for r in ran if not r.get("bonus_question")]  # headline numbers exclude bonus questions
     answerable = [r for r in ok if not r["should_abstain"]]
@@ -266,6 +308,8 @@ def summarise(rows: list[dict], mode: str) -> str:
     failed = {k: v for k, v in status.items() if k not in ("exact", "shifted", "fuzzy")}
     out = [
         f"## Mode: {mode}  ({len(ran)}/{len(rows)} questions ran; headline over {len(ok)}, bonus questions listed separately)",
+        "",
+        f"Judge: `{judge_label}`" if judge_label else "",
         "",
         "| metric | value |",
         "|---|---|",
@@ -349,7 +393,7 @@ def main() -> None:
     out_dir = ROOT / "eval" / "results"
     out_dir.mkdir(exist_ok=True)
     (out_dir / f"{label}.json").write_text(json.dumps(rows, indent=2, ensure_ascii=False))
-    report = summarise(rows, mode)
+    report = summarise(rows, mode, judge_name(pipe))
     (out_dir / f"{label}.md").write_text(report + "\n")
     print(report)
     print(f"\nTotal tokens: {pipe.llm.usage.snapshot()}")

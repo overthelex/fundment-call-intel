@@ -119,9 +119,14 @@ uv run python eval/compare.py --auto A1.json A2.json A3.json --full F.json   # p
 ```
 
 Each run writes `eval/results/<timestamp>-<mode>.json` (every answer, plan, citation check and
-verdict) and a `.md` summary. The judge defaults to `JUDGE_MODEL` on the same API, so an OpenAI key is
-enough. The results below used Claude Opus as the judge (`JUDGE_BACKEND=claude-cli`, through a local
-`claude` CLI), a different vendor from the answering model.
+verdict) and a `.md` summary that names the judge. The judge should not be the answering model's own
+family, so it does not grade its own blind spots:
+
+- with `ANTHROPIC_API_KEY` set, the judge is Claude Opus through the Anthropic API (the setup the
+  results below were produced with, there through a local `claude` CLI: `JUDGE_BACKEND=claude-cli`);
+- without it, the judge falls back to `JUDGE_MODEL` (`gpt-5.4`) on the same API, so an OpenAI key
+  alone is enough to run everything. That judge is from the answering model's own family; the fallback
+  trades independence for zero extra setup.
 
 ### What it measures and why
 
