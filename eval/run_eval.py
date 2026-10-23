@@ -448,7 +448,8 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "", workers: int =
         f"| mean prompt tokens / question | {mean([r['prompt_tokens'] for r in ok]) or 0:,.0f} |",
         f"| mean latency (s) | {fmt(mean([r['seconds'] for r in ok]))} |",
         f"| latency p50 / p95 (s), {workers} questions in parallel | {pct(lat, 50)} / {pct(lat, 95)} |",
-        f"| answer step: mean output tokens (what latency follows) | {mean(answer_out) or 0:,.0f} |",
+        f"| answer step: mean output tokens (what latency follows) | "
+        f"{'-' if mean(answer_out) is None else f'{mean(answer_out):,.0f}'} |",
         f"| first failed step | {failures or 'none'} |",
         "",
         "| id | kind | correct | ctx recall | ev. recall | cited recall | ev. cited | cit. valid | core | atomic | penalties | abstain ok | conf | failure |",

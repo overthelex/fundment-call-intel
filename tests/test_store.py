@@ -41,3 +41,13 @@ def test_ingest_is_idempotent_and_keeps_verified_notes(tmp_path):
     notes, vecs = store.notes(["CALL-006"], ["pricing, budget and commercial terms"])
     assert [n.turn_idx for n in notes] and vecs.shape == (1, 3)
     assert store.notes(["CALL-006"], ["needs and requirements"])[0] == []
+
+
+def test_first_question_from_several_threads_ingests_once(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    llm = FakeLLM()
+    store = Store(CALLS, llm, path=tmp_path / "db.sqlite")
+    with ThreadPoolExecutor(4) as pool:
+        list(pool.map(lambda _: store.ensure(), range(4)))
+    assert llm.reads == 1 and store.counts()["claims"] == 1

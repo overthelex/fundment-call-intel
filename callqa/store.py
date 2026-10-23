@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import hashlib
 import sqlite3
+import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -54,6 +56,9 @@ class Store:
         self.db = sqlite3.connect(path, check_same_thread=False)
         self.db.executescript(SCHEMA)
         self._ready = False
+        # one connection shared by the eval's worker threads: ingestion and reads take turns, and a
+        # first question asked from several threads at once ingests once
+        self._lock = threading.RLock()
 
     # -- ingestion ---------------------------------------------------------
 
@@ -87,22 +92,29 @@ class Store:
 
     def ingest(self, usage: Usage | None = None, workers: int = 8) -> int:
         """Read every new or changed call; returns how many were (re)read."""
-        todo = self.stale()
-        with ThreadPoolExecutor(workers) as pool:
-            for call, (cl, ns, vecs) in zip(todo, pool.map(lambda c: self.read(c, usage), todo)):
-                self.write(call, cl, ns, vecs)
-        self._ready = True
-        return len(todo)
+        with self._lock:
+            todo = self.stale()
+            if todo:
+                print(f"ingesting {len(todo)} new or changed calls (once; about 15 s per call, in parallel)",
+                      file=sys.stderr, flush=True)
+            with ThreadPoolExecutor(workers) as pool:
+                for call, (cl, ns, vecs) in zip(todo, pool.map(lambda c: self.read(c, usage), todo)):
+                    self.write(call, cl, ns, vecs)
+            self._ready = True
+            return len(todo)
 
     def ensure(self, usage: Usage | None = None) -> None:
         if not self._ready:
-            self.ingest(usage)
+            with self._lock:
+                if not self._ready:
+                    self.ingest(usage)
 
     # -- reads -------------------------------------------------------------
 
     def claims(self) -> list[StoredClaim]:
-        rows = self.db.execute("SELECT call_id, turn_idx, topic, statement, speaker, quote FROM claims "
-                               "ORDER BY call_id, turn_idx")
+        with self._lock:
+            rows = self.db.execute("SELECT call_id, turn_idx, topic, statement, speaker, quote FROM claims "
+                                   "ORDER BY call_id, turn_idx").fetchall()
         return [StoredClaim(call_id=r[0], turn_idx=r[1], topic=r[2], statement=r[3], speaker=r[4], quote=r[5])
                 for r in rows]
 
@@ -113,10 +125,12 @@ class Store:
         if fields:
             q += f" AND field IN ({','.join('?' * len(fields))})"
             args += fields
-        rows = self.db.execute(q + " ORDER BY call_id, turn_idx", args).fetchall()
+        with self._lock:
+            rows = self.db.execute(q + " ORDER BY call_id, turn_idx", args).fetchall()
         ns = [StoredNote(call_id=r[0], turn_idx=r[1], field=r[2], point=r[3], speaker=r[4], quote=r[5]) for r in rows]
         vecs = np.stack([np.frombuffer(r[6], dtype=np.float32) for r in rows]) if rows else np.zeros((0, 0))
         return ns, vecs
 
     def counts(self) -> dict[str, int]:
-        return {t: self.db.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("calls", "claims", "notes")}
+        with self._lock:
+            return {t: self.db.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("calls", "claims", "notes")}

@@ -264,6 +264,7 @@ class Pipeline:
         self.store.ensure(usage)
         retrieved = self.excerpt_context(question, plan, call_ids, usage)
         notes, vecs = self.store.notes(call_ids, plan.note_fields or None)
+        noted = {n.call_id for n in notes}  # before the budget cut: a call cut for space did have notes
         if len(notes) > NOTE_BUDGET:
             qv = np.asarray(self.llm.embed([question], usage=usage)[0], dtype=np.float32)
             keep = np.argsort(-(vecs @ (qv / np.linalg.norm(qv))))[:NOTE_BUDGET]
@@ -277,7 +278,6 @@ class Pipeline:
             if n.turn_idx > 0 and len(turn.text.split()) < 20:
                 by_call[n.call_id].add(n.turn_idx - 1)
         text, turns = self.excerpt_text(by_call)
-        noted = {n.call_id for n in notes}
         empty = [f"{cid} ({self.calls[cid].company})" for cid in call_ids if cid not in noted]
         if empty:
             fields = "; ".join(plan.note_fields) if plan.note_fields else "any field"
