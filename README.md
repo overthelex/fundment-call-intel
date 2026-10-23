@@ -42,6 +42,68 @@ The client speaks the OpenAI API. With a plain OpenAI key, set only `LLM_API_KEY
 are then deployment names. Defaults: `CHAT_MODEL=gpt-5.4-mini`, `JUDGE_MODEL=gpt-5.4`,
 `EMBED_MODEL=text-embedding-3-small`.
 
+## Approach
+
+```
+question
+  │
+  ├─ 1. plan (LLM, structured)      which calls? (named companies, call kinds) · specific vs across · search queries
+  │                                 · name mismatches ("Acme Corp" → Acme Logistics, flagged)
+  ├─ 2. context                     candidate calls fit in 12K words? → send whole transcripts
+  │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
+  ├─ 3. answer (LLM, structured)    summary · claims[] each with verbatim quotes · conflicts[] · not_found[]
+  │                                 · confidence (high / medium / low / insufficient) + reason
+  └─ 4. verify (code)               each quote looked up in the parsed transcript → exact / shifted / fuzzy
+                                    / wrong speaker / wrong call / not found
+                                    unverifiable claims flagged; if none verify, confidence is lowered
+```
+
+- **Parsing** (`callqa/parse.py`): header + `[MM:SS] Speaker: text` turns; each turn keeps its file
+  line number and its side (vendor / customer, taken from the participant list). The call kind
+  (prospect / renewal / churn / cold call) is derived from `STAGE`, because the manifest's `call_type`
+  only separates prospects from existing customers.
+- **Chunks** (`callqa/index.py`): windows of consecutive turns (~180 words, 2-turn overlap) within one
+  call, each with a header naming the call, company, and kind. People talk in fragments, so a window keeps a
+  question with its answer.
+- **Retrieval**: BM25 catches exact names (Salesforce, Workato, SOC 2); embeddings catch paraphrase
+  ("we're nervous about the price" ≈ pricing concern). The two are merged with reciprocal-rank fusion
+  over the original question plus the planner's rewrites. For questions about the whole dataset, every
+  candidate call also gets its best 2 chunks. Without that quota, long calls crowd short ones out of the
+  top-k.
+- **Answering** (`callqa/prompts.py`): the model sees whose side each speaker is on. It is told that a
+  vendor's product statement is a claim, not a fact. It is told to report contradictions instead of
+  picking one side. When it only saw excerpts, it must say "not found in the retrieved excerpts", not
+  "never said".
+
+## Key decisions
+
+1. **Whole calls when they fit, retrieval when they don't.** One call is at most ~5K words, and all 20
+   are ~51K words. If the question names a company or a call kind (cold calls are ~4K words in total;
+   renewals ~7.5K), chunking only loses context. So those questions get whole transcripts. Retrieval is
+   used when the candidate set is large (all prospects, the whole dataset). The 12K-word budget is one
+   constant (`FULL_TEXT_WORD_BUDGET`).
+2. **Structured output and a verifier in code, not "please cite your sources".** Citations are data
+   (call, timestamp, speaker, quote), so they can be checked. The checker allows small timestamp
+   slips (`shifted`) and punctuation and casing differences, but rejects invented quotes, words said
+   by someone else (`wrong_speaker`) and quotes from another call (`wrong_call`, with a pointer to the
+   real one). That gives an objective grounding metric for the eval and a live warning for the user.
+3. **The planner sees a catalogue, not the data.** 20 lines of call metadata are enough to resolve
+   "Acme Corp", "customers who left" (= churn) or "renewals vs new business" to the right calls. A
+   question about something absent from the catalogue (an unknown company) is flagged up front.
+4. **Confidence is part of the answer contract.** `insufficient` is an expected output, not a failure.
+   The verifier can lower confidence but never raise it.
+5. **The baseline is in the code (`--mode full`).** At this dataset size, the whole corpus fits in one
+   prompt. The eval compares the pipeline with that brute-force option, so retrieval has to earn its
+   place in quality, cost and latency. It is not assumed to help.
+6. **One OpenAI-compatible client.** It runs on OpenAI or Azure by changing env vars; no framework.
+
+## Assumptions
+
+- Transcripts are the source of truth; the manifest/header is metadata and can be wrong. Speaker
+  attribution is correct (stated in the dataset README), so the speaker's side comes from the participant list.
+- Users are sales managers. They want a short answer plus the quotes to check it, more than a long essay.
+- English only, a few dozen calls, questions one at a time (no chat history).
+
 ## Evaluation
 
 Details, the full results table and three worked examples: [`eval/EVALUATION.md`](eval/EVALUATION.md).
