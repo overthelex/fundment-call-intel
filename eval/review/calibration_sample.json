@@ -1,0 +1,16 @@
+{
+ "run": "eval/results/20261017-155023-auto.json",
+ "sample": {
+  "a01": "q26",
+  "a02": "q10",
+  "a03": "q07",
+  "a04": "q12",
+  "a05": "q16",
+  "a06": "q03",
+  "a07": "q28",
+  "a08": "q11",
+  "a09": "q08",
+  "a10": "q19"
+ },
+ "why": "6 questions where the judge gradings disagreed, 4 where they agreed, covering every question kind and verdict; shown in random order with the judge verdicts hidden"
+}
