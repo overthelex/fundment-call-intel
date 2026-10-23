@@ -262,9 +262,7 @@ On the cross-call questions the notes default sits between the other two on evid
 (notes are written without knowing the question), at about a fifth of the map step's tokens; its 5
 "yes" against the map step's 4 is within the judge noise. One cost the table hides: indexing takes
 ~5 min instead of ~4, once. The full-run totals differ within the judge noise
-(±6 on yes/partly). Latency grew to ~36 s per question under 4 parallel questions, mostly from the
-turn inventory's output; dropping it in notes mode halved latency but cut core recall on cross-call
-questions from 0.83 to 0.66 in a test on four questions, so it stays.
+(±6 on yes/partly). These three runs used medium reasoning in the answer step; latency is in *Speed*.
 
 **With the map step and the turn inventory (23.10)**, run `eval/results/20261023-224354-auto-map.md`:
 **20 / 9 / 0**, the first result clearly outside the judge noise band (14–15 "yes" before). Evidence
@@ -299,6 +297,49 @@ What I take from it:
 
 The gold set was drafted by an LLM, every citation checked against the source, and the 19 disputed
 points decided by a human (`eval/review/`).
+
+## Speed
+
+Targets for a sales manager waiting on an answer with evidence: something on screen in under 2 s,
+a question about one call in ≤ 8 s, a question across calls in ≤ 20 s, p95 ≤ 30 s.
+
+Latency follows the tokens the model *generates* in the answer step, at roughly 180 tokens/s;
+context size, retrieval, note selection and citation checks are each under a second. The breakdown
+is printed under every answer (`[plan 1.3s · context 0.5s · answer 8.4s (1,298 out) · check 0.0s]`),
+is in `--json` → `steps`, and the eval reports p50/p95 and the answer step's output tokens.
+
+| one question at a time | before (medium reasoning) | now (low reasoning) |
+|---|---|---|
+| one call, whole transcript ("What was Verity paying?") | 7.7 s | 5.5 s |
+| product fact, excerpts + vendor statements ("SSO on Growth?") | 30 s | 10.2 s |
+| across calls, ingestion notes ("Why do prospects hesitate?") | 85 s | 18.9 s |
+
+| full eval, 4 questions in parallel | medium | low (`…-235835-auto-effort-low`) |
+|---|---|---|
+| mean / p50 / p95 latency | 36 / 33 / 129 s | 9.9 / 8.1 / 21.7 s |
+| answer step output tokens, mean | 6.3K | 1.3K |
+| yes / partly / no · core · atomic | 16 / 13 / 0 · 0.79 · 0.67 | 18 / 10 / 1 · 0.80 · 0.67 |
+
+What was tried, measured on the full eval:
+
+- **Shorter inventory** (call and timestamp only, no description per turn): no gain. Most output
+  tokens were reasoning, not the inventory (q04: 18.5K tokens out, an inventory of ~50 entries is
+  under 1K), and the model listed more turns once each entry was cheap (32 vs 19 on average). Kept,
+  since quality was the same (`…-235550-auto-compact`).
+- **Low reasoning in the answer step** (`ANSWER_EFFORT`, default now `low`): 4–5× less output and
+  3–4× lower latency with no loss in quality. The inventory written before the answer does the work
+  the extra reasoning was doing. The one "no" (q10, "all five cold calls got a follow-up", Trafford
+  did not) was the same error as in the medium run, there judged "partly".
+- **Progress on screen**: the CLI prints each step as it starts (`planning` → `plan: across question
+  over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first
+  output arrives in well under 2 s even when the answer takes 15 s.
+
+Not done yet, in order of expected gain: stream the answer text and check each citation as it
+arrives; run the planner on a smaller model and embed the question while it plans (~1–2 s); keep the
+static prompt and the transcripts ahead of the question so the provider's prefix cache applies to
+repeated questions on the same calls; cache answers by normalised question and data version; and
+provisioned throughput, since the spread under load (8 s alone vs up to 22 s p95 with 4 in parallel)
+is the provider's.
 
 ## Diagnosing a bad answer
 
@@ -385,5 +426,5 @@ cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per qu
 - **Operations**: run the eval in CI on prompt/model changes, log every question with its plan,
   context and citation checks, collect user feedback (thumbs down + "wrong citation"), and watch
   citation validity and abstention rate as live quality signals.
-- **Cost/latency**: cache the planner output and embeddings; route simple single-call questions to a
-  smaller model; stream the answer.
+- **Cost/latency**: see *Speed*; in production also per-tenant rate limits and a latency budget per
+  step, alerting on p95.

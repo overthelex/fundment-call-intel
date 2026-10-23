@@ -267,7 +267,8 @@ the call, because one run credited Sarah's words to Maya; q11 led to the vendor-
 to giving product questions every vendor statement on the topic and weighing conflicts; q06 and q16 to
 checking first names in code and showing the notes on names under the answer; turn-level evidence
 recall to the map step for cross-call questions, and the 7 answer-step failures to an inventory of
-relevant turns written before the answer (tested with `--replay`, so retrieval was held fixed).
+relevant turns written before the answer (tested with `--replay`, so retrieval was held fixed); and
+per-step timings to low reasoning in the answer step, which cut latency 3–4× with no loss in quality.
 
 ## Where the gold set comes from
 

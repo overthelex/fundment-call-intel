@@ -332,7 +332,8 @@ def regrade(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> 
     if "error" in saved:
         return saved
     res = saved["result"]
-    res["answer"].setdefault("relevant_turns", [])  # runs saved before the inventory
+    res["answer"]["relevant_turns"] = [{"call_id": t["call_id"], "timestamp": t["timestamp"]}
+                                       for t in res["answer"].get("relevant_turns", [])]  # older runs: none, or with a point
     for c in res["answer"]["conflicts"]:  # runs saved before conflicts were weighed
         c.setdefault("better_supported", "")
         c.setdefault("why", "")
@@ -395,7 +396,11 @@ def fmt(x: float | None) -> str:
     return "-" if x is None else f"{x:.2f}"
 
 
-def summarise(rows: list[dict], mode: str, judge_label: str = "") -> str:
+def pct(xs: list[float], p: int) -> str:
+    return f"{xs[min(len(xs) - 1, round(p / 100 * (len(xs) - 1)))]:.1f}" if xs else "-"
+
+
+def summarise(rows: list[dict], mode: str, judge_label: str = "", workers: int = 4) -> str:
     ran = [r for r in rows if "error" not in r]
     ok = [r for r in ran if not r.get("bonus_question")]  # headline numbers exclude bonus questions
     answerable = [r for r in ok if not r["should_abstain"]]
@@ -403,6 +408,8 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "") -> str:
     status = Counter(s for r in ok for s, n in r["citation_status"].items() for _ in range(n))
     failed = {k: v for k, v in status.items() if k not in ("exact", "shifted", "fuzzy")}
     judged = any(r["correct"] is not None for r in ok)
+    lat = sorted(r["seconds"] for r in ok)
+    answer_out = [r["result"].get("steps", {}).get("answer", {}).get("completion_tokens") for r in ok]
     for r in ran:  # recomputed, so a saved run is re-labelled when the rules change
         r["failure"] = failure(r) if "evidence_recall" in r else ""
     steps = Counter(r["failure"].split(" (")[0].split(";")[0] for r in ok if r.get("failure"))
@@ -440,6 +447,8 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "") -> str:
         f"| false abstention on answerable | {j(abst_false)} |",
         f"| mean prompt tokens / question | {mean([r['prompt_tokens'] for r in ok]) or 0:,.0f} |",
         f"| mean latency (s) | {fmt(mean([r['seconds'] for r in ok]))} |",
+        f"| latency p50 / p95 (s), {workers} questions in parallel | {pct(lat, 50)} / {pct(lat, 95)} |",
+        f"| answer step: mean output tokens (what latency follows) | {mean(answer_out) or 0:,.0f} |",
         f"| first failed step | {failures or 'none'} |",
         "",
         "| id | kind | correct | ctx recall | ev. recall | cited recall | ev. cited | cit. valid | core | atomic | penalties | abstain ok | conf | failure |",
@@ -519,7 +528,7 @@ def main() -> None:
     out_dir = ROOT / "eval" / "results"
     out_dir.mkdir(exist_ok=True)
     (out_dir / f"{label}.json").write_text(json.dumps(rows, indent=2, ensure_ascii=False))
-    report = summarise(rows, mode, judge_name())
+    report = summarise(rows, mode, judge_name(), args.workers)
     (out_dir / f"{label}.md").write_text(report + "\n")
     print(report)
     print(f"\nTotal tokens: {pipe.llm.usage.snapshot()}")

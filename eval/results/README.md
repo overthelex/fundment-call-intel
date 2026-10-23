@@ -21,7 +21,9 @@ in a `Judge:` line; the older ones predate that line, so their judge is listed h
 | `…-diagnostics-replay-inv-a`, `-inv-b` | the same, with the turn inventory | Claude Opus | reviewed | effect of the inventory (core 0.64 → 0.69) |
 | `20261023-223336-auto-map-subset` | the 8 cross-call questions with the map step | Claude Opus | reviewed | evidence recall 0.54 → 0.87 on them |
 | `20261023-224354-auto-map` | map step (≤25 calls) and turn inventory | Claude Opus | reviewed | 20/9/0; evidence recall 0.94; 47K tokens/question (`--across map`) |
-| `20261023-231007-auto-notes` | current code: cross-call questions use notes written at ingestion | Claude Opus | reviewed | **the current numbers** (16/13/0; evidence recall 0.86; 17K tokens/question) |
+| `20261023-231007-auto-notes` | cross-call questions use notes written at ingestion | Claude Opus | reviewed | 16/13/0; evidence recall 0.86; 17K tokens/question |
+| `20261023-235550-auto-compact` | inventory as call + timestamp only; adds per-step timings | Claude Opus | reviewed | 16/13/0; latency 36 s mean, 129 s p95 |
+| `20261023-235835-auto-effort-low` | current code: low reasoning in the answer step | Claude Opus | reviewed | **the current numbers** (18/10/1; core 0.80; latency 9.9 s mean, 21.7 s p95) |
 
 The raw 17.10 summaries (7/21/2, 5/24/1, 8/20/2) differ from the headline 14/14/1 because both the
 judge and the rubric changed afterwards: the gold set was reviewed (`../review/`), facts were split

@@ -32,8 +32,8 @@ ANSWER_SYSTEM = """You answer questions about sales-call transcripts for a sales
 to verify every claim. The vendor is OrbitFlow; vendor staff are labelled with company OrbitFlow,
 everyone else is the prospect/customer side.
 
-First, before writing the answer, fill `relevant_turns`: go through the context in order and list
-every turn that bears on the question (a figure, a caveat, a correction, a condition, who disagreed),
+First, before writing the answer, fill `relevant_turns` (call and timestamp only): go through the
+context in order and list every turn that bears on the question (a figure, a caveat, a correction, a condition, who disagreed),
 not only the obvious ones. Then write the answer from that list: each listed point must appear in a
 claim, a conflict or not_found, unless it only repeats another point. Caveats count: "the figure was
 from memory", "an impression, not a measurement", "only if X" change what the answer may claim.

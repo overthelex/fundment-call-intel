@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 from .pipeline import Pipeline, Result
@@ -58,7 +59,17 @@ def render(pipe: Pipeline, r: Result) -> str:
         f"\n[{ctx.mode}: {len(ctx.call_ids)} calls, {ctx.words:,} words in context · "
         f"{u['calls']} API calls · {u['prompt_tokens']:,} in / {u['completion_tokens']:,} out tokens · {r.seconds:.1f}s]"
     )
+    if r.steps:
+        out.append("[" + " · ".join(
+            f"{k} {v['seconds']:.1f}s" + (f" ({v['completion_tokens']:,} out)" if v["completion_tokens"] else "")
+            for k, v in r.steps.items()) + "]")
     return "\n".join(out)
+
+
+def progress() -> callable:
+    """Print each pipeline step to stderr as it starts, with the elapsed time."""
+    t0 = time.time()
+    return lambda msg: print(f"  [{time.time() - t0:5.1f}s] {msg}", file=sys.stderr, flush=True)
 
 
 def to_dict(r: Result) -> dict:
@@ -94,6 +105,7 @@ def to_dict(r: Result) -> dict:
         "warnings": r.warnings,
         "usage": r.usage,
         "seconds": round(r.seconds, 2),
+        "steps": r.steps,
     }
 
 
@@ -118,7 +130,7 @@ def main(argv: list[str] | None = None) -> None:
               f"{c['claims']} vendor claims, {c['notes']} notes")
         return
     if args.cmd == "ask":
-        r = pipe.ask(args.question, mode=args.mode)
+        r = pipe.ask(args.question, mode=args.mode, on_step=None if args.json else progress())
         print(json.dumps(to_dict(r), indent=2, ensure_ascii=False) if args.json else render(pipe, r))
         return
 
@@ -130,7 +142,7 @@ def main(argv: list[str] | None = None) -> None:
             break
         if not q:
             break
-        print(render(pipe, pipe.ask(q)))
+        print(render(pipe, pipe.ask(q, on_step=progress())))
 
 
 if __name__ == "__main__":

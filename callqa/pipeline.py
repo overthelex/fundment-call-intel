@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal
+from typing import Callable, Literal
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -31,6 +32,8 @@ MAX_PRODUCT_TOPICS = 3
 # comparison, capped at MAX_MAP_CALLS); "retrieval" uses excerpts only.
 Across = Literal["notes", "map", "retrieval"]
 MAX_MAP_CALLS = 25
+# Reasoning effort of the answer step; it is most of the answer's output tokens, hence of its latency.
+ANSWER_EFFORT = os.environ.get("ANSWER_EFFORT", "low")
 # At most this many notes go to the answer step, best first by similarity to the question.
 NOTE_BUDGET = 250
 
@@ -81,9 +84,9 @@ class Conflict(BaseModel):
 
 
 class RelevantTurn(BaseModel):
+    # only a pointer: every token here is generated before the answer and adds to latency
     call_id: str
     timestamp: str
-    point: str = Field(description="What this turn contributes to the answer, a few words")
 
 
 class Answer(BaseModel):
@@ -126,6 +129,9 @@ class Result:
     warnings: list[str]
     usage: dict
     seconds: float
+    # per step: seconds and tokens, so a slow answer shows which step was slow (latency follows the
+    # tokens the model generates, not the size of the context)
+    steps: dict = field(default_factory=dict)
 
     @property
     def cited_calls(self) -> list[str]:
@@ -311,7 +317,7 @@ class Pipeline:
         if context.claim_topics:
             scope += "\nPlus every OrbitFlow statement on: " + "; ".join(context.claim_topics)
         user = f"{scope}\n\nTRANSCRIPTS\n{context.text}\n\n{notes}QUESTION\n{question}"
-        return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort="medium", usage=usage)
+        return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort=ANSWER_EFFORT, usage=usage)
 
     def check(self, citations: list[Citation], context: Context) -> list[CitationCheck]:
         in_ctx = {(t.call_id, t.idx) for t in context.turns} | {(cid, -1) for cid in context.call_ids}
@@ -319,17 +325,34 @@ class Pipeline:
 
     # -- entry point -------------------------------------------------------
 
-    def ask(self, question: str, mode: Literal["auto", "full"] = "auto") -> Result:
+    def ask(self, question: str, mode: Literal["auto", "full"] = "auto",
+            on_step: Callable[[str], None] | None = None) -> Result:
         """mode="auto": plan, then whole calls or retrieved excerpts depending on size, or the vendor-claims
         table for questions about whether the vendor contradicts itself.
         mode="full": skip planning and put the entire dataset in context (baseline)."""
         t0 = time.time()
         usage = Usage()
+        steps: dict[str, dict] = {}
+        mark = {"t": t0, "u": usage.snapshot()}
+
+        def done(step: str) -> None:
+            now, u = time.time(), usage.snapshot()
+            steps[step] = {"seconds": round(now - mark["t"], 2),
+                           "prompt_tokens": u["prompt_tokens"] - mark["u"]["prompt_tokens"],
+                           "completion_tokens": u["completion_tokens"] - mark["u"]["completion_tokens"]}
+            mark.update(t=now, u=u)
+
+        say = on_step or (lambda _: None)
         plan: Plan | None = None
         if mode == "full":
             context = self.full_context(list(self.calls))
         else:
+            say("planning")
             plan = self.plan(question, usage)
+            done("plan")
+            scope = "named calls" if plan.call_ids else (", ".join(plan.categories) or "all calls")
+            say(f"plan: {plan.scope} question over {scope}"
+                + (f"; note fields: {', '.join(plan.note_fields)}" if plan.scope == "across" and plan.note_fields else ""))
             ids = self.candidates(plan)
             size = sum(len(t.text.split()) for cid in ids for t in self.calls[cid].turns)
             if plan.vendor_consistency and not plan.call_ids:
@@ -345,13 +368,17 @@ class Pipeline:
             if (plan.product_topics and len(plan.product_topics) <= MAX_PRODUCT_TOPICS
                     and plan.scope == "specific" and context.mode != "claims" and not plan.call_ids):
                 context = self.with_vendor_statements(context, plan.product_topics, usage)
+        done("context")
+        say(f"context: {context.mode}, {len(context.call_ids)} calls, {context.words:,} words; writing the answer")
 
         answer = self.answer(question, context, plan, usage)
+        done("answer")
         claim_checks = [self.check(c.citations, context) for c in answer.claims]
         conflict_checks = [self.check(c.citations, context) for c in answer.conflicts]
         confidence, warnings = assess(answer, claim_checks, conflict_checks)
+        done("check")
 
         return Result(
             question, plan, context, answer, claim_checks, conflict_checks,
-            confidence, warnings, usage.snapshot(), time.time() - t0,
+            confidence, warnings, usage.snapshot(), time.time() - t0, steps,
         )
