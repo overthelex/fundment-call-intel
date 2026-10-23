@@ -151,6 +151,13 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 | abstention: right on unanswerable / false on answerable | 5/5 · 0–1 of 24 | 5/5 · 0 of 24 |
 | prompt tokens per question | ~13K | 122K |
 
+**If you rerun it with the default judge (`gpt-5.4`), expect fewer "yes".** A run from a fresh clone
+of this repo on 23.10 (`eval/results/20261023-113918-auto-fresh-clone.md`) gave 8 / 18 / 3, and
+`gpt-5.4` grading the *same* answers as the first pipeline run gave 11 / 16 / 2: it is a stricter judge than
+Claude on the yes/partly line. What reproduces exactly is the deterministic part: context recall
+1.00, citation validity 1.00, abstention 5/5 with no false abstentions, ~13K prompt tokens, and the
+known failures (q11, q30).
+
 What I take from it:
 
 - **Retrieval is not the bottleneck**: every gold call reaches the model in every run. Misses happen

@@ -92,6 +92,11 @@ three runs is partly luck. The yes-vs-no line, the abstentions and the determini
 recall, citation validity, tokens) are stable. Taking the majority of three judge passes would cut the
 noise; the judge has not yet been calibrated against human grades (see the end of this file).
 
+The default judge is `gpt-5.4`, so that is what a rerun uses. It is stricter on the yes/partly line:
+a run from a fresh clone on 23.10 (`results/20261023-113918-auto-fresh-clone.md`) gave 8 / 18 / 3,
+with context recall 1.00, citation validity 1.00, abstention 5/5 and ~13K tokens per question, the
+same as the Claude-judged runs.
+
 ### Reading the numbers
 
 - **Routing and retrieval are not the bottleneck.** Every gold call reaches the model in every run.
