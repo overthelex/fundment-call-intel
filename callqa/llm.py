@@ -47,13 +47,21 @@ class Usage:
         }
 
 
+# A call made while someone waits for an answer finishes in well under a minute; one that hangs at the
+# provider is cut off and retried instead of holding the answer (or the whole eval) for minutes.
+QUESTION_TIMEOUT = 120
+# An extraction at ingestion generates 10-26K tokens and can take over 3 minutes under load; cutting it
+# off restarts it from zero (that made ingestion ~6 min with a 180 s timeout).
+INGEST_TIMEOUT = 600
+
+
 class LLM:
     def __init__(self) -> None:
         api_key = os.environ.get("LLM_API_KEY") or os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise SystemExit("Set LLM_API_KEY (or OPENAI_API_KEY); see README.")
         self.client = OpenAI(
-            api_key=api_key, base_url=os.environ.get("LLM_BASE_URL") or None, max_retries=8, timeout=600
+            api_key=api_key, base_url=os.environ.get("LLM_BASE_URL") or None, max_retries=8, timeout=QUESTION_TIMEOUT
         )
         self.chat_model = os.environ.get("CHAT_MODEL", "gpt-5.4-mini")
         self.embed_model = os.environ.get("EMBED_MODEL", "text-embedding-3-small")
@@ -67,12 +75,14 @@ class LLM:
         model: str | None = None,
         reasoning_effort: str | None = None,
         usage: Usage | None = None,
+        timeout: float | None = None,
     ) -> T:
         """One chat call whose output is validated against a pydantic schema."""
         kwargs = {}
         if reasoning_effort:
             kwargs["reasoning_effort"] = reasoning_effort
-        resp = self.client.chat.completions.parse(
+        client = self.client.with_options(timeout=timeout) if timeout else self.client
+        resp = client.chat.completions.parse(
             model=model or self.chat_model,
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
             response_format=schema,

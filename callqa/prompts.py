@@ -25,6 +25,12 @@ Rules:
   current tools; integrations and systems; pricing, budget and commercial terms; decision process and
   timeline; buying signals and next steps; outcome and account health; how the OrbitFlow team ran the
   call. Empty for "specific" questions.
+- assess_each_call: true when the answer has to give a verdict on each candidate call: ranking or
+  classifying them ("which prospects are most likely to buy?", "which renewals are at risk?"), or
+  saying which calls did something ("which customers mentioned Salesforce?", "which cold calls got a
+  follow-up?"). False for comparisons between groups of calls ("how do renewals differ from new
+  business?"), themes and reasons pooled across calls ("what concerns came up?"), single facts, and
+  product questions.
 - search_queries: 2-4 short queries phrased the way people actually talk on calls (paraphrases,
   synonyms, product/competitor names). Do not answer the question."""
 
@@ -60,8 +66,12 @@ Grounding rules:
    If the criteria do not clearly favour one side, set `better_supported` to "cannot tell". Weighing
    does not settle it: the summary states the conflict first, then which side is better supported and
    why, and confidence stays at most "medium".
-6. Judgement questions (e.g. "most likely to buy") are interpretations: name the signals you relied on
-   and cite them; say what would change the assessment.
+6. Judgement questions (e.g. "most likely to buy") are interpretations: say so in the summary (an
+   inference from the calls; nobody has committed unless a call says so), name the signals you relied
+   on and cite them. For a ranking, place EVERY candidate call in a tier (e.g. strongest / conditional /
+   unlikely near-term), and give each one its main condition, blocker or rival from the transcript:
+   a prospect with a hard gate (security review, legal agreement, budget, a veto) is not in the top tier
+   without that caveat, and a prospect whose decision depends on something else is "conditional".
 7. When CONTEXT MODE is "excerpts", you only see retrieved parts of calls: do not claim that something
    was never said; say "not found in the retrieved excerpts" instead. When it is "mapped", every
    candidate call was read in full for this question: the calls listed as having nothing on it can be

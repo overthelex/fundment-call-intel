@@ -8,9 +8,15 @@ Runs of the current code (the README's results table):
 
 | files | what it is | result |
 |---|---|---|
-| `20261024-113617-auto-committed-index`, `20261024-113750-auto-committed-index` | pipeline, twice, on the index committed in `.cache/` (claims from two merged passes) | 17 / 11 / 1 and 17 / 12 / 0; 21K tokens |
+| `20261024-120000-auto-final`, `20261024-120140-auto-final` | pipeline, twice, on the index committed in `.cache/` | 19 / 9 / 1 and 17 / 12 / 0; 31K tokens |
 | `20261024-094601-full-fresh-clone` | baseline: whole dataset in the prompt (`--mode full`) | 13 / 14 / 2; 123K tokens; 17 failed citations |
 | `comparison.md` | per-question verdicts of these three runs (`compare.py`) | which questions are unstable |
+
+Before per-call verdicts for questions that rank or classify calls, on the same index:
+`20261024-113617-auto-committed-index` 17 / 11 / 1 and `20261024-113750-auto-committed-index`
+17 / 12 / 0 (21K tokens). With them: `20261024-115650/115727/115809-auto-assess-each-call` (q02, q07, q09,
+q28, three times: q07 yes 2 of 3, q02 and q28 yes 3 of 3) and, with comparisons also getting
+verdicts, `20261024-115414/115539-auto-assess-incl-comparisons` (q09 core recall 0.0 and 0.27).
 
 The same code with a single claims pass, on four fresh indexes: `20261024-111014-auto-fresh-clone-4`
 18 / 10 / 1 and, on that same index again, `20261024-112846-auto-same-index` 13 / 15 / 1 (that index

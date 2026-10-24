@@ -368,7 +368,8 @@ def regrade(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> 
 def saved_plan(res: dict) -> Plan | None:
     if not res.get("plan"):
         return None
-    return Plan.model_validate({"product_topics": [], "note_fields": [], "vendor_consistency": False, **res["plan"]})
+    return Plan.model_validate({"product_topics": [], "note_fields": [], "vendor_consistency": False, "assess_each_call": False,
+                               **res["plan"]})
 
 
 def replay(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> dict:

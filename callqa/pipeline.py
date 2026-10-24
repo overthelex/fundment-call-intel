@@ -61,6 +61,10 @@ class Plan(BaseModel):
     note_fields: list[NoteField] = Field(
         description="For a question across calls, the note fields that hold the answer; empty = all"
     )
+    assess_each_call: bool = Field(
+        description="True when the answer needs a verdict on each candidate call: ranking or classifying "
+                    "calls, saying which calls did something, or comparing groups of calls"
+    )
 
 
 class Citation(BaseModel):
@@ -364,16 +368,21 @@ class Pipeline:
                 context = self.claims_context(usage)
             elif size <= FULL_TEXT_WORD_BUDGET:
                 context = self.full_context(ids)
-                if plan.scope == "across" and len(ids) > 1:
-                    say(f"reading each of {len(ids)} calls on its own")
-                    found = call_findings(question, ids, self.calls, self.llm, usage)
-                    context.text = render_findings(found) + "\n\n" + context.text
             elif plan.scope == "across" and self.across == "notes":
                 context = self.notes_context(question, plan, ids, usage)
             elif plan.scope == "across" and self.across == "map" and len(ids) <= MAX_MAP_CALLS:
                 context = self.mapped_context(question, plan, ids, usage)
             else:
                 context = self.excerpt_context(question, plan, ids, usage)
+            # A verdict per call, read on its own, when the answer has to be built call by call: one pass
+            # over several calls drops a call or its caveat (q10 "all five cold calls", q07 left out Acme).
+            # Always for a few whole calls; beyond the word budget only when the planner says the question
+            # assesses each call, and for at most MAX_MAP_CALLS candidates.
+            if (plan.scope == "across" and len(ids) > 1 and context.mode in ("full", "notes", "excerpts")
+                    and (context.mode == "full" or (plan.assess_each_call and len(ids) <= MAX_MAP_CALLS))):
+                say(f"reading each of {len(ids)} calls on its own")
+                found = call_findings(question, ids, self.calls, self.llm, usage)
+                context.text = render_findings(found) + "\n\n" + context.text
             if (plan.product_topics and len(plan.product_topics) <= MAX_PRODUCT_TOPICS
                     and plan.scope == "specific" and context.mode != "claims" and not plan.call_ids):
                 context = self.with_vendor_statements(context, plan.product_topics, usage)

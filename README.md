@@ -58,6 +58,7 @@ question
   │                                 · does it ask whether the vendor contradicts itself?
   │                                 · is it about a product fact? which of 12 topics?
   │                                 · across calls? which note fields hold the answer?
+  │                                 · does it rank or classify the calls ("which prospects…", "which customers…")?
   ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic,
   │                                   + contradictions found by checking each topic on its own (in parallel)
   │                                 candidate calls fit in 12K words? → send whole transcripts
@@ -66,6 +67,7 @@ question
   │                                   in those fields (+ retrieved excerpts), and the calls with none
   │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
   │                                 product fact? → plus every vendor statement on that topic, from all calls
+  │                                 ranks or classifies calls? → plus a verdict from reading each call (≤25)
   ├─ 3. answer (LLM, structured)    first an inventory of every relevant turn, then the answer from it:
   │                                 summary · claims[] each with verbatim quotes · conflicts[] · not_found[]
   │                                 · each conflict weighed: better-supported side + why, or "cannot tell"
@@ -216,29 +218,28 @@ Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/
 
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
-| run | `…-113617-auto-committed-index` | `…-113750-auto-committed-index` | `…-094601-full-fresh-clone` |
-| correct: yes / partly / no | **17 / 11 / 1** | **17 / 12 / 0** | 13 / 14 / 2 |
-| core / atomic fact recall | 0.74 / 0.65 | 0.76 / 0.66 | 0.73 / 0.61 |
-| context recall · evidence recall | 1.00 · 0.88 | 1.00 · 0.88 | 1.00 · 1.00 (by construction) |
-| citation validity | 1.00 | 1.00 | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 0 · 4 · 0 | 0 · 0 · 1 | 4 · 10 · 3 |
-| abstention: right on unanswerable · false on answerable | 4/5 · 0 of 24 | 4/5 · 0 of 24 | 5/5 · 0 of 24 |
-| penalties hit | 2 | 0 | 3 |
-| prompt tokens per question | 21K | 21K | 123K |
-| latency mean / p95, 4 questions in parallel | 10.1 / 22.1 s | 9.3 / 18.6 s | 11.3 / 38.5 s |
-| first failed step | answer 8, retrieval 4, attribution 2, abstention 1 | answer 7, retrieval 4, attribution 1, abstention 1 | answer 15, attribution 4 |
+| run | `…-120000-auto-final` | `…-120140-auto-final` | `…-094601-full-fresh-clone` |
+| correct: yes / partly / no | **19 / 9 / 1** | **17 / 12 / 0** | 13 / 14 / 2 |
+| core / atomic fact recall | 0.76 / 0.68 | 0.81 / 0.69 | 0.73 / 0.61 |
+| context recall · evidence recall | 1.00 · 0.87 | 1.00 · 0.87 | 1.00 · 1.00 (by construction) |
+| citation validity | 0.99 | 0.99 | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 2 · 3 · 1 | 2 · 2 · 1 | 4 · 10 · 3 |
+| abstention: right on unanswerable · false on answerable | 5/5 · 0 of 24 | 4/5 · 0 of 24 | 5/5 · 0 of 24 |
+| penalties hit | 0 | 0 | 3 |
+| prompt tokens per question | 31K | 31K | 123K |
+| latency mean / p95, 4 questions in parallel | 9.9 / 20.7 s | 11.2 / 31.2 s | 11.3 / 38.5 s |
+| first failed step | retrieval 4, answer 5, attribution 3 | answer 8, attribution 3, retrieval 3, abstention 1 | answer 15, attribution 4 |
 
-Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 4 of 30 (q02, q08,
-q16, q26). The baseline differs from both on 5: worse on q03, q07, q11 and q24, better on q30, where
-it sees every call. Runs of the same code on indexes built with a single claims pass gave 16–18
-"yes" and once 13 (`eval/results/README.md`); that spread is why claims are now extracted twice.
+Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 6 of 30, between
+yes and partly except q21. The baseline differs from both on 5: worse on q03, q11, q16 and q24,
+better on q30, where it sees every call.
 
 What I take from it:
 
-- **The pipeline is ahead of the brute-force baseline at about 1/6 of the tokens.** The yes/partly
-  gap (17 vs 13) is about the size of the judge's own noise (re-judging the same answers moved
+- **The pipeline is ahead of the brute-force baseline at about 1/4 of the tokens.** The yes/partly
+  gap (17–19 vs 13) is about the size of the judge's own noise (re-judging the same answers moved
   6 of 30 verdicts), so the safe claim is "at least as good". Two differences are not noise: the
-  baseline attaches far more quotes to the wrong call or speaker (17 failed citations vs 1–4), and
+  baseline attaches far more quotes to the wrong call or speaker (17 failed citations vs 5–6), and
   on q24 ("Is SSO on Growth?") it concluded "yes, all plans" from one AE against nine calls that say
   Enterprise, the error the vendor-statement table and the weighing rules exist to prevent (example 1
   in `eval/EVALUATION.md`).
@@ -248,16 +249,17 @@ What I take from it:
   renewals differ from new business?") reaches about a third of its evidence turns, and a pattern that only
   shows across calls is not in any one call's notes.
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
-- **Known failures**: q07 ("which prospects seem most likely to purchase?") is "partly" in both runs
-  (and "no" on earlier indexes): a judgement call, graded on tiers, and the answer leaves Acme out
-  or drops the caveats on the top prospects. q02 ("which customers mentioned Salesforce
-  integrations?") was "no" once, for listing BrightPath and Greenline. q30 (bonus) needs a second
-  retrieval hop and is declined.
-- **Fixed by splitting one pass into small parallel checks**: q11 (vendor contradictions) found only
-  some of the contradictions with one pass over ~600 statements; a check per claim topic makes it
-  "yes" in both runs. q10 ("which cold calls produced a follow-up?") said "all five" in 3 of 5
-  replays although Trafford's Yvonne said "I won't read it"; a verdict per call makes it "yes" in both
-  runs.
+- **Fixed by splitting one pass into small parallel checks.** One pass of the answer step over many
+  calls or statements dropped a call or a case. q11 (vendor contradictions) found only some of them;
+  a check per claim topic makes it "yes" in both runs. q10 ("which cold calls produced a follow-up?")
+  said "all five" although Trafford's Yvonne said "I won't read it"; q07 ("which prospects seem most
+  likely to purchase?") left Acme out and put BrightPath on top without its BAA gate; q02 listed
+  BrightPath and Greenline among the Salesforce customers. A verdict per call, read on its own, makes
+  q10, q02 and q28 "yes" in both runs and q07 "yes" in 3 of 5 (it was "partly" or "no" before).
+- **Known failures**: q09 ("how do renewals differ from new business?") is a pattern across calls
+  that no single call's notes hold; per-call verdicts made it worse, so comparisons do not get them.
+  q21 once took Sarah's rhetorical "costs a hundred thousand a year" over the £80K account value, a
+  trap noted in `eval/GOLD_NOTES.md`. q30 (bonus) needs a second retrieval hop and is declined.
 
 ### Options for questions across calls
 
@@ -297,6 +299,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | across calls, ingestion notes ("Why do prospects hesitate?") | 18.9 s |
 | ingestion of all 20 calls, fresh clone (`callqa index`) | ~2–3 min |
 | across a few whole calls, a verdict per call + answer ("Which cold calls produced a follow-up?") | 13–16 s |
+| a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
 | vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
 | the task's 11 example questions (`…-001127-auto-examples-low`): mean / median / slowest | 17.1 / 18.2 / 26.3 s |
 | full eval, 4 in parallel: mean / p50 / p95 | 8.6 / 7.8 / 21.0 s |
@@ -396,6 +399,7 @@ cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per qu
 | part | now | at thousands of calls | what to do instead |
 |---|---|---|---|
 | map step (read each candidate call) | ~139K tokens per cross-call question | ~6K tokens × every call: millions of tokens, minutes | **done**: notes at ingestion (default, ~26K tokens per cross-call question, most of the map step's gain); map kept as `--across map`, capped at 25 calls |
+| verdict per call, for questions that rank or classify calls (q02, q07, q28) | 100–150K tokens per such question at 10–20 calls | linear in the number of candidate calls | capped at 25 candidates; at scale, shortlist calls by their notes first and read only those |
 | notes at ingestion | ~1,100 notes, top 250 by field and similarity | grows with calls; the answer still gets ≤250 | add metadata filters and a shortlist of calls before ranking notes |
 | all vendor claims in one prompt (q11) | ~600 claims | tens of thousands, does not fit | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
 | every vendor statement on a topic (q24) | 9 calls on SSO | hundreds per topic | the same table: "SAML SSO: Enterprise, 9 calls / 3 reps; all plans, 1 call, later hedged"; weighing becomes counting |
