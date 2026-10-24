@@ -39,8 +39,9 @@ Runs that show one change, referenced from the README and `EVALUATION.md`:
 | `20261023-235835-auto-effort-low` | the same code on another index | 18 / 10 / 1 |
 | `20261024-1022*-auto-q11-topic-check` | q11 three times, after adding the per-topic contradiction check | yes, yes, yes |
 | `20261024-1031*-auto-per-call-check` | q08, q10, q19, q20 four times, after adding per-call verdicts | q10 yes ×4, q08 3 yes 1 partly, q19 partly, q20 yes |
-| `20261024-143451-auto-examples-low` | the task's 11 example questions, one at a time | 8 / 3 / 0; 16.7 s mean |
-| `20261024-144652-auto-examples-medium` | the same with `ANSWER_EFFORT=medium` | 7 / 4 / 0; 63.8 s mean |
+| `20261024-172455-auto-examples-low` | the task's 11 example questions, one at a time, current index | 9 / 2 / 0; 15.0 s mean |
+| `20261024-143451-auto-examples-low` | the same on the previous index | 8 / 3 / 0; 16.7 s mean |
+| `20261024-144652-auto-examples-medium` | the same with `ANSWER_EFFORT=medium`, previous index | 7 / 4 / 0; 63.8 s mean |
 
 Options for questions across calls (`--across`), measured with `ANSWER_EFFORT=medium`:
 

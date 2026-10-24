@@ -272,7 +272,8 @@ What I take from it:
   questions such as "Can we export audit logs to our own SIEM?", which the notes did not record; the
   notes prompt now records them as needs (10 of the 14 missed turns are noted now, 0 before):
   evidence recall 0.42 → 0.38–0.54 (it moves with the index and the fields the planner picks);
-  "partly" in every full run (core recall 0.5–0.67), "yes" in both runs of the 11 example questions.
+  "partly" in every full run (core recall 0.5–0.67) and in the latest run of the 11 example
+  questions, "yes" in the two before.
 - **Known failures**: q18 ("are the lead scores reliable?") once concluded flatly that they are not,
   from one person's impression. q21 once took Sarah's rhetorical "costs a hundred thousand a year" over the £80K account value, a
   trap noted in `eval/GOLD_NOTES.md`. q30 (bonus) needs a second retrieval hop and is declined.
@@ -318,7 +319,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
 | comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
 | vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
-| the task's 11 example questions, one at a time (`…-143451-auto-examples-low`): mean / median / slowest | 16.7 / 15.6 / 22.4 s |
+| the task's 11 example questions, one at a time (`…-172455-auto-examples-low`): mean / median / slowest | 15.0 / 15.2 / 21.1 s |
 | full eval, 4 in parallel (`…-154829/154956-auto-parts`): mean / p50 / p95 | 9.9–10.2 / 7.7–8.4 / 22.6–23.7 s |
 
 What keeps it there:
@@ -326,7 +327,8 @@ What keeps it there:
 - **Low reasoning in the answer step** (`ANSWER_EFFORT`, default `low`). The inventory of relevant
   turns, written before the answer, does the work extra reasoning would do. `ANSWER_EFFORT=medium`
   is ~4× slower (63.8 s mean on the 11 examples, slowest 197 s, `…-144652-auto-examples-medium`)
-  with no better verdicts: 7 / 4 / 0 against 8 / 3 / 0 at `low`. q07, q08 and q09 are "partly" at
+  with no better verdicts: 7 / 4 / 0 against 8 / 3 / 0 at `low` on the same (previous) index; 9 / 2 / 0
+  at `low` on the current one. q07, q08 and q09 are "partly" at
   both, so what they miss is not fixed by more reasoning.
 - **The inventory is call and timestamp only**: every token in it is generated before the answer.
 - **Calls are read at ingestion**, so a question across calls selects notes instead of reading calls.
