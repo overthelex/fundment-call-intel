@@ -12,6 +12,7 @@ import numpy as np
 from pydantic import BaseModel, Field
 
 from .claims import ClaimStore, Topic
+from .conflicts import find_conflicts, render as render_conflicts
 from .index import Chunk, Index, turn_line
 from .llm import LLM, Usage
 from .mapper import map_calls
@@ -285,8 +286,12 @@ class Pipeline:
         return Context("notes", sorted(by_call), turns, text, retrieved.chunks)
 
     def claims_context(self, usage: Usage | None = None) -> Context:
+        """Every vendor claim grouped by topic, plus the contradictions found by checking each topic on
+        its own (in parallel), so the answer does not depend on one pass comparing ~600 statements."""
         text, turns = self.claims.context(usage)
-        return Context("claims", sorted({t.call_id for t in turns}), turns, text)
+        found = find_conflicts(self.claims.topics(usage), self.calls, self.llm, usage)
+        return Context("claims", sorted({t.call_id for t in turns}), turns,
+                       render_conflicts(found) + "\n\n" + text)
 
     def with_vendor_statements(self, context: Context, topics: list[str], usage: Usage | None = None) -> Context:
         """Add every vendor statement on the question's product topics, from all calls. Retrieval returns

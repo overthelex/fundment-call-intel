@@ -66,3 +66,24 @@ def test_map_step_keeps_only_verified_turns():
 
     turns = read_call("Is SSO on all plans?", CALLS["CALL-006"], CALLS, MapLLM())
     assert [t.ts for t in turns] == ["07:23"]
+
+
+def test_topic_conflict_check_drops_a_side_with_no_verified_quote():
+    from callqa.conflicts import Statement, TopicConflict, TopicConflicts, check_topic
+
+    topic = "no-code vs code, technical skills needed"
+    turns = [CALLS["CALL-006"].turns[110], CALLS["CALL-001"].turns[80]]
+
+    class ConflictLLM:
+        def structured(self, system, user, schema, **kw):
+            real_a = Statement(call_id="CALL-006", timestamp="11:30", speaker="Alastair McCrae", quote="it's completely no-code")
+            real_b = Statement(call_id="call-001", timestamp="12:12", speaker="Jon Bell", quote="We don't claim every workflow is no-code")
+            fake_b = Statement(call_id="CALL-001", timestamp="12:12", speaker="Jon Bell", quote="Everything needs JavaScript")
+            return TopicConflicts(conflicts=[
+                TopicConflict(what="real", side_a=[real_a], side_b=[real_b, fake_b]),
+                TopicConflict(what="invented", side_a=[real_a], side_b=[fake_b]),
+            ])
+
+    found = check_topic(topic, "text", turns, CALLS, ConflictLLM())
+    assert [c.what for c in found] == ["real"]
+    assert [(s.call_id, s.timestamp) for s in found[0].side_b] == [("CALL-001", "12:12")]  # normalised, invented one dropped

@@ -1,0 +1,2210 @@
+[
+  {
+    "id": "q11",
+    "kind": "conflict",
+    "bonus_question": false,
+    "question": "Has anyone from the vendor given inconsistent answers about the product?",
+    "context_recall": 1.0,
+    "cited_recall": 1.0,
+    "missed_calls": [],
+    "evidence_recall": 0.8,
+    "evidence_cited": 0.25,
+    "missed_evidence": [
+      "CALL-006 [07:35]",
+      "CALL-006 [14:36]",
+      "CALL-012 [16:21]",
+      "CALL-012 [16:31]"
+    ],
+    "citation_valid": 1.0,
+    "citations": 31,
+    "citation_status": {
+      "exact": 31
+    },
+    "should_abstain": false,
+    "confidence": "high",
+    "core_recall": 1.0,
+    "atomic_recall": 1.0,
+    "compound_recall": 1.0,
+    "contradicted": 0,
+    "penalties_hit": [],
+    "bonus_hit": 0,
+    "bonus_total": 3,
+    "correct": "yes",
+    "correct_reason": "Both required contradictions, SSO plan coverage and no-code, are identified with both sides shown.",
+    "verdicts": [
+      {
+        "n": 1,
+        "core": "supported",
+        "details_covered": [
+          1,
+          2
+        ],
+        "reason": "The answer says one rep (CALL-006) claimed SSO is on all plans, while many other reps across calls, including technical reps, said SAML SSO/SCIM is Enterprise-only. It quotes the 'I'm fairly sure it's all plans' hedge. It doesn't name the reps or mention 'lost on Growth', but the contradiction itself is covered."
+      },
+      {
+        "n": 2,
+        "core": "supported",
+        "details_covered": [],
+        "reason": "The answer quotes the 'completely no-code' claim from CALL-006 and sets it against CALL-001: 'We don't claim every workflow is no-code', which mentions expressions and Enterprise JavaScript steps."
+      }
+    ],
+    "abstained": false,
+    "abstention_correct": true,
+    "failure": "",
+    "prompt_tokens": 67763,
+    "completion_tokens": 7156,
+    "seconds": 19.8,
+    "result": {
+      "question": "Has anyone from the vendor given inconsistent answers about the product?",
+      "plan": {
+        "call_ids": [],
+        "categories": [],
+        "scope": "across",
+        "search_queries": [
+          "contradicting answers on the product",
+          "said different things about pricing or features",
+          "one call says SSO another says no SSO",
+          "roadmap changes across calls"
+        ],
+        "entity_notes": [],
+        "vendor_consistency": true,
+        "product_topics": [],
+        "note_fields": []
+      },
+      "context": {
+        "mode": "claims",
+        "call_ids": [
+          "CALL-001",
+          "CALL-002",
+          "CALL-003",
+          "CALL-004",
+          "CALL-005",
+          "CALL-006",
+          "CALL-007",
+          "CALL-008",
+          "CALL-009",
+          "CALL-010",
+          "CALL-011",
+          "CALL-012",
+          "CALL-013",
+          "CALL-014",
+          "CALL-015",
+          "CALL-016",
+          "CALL-017",
+          "CALL-018",
+          "CALL-019",
+          "CALL-020"
+        ],
+        "words": 19619,
+        "claim_topics": [],
+        "turns": [
+          [
+            "CALL-001",
+            34
+          ],
+          [
+            "CALL-001",
+            134
+          ],
+          [
+            "CALL-002",
+            28
+          ],
+          [
+            "CALL-002",
+            158
+          ],
+          [
+            "CALL-002",
+            164
+          ],
+          [
+            "CALL-002",
+            182
+          ],
+          [
+            "CALL-003",
+            57
+          ],
+          [
+            "CALL-004",
+            130
+          ],
+          [
+            "CALL-004",
+            133
+          ],
+          [
+            "CALL-004",
+            150
+          ],
+          [
+            "CALL-005",
+            133
+          ],
+          [
+            "CALL-005",
+            144
+          ],
+          [
+            "CALL-005",
+            156
+          ],
+          [
+            "CALL-007",
+            141
+          ],
+          [
+            "CALL-007",
+            145
+          ],
+          [
+            "CALL-008",
+            95
+          ],
+          [
+            "CALL-008",
+            201
+          ],
+          [
+            "CALL-008",
+            211
+          ],
+          [
+            "CALL-008",
+            301
+          ],
+          [
+            "CALL-009",
+            149
+          ],
+          [
+            "CALL-010",
+            70
+          ],
+          [
+            "CALL-010",
+            260
+          ],
+          [
+            "CALL-011",
+            77
+          ],
+          [
+            "CALL-012",
+            70
+          ],
+          [
+            "CALL-012",
+            72
+          ],
+          [
+            "CALL-012",
+            78
+          ],
+          [
+            "CALL-012",
+            112
+          ],
+          [
+            "CALL-013",
+            120
+          ],
+          [
+            "CALL-015",
+            12
+          ],
+          [
+            "CALL-015",
+            64
+          ],
+          [
+            "CALL-001",
+            136
+          ],
+          [
+            "CALL-002",
+            166
+          ],
+          [
+            "CALL-003",
+            55
+          ],
+          [
+            "CALL-003",
+            63
+          ],
+          [
+            "CALL-004",
+            126
+          ],
+          [
+            "CALL-005",
+            148
+          ],
+          [
+            "CALL-006",
+            73
+          ],
+          [
+            "CALL-006",
+            77
+          ],
+          [
+            "CALL-006",
+            79
+          ],
+          [
+            "CALL-006",
+            83
+          ],
+          [
+            "CALL-006",
+            141
+          ],
+          [
+            "CALL-007",
+            157
+          ],
+          [
+            "CALL-009",
+            162
+          ],
+          [
+            "CALL-011",
+            81
+          ],
+          [
+            "CALL-011",
+            95
+          ],
+          [
+            "CALL-011",
+            101
+          ],
+          [
+            "CALL-011",
+            167
+          ],
+          [
+            "CALL-011",
+            179
+          ],
+          [
+            "CALL-012",
+            92
+          ],
+          [
+            "CALL-013",
+            5
+          ],
+          [
+            "CALL-013",
+            146
+          ],
+          [
+            "CALL-014",
+            147
+          ],
+          [
+            "CALL-015",
+            120
+          ],
+          [
+            "CALL-018",
+            37
+          ],
+          [
+            "CALL-019",
+            25
+          ],
+          [
+            "CALL-001",
+            122
+          ],
+          [
+            "CALL-002",
+            13
+          ],
+          [
+            "CALL-004",
+            17
+          ],
+          [
+            "CALL-005",
+            42
+          ],
+          [
+            "CALL-006",
+            65
+          ],
+          [
+            "CALL-006",
+            145
+          ],
+          [
+            "CALL-007",
+            131
+          ],
+          [
+            "CALL-008",
+            83
+          ],
+          [
+            "CALL-009",
+            141
+          ],
+          [
+            "CALL-010",
+            162
+          ],
+          [
+            "CALL-012",
+            80
+          ],
+          [
+            "CALL-001",
+            102
+          ],
+          [
+            "CALL-001",
+            111
+          ],
+          [
+            "CALL-001",
+            113
+          ],
+          [
+            "CALL-001",
+            130
+          ],
+          [
+            "CALL-002",
+            8
+          ],
+          [
+            "CALL-002",
+            21
+          ],
+          [
+            "CALL-002",
+            33
+          ],
+          [
+            "CALL-002",
+            39
+          ],
+          [
+            "CALL-002",
+            41
+          ],
+          [
+            "CALL-002",
+            49
+          ],
+          [
+            "CALL-002",
+            88
+          ],
+          [
+            "CALL-002",
+            196
+          ],
+          [
+            "CALL-004",
+            27
+          ],
+          [
+            "CALL-004",
+            78
+          ],
+          [
+            "CALL-004",
+            176
+          ],
+          [
+            "CALL-006",
+            69
+          ],
+          [
+            "CALL-006",
+            71
+          ],
+          [
+            "CALL-007",
+            137
+          ],
+          [
+            "CALL-008",
+            30
+          ],
+          [
+            "CALL-008",
+            32
+          ],
+          [
+            "CALL-008",
+            53
+          ],
+          [
+            "CALL-008",
+            57
+          ],
+          [
+            "CALL-008",
+            59
+          ],
+          [
+            "CALL-008",
+            70
+          ],
+          [
+            "CALL-008",
+            72
+          ],
+          [
+            "CALL-008",
+            260
+          ],
+          [
+            "CALL-009",
+            131
+          ],
+          [
+            "CALL-010",
+            47
+          ],
+          [
+            "CALL-010",
+            49
+          ],
+          [
+            "CALL-010",
+            51
+          ],
+          [
+            "CALL-010",
+            53
+          ],
+          [
+            "CALL-011",
+            162
+          ],
+          [
+            "CALL-011",
+            164
+          ],
+          [
+            "CALL-013",
+            62
+          ],
+          [
+            "CALL-013",
+            69
+          ],
+          [
+            "CALL-013",
+            71
+          ],
+          [
+            "CALL-013",
+            75
+          ],
+          [
+            "CALL-013",
+            77
+          ],
+          [
+            "CALL-014",
+            155
+          ],
+          [
+            "CALL-002",
+            15
+          ],
+          [
+            "CALL-003",
+            53
+          ],
+          [
+            "CALL-004",
+            19
+          ],
+          [
+            "CALL-008",
+            85
+          ],
+          [
+            "CALL-010",
+            164
+          ],
+          [
+            "CALL-013",
+            46
+          ],
+          [
+            "CALL-001",
+            80
+          ],
+          [
+            "CALL-001",
+            88
+          ],
+          [
+            "CALL-001",
+            161
+          ],
+          [
+            "CALL-001",
+            163
+          ],
+          [
+            "CALL-001",
+            165
+          ],
+          [
+            "CALL-002",
+            99
+          ],
+          [
+            "CALL-002",
+            123
+          ],
+          [
+            "CALL-002",
+            128
+          ],
+          [
+            "CALL-002",
+            145
+          ],
+          [
+            "CALL-002",
+            148
+          ],
+          [
+            "CALL-003",
+            44
+          ],
+          [
+            "CALL-004",
+            114
+          ],
+          [
+            "CALL-005",
+            47
+          ],
+          [
+            "CALL-005",
+            112
+          ],
+          [
+            "CALL-005",
+            115
+          ],
+          [
+            "CALL-005",
+            140
+          ],
+          [
+            "CALL-006",
+            28
+          ],
+          [
+            "CALL-006",
+            58
+          ],
+          [
+            "CALL-007",
+            103
+          ],
+          [
+            "CALL-008",
+            146
+          ],
+          [
+            "CALL-008",
+            148
+          ],
+          [
+            "CALL-008",
+            256
+          ],
+          [
+            "CALL-009",
+            82
+          ],
+          [
+            "CALL-009",
+            84
+          ],
+          [
+            "CALL-009",
+            86
+          ],
+          [
+            "CALL-009",
+            229
+          ],
+          [
+            "CALL-010",
+            172
+          ],
+          [
+            "CALL-010",
+            184
+          ],
+          [
+            "CALL-010",
+            186
+          ],
+          [
+            "CALL-013",
+            132
+          ],
+          [
+            "CALL-014",
+            74
+          ],
+          [
+            "CALL-014",
+            125
+          ],
+          [
+            "CALL-015",
+            104
+          ],
+          [
+            "CALL-015",
+            114
+          ],
+          [
+            "CALL-019",
+            19
+          ],
+          [
+            "CALL-020",
+            37
+          ],
+          [
+            "CALL-002",
+            124
+          ],
+          [
+            "CALL-006",
+            40
+          ],
+          [
+            "CALL-006",
+            110
+          ],
+          [
+            "CALL-006",
+            112
+          ],
+          [
+            "CALL-006",
+            114
+          ],
+          [
+            "CALL-006",
+            121
+          ],
+          [
+            "CALL-007",
+            113
+          ],
+          [
+            "CALL-008",
+            61
+          ],
+          [
+            "CALL-010",
+            23
+          ],
+          [
+            "CALL-010",
+            31
+          ],
+          [
+            "CALL-010",
+            45
+          ],
+          [
+            "CALL-002",
+            23
+          ],
+          [
+            "CALL-003",
+            93
+          ],
+          [
+            "CALL-005",
+            150
+          ],
+          [
+            "CALL-006",
+            81
+          ],
+          [
+            "CALL-007",
+            92
+          ],
+          [
+            "CALL-007",
+            149
+          ],
+          [
+            "CALL-010",
+            74
+          ],
+          [
+            "CALL-010",
+            76
+          ],
+          [
+            "CALL-010",
+            151
+          ],
+          [
+            "CALL-011",
+            5
+          ],
+          [
+            "CALL-011",
+            20
+          ],
+          [
+            "CALL-011",
+            23
+          ],
+          [
+            "CALL-011",
+            32
+          ],
+          [
+            "CALL-011",
+            72
+          ],
+          [
+            "CALL-011",
+            85
+          ],
+          [
+            "CALL-011",
+            87
+          ],
+          [
+            "CALL-012",
+            114
+          ],
+          [
+            "CALL-012",
+            150
+          ],
+          [
+            "CALL-012",
+            184
+          ],
+          [
+            "CALL-013",
+            94
+          ],
+          [
+            "CALL-014",
+            141
+          ],
+          [
+            "CALL-019",
+            27
+          ],
+          [
+            "CALL-001",
+            96
+          ],
+          [
+            "CALL-001",
+            106
+          ],
+          [
+            "CALL-003",
+            85
+          ],
+          [
+            "CALL-003",
+            89
+          ],
+          [
+            "CALL-003",
+            91
+          ],
+          [
+            "CALL-004",
+            169
+          ],
+          [
+            "CALL-004",
+            170
+          ],
+          [
+            "CALL-005",
+            25
+          ],
+          [
+            "CALL-005",
+            27
+          ],
+          [
+            "CALL-005",
+            35
+          ],
+          [
+            "CALL-005",
+            37
+          ],
+          [
+            "CALL-006",
+            56
+          ],
+          [
+            "CALL-008",
+            108
+          ],
+          [
+            "CALL-008",
+            122
+          ],
+          [
+            "CALL-008",
+            124
+          ],
+          [
+            "CALL-008",
+            128
+          ],
+          [
+            "CALL-009",
+            103
+          ],
+          [
+            "CALL-009",
+            109
+          ],
+          [
+            "CALL-009",
+            115
+          ],
+          [
+            "CALL-009",
+            119
+          ],
+          [
+            "CALL-009",
+            124
+          ],
+          [
+            "CALL-011",
+            153
+          ],
+          [
+            "CALL-011",
+            155
+          ],
+          [
+            "CALL-011",
+            159
+          ],
+          [
+            "CALL-013",
+            40
+          ],
+          [
+            "CALL-013",
+            60
+          ],
+          [
+            "CALL-001",
+            124
+          ],
+          [
+            "CALL-001",
+            141
+          ],
+          [
+            "CALL-001",
+            147
+          ],
+          [
+            "CALL-001",
+            157
+          ],
+          [
+            "CALL-002",
+            170
+          ],
+          [
+            "CALL-003",
+            145
+          ],
+          [
+            "CALL-004",
+            178
+          ],
+          [
+            "CALL-004",
+            251
+          ],
+          [
+            "CALL-005",
+            199
+          ],
+          [
+            "CALL-006",
+            38
+          ],
+          [
+            "CALL-006",
+            106
+          ],
+          [
+            "CALL-006",
+            108
+          ],
+          [
+            "CALL-006",
+            117
+          ],
+          [
+            "CALL-006",
+            119
+          ],
+          [
+            "CALL-006",
+            130
+          ],
+          [
+            "CALL-006",
+            132
+          ],
+          [
+            "CALL-006",
+            139
+          ],
+          [
+            "CALL-007",
+            185
+          ],
+          [
+            "CALL-007",
+            190
+          ],
+          [
+            "CALL-007",
+            192
+          ],
+          [
+            "CALL-008",
+            215
+          ],
+          [
+            "CALL-008",
+            218
+          ],
+          [
+            "CALL-008",
+            262
+          ],
+          [
+            "CALL-008",
+            272
+          ],
+          [
+            "CALL-008",
+            276
+          ],
+          [
+            "CALL-009",
+            168
+          ],
+          [
+            "CALL-009",
+            215
+          ],
+          [
+            "CALL-010",
+            15
+          ],
+          [
+            "CALL-010",
+            256
+          ],
+          [
+            "CALL-010",
+            288
+          ],
+          [
+            "CALL-011",
+            121
+          ],
+          [
+            "CALL-011",
+            124
+          ],
+          [
+            "CALL-011",
+            171
+          ],
+          [
+            "CALL-011",
+            173
+          ],
+          [
+            "CALL-012",
+            17
+          ],
+          [
+            "CALL-012",
+            19
+          ],
+          [
+            "CALL-012",
+            32
+          ],
+          [
+            "CALL-012",
+            35
+          ],
+          [
+            "CALL-012",
+            90
+          ],
+          [
+            "CALL-012",
+            154
+          ],
+          [
+            "CALL-012",
+            155
+          ],
+          [
+            "CALL-012",
+            188
+          ],
+          [
+            "CALL-012",
+            192
+          ],
+          [
+            "CALL-014",
+            52
+          ],
+          [
+            "CALL-014",
+            54
+          ],
+          [
+            "CALL-014",
+            105
+          ],
+          [
+            "CALL-014",
+            109
+          ],
+          [
+            "CALL-015",
+            60
+          ],
+          [
+            "CALL-015",
+            88
+          ],
+          [
+            "CALL-015",
+            106
+          ],
+          [
+            "CALL-015",
+            116
+          ],
+          [
+            "CALL-018",
+            59
+          ],
+          [
+            "CALL-018",
+            61
+          ],
+          [
+            "CALL-019",
+            37
+          ],
+          [
+            "CALL-020",
+            64
+          ],
+          [
+            "CALL-008",
+            92
+          ],
+          [
+            "CALL-015",
+            97
+          ],
+          [
+            "CALL-001",
+            54
+          ],
+          [
+            "CALL-001",
+            64
+          ],
+          [
+            "CALL-001",
+            66
+          ],
+          [
+            "CALL-001",
+            77
+          ],
+          [
+            "CALL-001",
+            78
+          ],
+          [
+            "CALL-001",
+            83
+          ],
+          [
+            "CALL-001",
+            109
+          ],
+          [
+            "CALL-001",
+            116
+          ],
+          [
+            "CALL-001",
+            167
+          ],
+          [
+            "CALL-002",
+            81
+          ],
+          [
+            "CALL-002",
+            93
+          ],
+          [
+            "CALL-002",
+            95
+          ],
+          [
+            "CALL-002",
+            134
+          ],
+          [
+            "CALL-002",
+            140
+          ],
+          [
+            "CALL-002",
+            180
+          ],
+          [
+            "CALL-003",
+            13
+          ],
+          [
+            "CALL-003",
+            16
+          ],
+          [
+            "CALL-003",
+            18
+          ],
+          [
+            "CALL-003",
+            20
+          ],
+          [
+            "CALL-003",
+            32
+          ],
+          [
+            "CALL-003",
+            34
+          ],
+          [
+            "CALL-003",
+            75
+          ],
+          [
+            "CALL-003",
+            81
+          ],
+          [
+            "CALL-003",
+            83
+          ],
+          [
+            "CALL-004",
+            21
+          ],
+          [
+            "CALL-004",
+            24
+          ],
+          [
+            "CALL-004",
+            43
+          ],
+          [
+            "CALL-004",
+            73
+          ],
+          [
+            "CALL-004",
+            76
+          ],
+          [
+            "CALL-004",
+            99
+          ],
+          [
+            "CALL-004",
+            105
+          ],
+          [
+            "CALL-004",
+            107
+          ],
+          [
+            "CALL-005",
+            8
+          ],
+          [
+            "CALL-005",
+            76
+          ],
+          [
+            "CALL-005",
+            78
+          ],
+          [
+            "CALL-005",
+            82
+          ],
+          [
+            "CALL-005",
+            94
+          ],
+          [
+            "CALL-005",
+            96
+          ],
+          [
+            "CALL-005",
+            102
+          ],
+          [
+            "CALL-005",
+            138
+          ],
+          [
+            "CALL-006",
+            4
+          ],
+          [
+            "CALL-006",
+            6
+          ],
+          [
+            "CALL-006",
+            24
+          ],
+          [
+            "CALL-006",
+            42
+          ],
+          [
+            "CALL-006",
+            47
+          ],
+          [
+            "CALL-006",
+            49
+          ],
+          [
+            "CALL-006",
+            51
+          ],
+          [
+            "CALL-006",
+            53
+          ],
+          [
+            "CALL-006",
+            62
+          ],
+          [
+            "CALL-006",
+            89
+          ],
+          [
+            "CALL-007",
+            13
+          ],
+          [
+            "CALL-007",
+            22
+          ],
+          [
+            "CALL-007",
+            40
+          ],
+          [
+            "CALL-007",
+            86
+          ],
+          [
+            "CALL-007",
+            94
+          ],
+          [
+            "CALL-007",
+            139
+          ],
+          [
+            "CALL-008",
+            51
+          ],
+          [
+            "CALL-008",
+            268
+          ],
+          [
+            "CALL-009",
+            34
+          ],
+          [
+            "CALL-009",
+            91
+          ],
+          [
+            "CALL-009",
+            99
+          ],
+          [
+            "CALL-009",
+            239
+          ],
+          [
+            "CALL-010",
+            7
+          ],
+          [
+            "CALL-010",
+            11
+          ],
+          [
+            "CALL-010",
+            129
+          ],
+          [
+            "CALL-010",
+            133
+          ],
+          [
+            "CALL-010",
+            182
+          ],
+          [
+            "CALL-010",
+            190
+          ],
+          [
+            "CALL-010",
+            266
+          ],
+          [
+            "CALL-012",
+            86
+          ],
+          [
+            "CALL-012",
+            194
+          ],
+          [
+            "CALL-013",
+            34
+          ],
+          [
+            "CALL-013",
+            42
+          ],
+          [
+            "CALL-013",
+            84
+          ],
+          [
+            "CALL-013",
+            112
+          ],
+          [
+            "CALL-013",
+            114
+          ],
+          [
+            "CALL-013",
+            130
+          ],
+          [
+            "CALL-013",
+            144
+          ],
+          [
+            "CALL-014",
+            89
+          ],
+          [
+            "CALL-015",
+            2
+          ],
+          [
+            "CALL-015",
+            58
+          ],
+          [
+            "CALL-015",
+            118
+          ],
+          [
+            "CALL-016",
+            5
+          ],
+          [
+            "CALL-017",
+            5
+          ],
+          [
+            "CALL-017",
+            33
+          ],
+          [
+            "CALL-017",
+            35
+          ],
+          [
+            "CALL-018",
+            3
+          ],
+          [
+            "CALL-018",
+            77
+          ],
+          [
+            "CALL-019",
+            5
+          ],
+          [
+            "CALL-019",
+            11
+          ],
+          [
+            "CALL-019",
+            23
+          ],
+          [
+            "CALL-019",
+            29
+          ],
+          [
+            "CALL-020",
+            11
+          ],
+          [
+            "CALL-020",
+            39
+          ]
+        ],
+        "text": "CONTRADICTIONS FOUND TOPIC BY TOPIC (every topic was checked separately; quotes verified)\n1. [SSO, SCIM and identity] SSO on all plans vs SAML SSO and SCIM on Enterprise only\n   A: CALL-006 [07:23] Alastair McCrae: \"SSO's included on all our plans, that's standard.\"\n   A: CALL-006 [14:50] Alastair McCrae: \"I'm fairly sure it's all plans.\"\n   B: CALL-001 [20:05] Jon Bell: \"SAML SSO and SCIM on Enterprise.\"\n   B: CALL-002 [01:59] Jon Bell: \"SAML SSO and SCIM provisioning, both on Enterprise.\"\n   B: CALL-004 [02:09] Jon Bell: \"SAML SSO and SCIM provisioning — both supported, both on Enterprise.\"\n   B: CALL-005 [06:49] Nina Patel: \"SAML SSO and SCIM on Enterprise.\"\n   B: CALL-007 [16:22] Jon Bell: \"SAML SSO and SCIM on Enterprise, and Azure AD works with that.\"\n   B: CALL-008 [10:56] Nina Patel: \"SAML SSO and SCIM on Enterprise.\"\n   B: CALL-009 [17:29] Jon Bell: \"SAML SSO and SCIM on Enterprise, encryption in transit and at rest, audit logs covering administrative and workflow events.\"\n   B: CALL-010 [17:41] Nina Patel: \"SAML SSO and SCIM on Enterprise.\"\n   B: CALL-012 [07:10] Leo Grant: \"Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support.\"\n   B: CALL-012 [08:09] Leo Grant: \"SAML SSO is Enterprise.\"\n2. [security, compliance and certifications] SSO included on all plans vs SAML SSO on Enterprise only\n   A: CALL-006 [07:23] Alastair McCrae: \"Yeah, so SSO's included on all our plans, that's standard. And we're fully GDPR compliant, so that's all covered.\"\n   B: CALL-001 [20:05] Jon Bell: \"Baseline is SOC 2 Type II. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest.\"\n   B: CALL-002 [01:59] Jon Bell: \"SOC 2 Type II is the baseline. SAML SSO and SCIM provisioning, both on Enterprise.\"\n   B: CALL-004 [02:09] Jon Bell: \"SAML SSO and SCIM provisioning — both supported, both on Enterprise.\"\n   B: CALL-007 [16:22] Jon Bell: \"SAML SSO and SCIM on Enterprise, and Azure AD works with that.\"\n   B: CALL-008 [10:56] Nina Patel: \"SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise.\"\n   B: CALL-009 [17:29] Jon Bell: \"SOC 2 Type II baseline, SAML SSO and SCIM on Enterprise, encryption in transit and at rest,\"\n   B: CALL-010 [17:41] Nina Patel: \"SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise.\"\n   B: CALL-012 [07:10] Leo Grant: \"Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support.\"\n3. [integrations and connectors] Native connectors for customer systems vs limited native connectors requiring API work\n   A: CALL-006 [03:19] Alastair McCrae: \"All of those are native connectors, no problem at all.\"\n   B: CALL-008 [17:57] Nina Patel: \"native legal-system connectors are limited. In our catalogue, specifically, limited.\"\n   B: CALL-008 [18:22] Nina Patel: \"we'd be working through their APIs rather than a maintained native connector.\"\n4. [no-code vs code, technical skills needed] Some workflows require expressions/JavaScript or connector code vs the platform being completely no-code/just configuration\n   A: CALL-001 [12:12] Jon Bell: \"Transformations use expressions. On Enterprise you can package reusable JavaScript steps if you need to.\"\n   A: CALL-001 [12:12] Jon Bell: \"We don't claim every workflow is no-code.\"\n   A: CALL-002 [19:37] Jon Bell: \"Transformations use expressions. On Enterprise you can package reusable JavaScript steps.\"\n   A: CALL-002 [19:37] Jon Bell: \"We don't claim every workflow is no-code.\"\n   A: CALL-010 [03:01] Nina Patel: \"Custom components and connector code — the things that touch credentials and external systems — authored by you and version controlled.\"\n   B: CALL-006 [11:30] Alastair McCrae: \"That's fine, it's completely no-code.\"\n   B: CALL-006 [11:36] Alastair McCrae: \"For what you'd be doing, yeah.\"\n   B: CALL-006 [12:24] Alastair McCrae: \"Yeah, that's just configuration.\"\n\n## TOPIC: plans and what each tier includes\nCALL-001 (Acme Logistics, prospect) [04:50] Maya Chen (Account Executive, OrbitFlow): Fair. Growth starts at eighteen hundred a month, that's up to thirty users, annual agreement. Enterprise is custom — that's where the governance and security capabilities sit, plus higher usage.\nCALL-001 (Acme Logistics, prospect) [22:26] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed users. Approval-only or notification-only can be structured differently depending on the package. I'm deliberately not giving you an exact number today because without the user model any number I give you is misleading.\nCALL-002 (BrightPath Health, prospect) [04:03] Jon Bell (Solutions Engineer, OrbitFlow): Workspace separation is supported, and Enterprise has stronger governance around who can publish where. What I'd want to understand is whether you mean separate data planes or separate logical workspaces, because those are very different asks.\nCALL-002 (BrightPath Health, prospect) [23:53] Maya Chen (Account Executive, OrbitFlow): Growth starts at eighteen hundred a month for up to thirty users on an annual agreement. Enterprise is custom-priced — that's where advanced governance, the security capabilities, and higher usage sit. Given your list, you're an Enterprise conversation, not a Growth one.\nCALL-002 (BrightPath Health, prospect) [25:04] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only can be structured differently depending on package. I'm deliberately not quoting you a figure today because without the user model any figure I give is misleading.\nCALL-002 (BrightPath Health, prospect) [28:07] Jon Bell (Solutions Engineer, OrbitFlow): Version history and change metadata, yes. Rollback and promotion patterns vary by workflow and package. For your evaluation I'd suggest we include a change-management scenario rather than just building it once.\nCALL-003 (Cedar & Finch, prospect) [06:41] Leo Grant (Account Executive, OrbitFlow): Sensible. Growth starts at eighteen hundred a month, up to thirty users, on an annual agreement.\nCALL-004 (DeltaWorks Manufacturing, prospect) [20:23] Maya Chen (Account Executive, OrbitFlow): Fair enough. For the record — Growth is eighteen hundred a month up to thirty users on an annual agreement, but that's not your shape. You're an Enterprise conversation. Custom priced, advanced governance, security capabilities, higher usage.\nCALL-004 (DeltaWorks Manufacturing, prospect) [20:53] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed users. Approval-only or notification-only populations can be structured differently depending on package. I'm not going to give you a number today because without the user model any number is misleading.\nCALL-004 (DeltaWorks Manufacturing, prospect) [23:12] Jon Bell (Solutions Engineer, OrbitFlow): Workspace separation is supported and Enterprise has stronger governance around who can publish where. There's version history and change metadata on every workflow. Rollback and promotion patterns vary a bit depending on the workflow and the package, and I'd want to walk through your specific promotion process rather than assume it maps.\nCALL-005 (Ember Financial, prospect) [18:47] Nina Patel (Solutions Engineer, OrbitFlow): Workspace separation is supported, and Enterprise has stronger governance around who can publish where. There's version history and change metadata on every workflow, so you can see what changed and when. Rollback and promotion patterns vary a bit by package.\nCALL-005 (Ember Financial, prospect) [20:25] Leo Grant (Account Executive, OrbitFlow): Growth is eighteen hundred a month up to thirty users on an annual agreement. You're not a Growth shape — you're Enterprise, which is custom priced and adds the advanced governance, the security capabilities, and higher usage.\nCALL-005 (Ember Financial, prospect) [22:29] Leo Grant (Account Executive, OrbitFlow): Builders and full workspace users are the licensed users. Approval-only or notification-only populations can be structured differently depending on the package. Forty and three hundred is a very common shape and it's exactly why I won't quote you a number before I know it.\nCALL-007 (Greenline Energy Services, prospect) [18:00] Jon Bell (Solutions Engineer, OrbitFlow): You define that. Typically a small central group owns standards and publishing rights, and the regions contribute. Enterprise supports stronger governance around who can publish where.\nCALL-007 (Greenline Energy Services, prospect) [18:27] Maya Chen (Account Executive, OrbitFlow): Understood. Growth is eighteen hundred a month up to thirty users on an annual agreement. Enterprise is custom priced — advanced governance, the security capabilities, higher usage.\nCALL-008 (Harbor Legal, prospect) [12:28] Nina Patel (Solutions Engineer, OrbitFlow): Run events and metrics through APIs and webhooks, and audit export on Enterprise. Several customers forward events into their own tooling continuously.\nCALL-008 (Harbor Legal, prospect) [25:01] Leo Grant (Account Executive, OrbitFlow): Growth is eighteen hundred a month up to thirty users on an annual agreement. You're not a Growth shape — everything Samir's asked for sits in Enterprise, which is custom priced.\nCALL-008 (Harbor Legal, prospect) [26:24] Leo Grant (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only populations can be structured differently depending on package. I'm not giving you a number today because without the split it'd be misleading.\nCALL-008 (Harbor Legal, prospect) [37:10] Leo Grant (Account Executive, OrbitFlow): Summarising, then. Scope is administrative orchestration around matter opening, with conflicts decisions untouched and enforced at the credential layer. Information barriers are a real unsolved constraint, so phase one avoids barriered matters and we document that as deferred. AI is off for phase one. The decisive question is whether integration effort into iManage and Intapp is proportionate to the value, and we answer that with an operations list and honest difficulty ratings. Two practice groups, not the firm. Q4 PoC, Q1 decision.\nCALL-009 (Inkwell Learning, prospect) [18:23] Maya Chen (Account Executive, OrbitFlow): Yes. Growth is eighteen hundred a month up to thirty users on an annual agreement. Enterprise is custom priced and adds the advanced governance, the security capabilities, and higher usage.\nCALL-010 (Juniper Cloud Tools, prospect) [07:42] Leo Grant (Account Executive, OrbitFlow): Usage is scoped on workflow runs and premium connector needs. Growth is eighteen hundred a month up to thirty users, annual. You're an Enterprise conversation given the security list.\nCALL-010 (Juniper Cloud Tools, prospect) [27:36] Leo Grant (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only populations can be structured differently by package. For you it's probably a small number either way.\nCALL-011 (Lumen Retail Group, renewal) [08:02] Maya Chen (Account Executive, OrbitFlow): Right. Current contract is Enterprise, nine builder seats, run tier at two hundred and fifty thousand a month. It expires the eighteenth of October.\nCALL-012 (Pinewood Insurance, renewal) [06:55] Leo Grant (Account Executive, OrbitFlow): I've been listening and I want to say something that probably isn't in my interest. You're on Enterprise. Looking at what you're actually using, I'm not sure you should be.\nCALL-012 (Pinewood Insurance, renewal) [07:10] Leo Grant (Account Executive, OrbitFlow): Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support. Nadia, how many of those are you using?\nCALL-012 (Pinewood Insurance, renewal) [07:50] Leo Grant (Account Executive, OrbitFlow): Growth. Eighteen hundred a month, up to thirty users, annual. You'd lose SCIM, audit export, EU residency as a contractual commitment, some of the governance controls, and priority support drops to standard.\nCALL-012 (Pinewood Insurance, renewal) [12:25] Leo Grant (Account Executive, OrbitFlow): It's a six-month term. It ends. There's no auto-renew clause on a term like that and I'd put that in writing.\nCALL-013 (Halberd Security, renewal) [12:20] Nina Patel (Solutions Engineer, OrbitFlow): Enterprise supports governance around who can publish where, so the mechanism is separating build permissions from publish permissions. Whether there's a formal two-person approval gate specifically — that's the same permissions question I'm already checking. I'll fold it into the same answer.\nCALL-015 (Oakhill Property, churn) [01:10] Ruth Adeyemi (Customer Success Manager, OrbitFlow): And you were on Growth.\nCALL-015 (Oakhill Property, churn) [06:39] Ruth Adeyemi (Customer Success Manager, OrbitFlow): There isn't one.\n\n## TOPIC: pricing and discounts\nCALL-001 (Acme Logistics, prospect) [04:50] Maya Chen (Account Executive, OrbitFlow): Fair. Growth starts at eighteen hundred a month, that's up to thirty users, annual agreement. Enterprise is custom — that's where the governance and security capabilities sit, plus higher usage.\nCALL-001 (Acme Logistics, prospect) [22:56] Maya Chen (Account Executive, OrbitFlow): It'll be itemised — assumed builder count, viewer and approver population, expected workflow volume, and any one-time services separately.\nCALL-002 (BrightPath Health, prospect) [23:53] Maya Chen (Account Executive, OrbitFlow): Growth starts at eighteen hundred a month for up to thirty users on an annual agreement. Enterprise is custom-priced — that's where advanced governance, the security capabilities, and higher usage sit. Given your list, you're an Enterprise conversation, not a Growth one.\nCALL-002 (BrightPath Health, prospect) [25:35] Maya Chen (Account Executive, OrbitFlow): It'll be itemised. Assumed builders, viewer and approver population, expected workflow volume, one-time services separately.\nCALL-003 (Cedar & Finch, prospect) [06:31] Leo Grant (Account Executive, OrbitFlow): That's the expensive one, yes.\nCALL-003 (Cedar & Finch, prospect) [07:16] Leo Grant (Account Executive, OrbitFlow): It can. I'd be lying if I said it halves it. It's a meaningful discount, not a transformation.\nCALL-004 (DeltaWorks Manufacturing, prospect) [19:43] Maya Chen (Account Executive, OrbitFlow): Then here's what I'll commit to. The proposal will separate licence, assumed builder count, viewer and approver population, expected workflow volume, and services as distinct line items, with the assumptions written next to each. And where I don't know, it'll say \"to be determined after architecture review\" rather than a placeholder number that looks like a quote.\nCALL-004 (DeltaWorks Manufacturing, prospect) [20:23] Maya Chen (Account Executive, OrbitFlow): Fair enough. For the record — Growth is eighteen hundred a month up to thirty users on an annual agreement, but that's not your shape. You're an Enterprise conversation. Custom priced, advanced governance, security capabilities, higher usage.\nCALL-005 (Ember Financial, prospect) [20:25] Leo Grant (Account Executive, OrbitFlow): Growth is eighteen hundred a month up to thirty users on an annual agreement. You're not a Growth shape — you're Enterprise, which is custom priced and adds the advanced governance, the security capabilities, and higher usage.\nCALL-005 (Ember Financial, prospect) [21:12] Leo Grant (Account Executive, OrbitFlow): That's the right thing to worry about and I'd rather deal with it now. Usage is scoped on workflow runs and premium connector needs. What I'd want to do is model your actual expected volumes, agree what happens above the threshold before you sign, and put the overage mechanism in the contract explicitly rather than in a rate card that changes.\nCALL-006 (Fable Media, prospect) [07:57] Alastair McCrae (Account Executive, OrbitFlow): Sure. So our Growth package is eighteen hundred a month, up to thirty users, on an annual agreement.\nCALL-006 (Fable Media, prospect) [08:25] Alastair McCrae (Account Executive, OrbitFlow): Yeah, monthly's usually fine, we can sort something out.\nCALL-006 (Fable Media, prospect) [08:32] Alastair McCrae (Account Executive, OrbitFlow): I'd have to run it past my manager but I can't see it being a problem.\nCALL-006 (Fable Media, prospect) [08:53] Alastair McCrae (Account Executive, OrbitFlow): You'd be paying for the platform, really, the seats are just —\nCALL-006 (Fable Media, prospect) [14:27] Alastair McCrae (Account Executive, OrbitFlow): I'll check with my manager and come back.\nCALL-007 (Greenline Energy Services, prospect) [18:27] Maya Chen (Account Executive, OrbitFlow): Understood. Growth is eighteen hundred a month up to thirty users on an annual agreement. Enterprise is custom priced — advanced governance, the security capabilities, higher usage.\nCALL-007 (Greenline Energy Services, prospect) [20:25] Maya Chen (Account Executive, OrbitFlow): It is, and I'm not going to pretend we can beat bundled licensing on price. If the decision is purely cost per seat, Microsoft wins and everyone knows it. The argument has to be that the operational cost — Carlos's six people fielding troubleshooting tickets — is bigger than the licence delta.\nCALL-008 (Harbor Legal, prospect) [25:01] Leo Grant (Account Executive, OrbitFlow): Growth is eighteen hundred a month up to thirty users on an annual agreement. You're not a Growth shape — everything Samir's asked for sits in Enterprise, which is custom priced.\nCALL-009 (Inkwell Learning, prospect) [19:53] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only can be structured differently by package. For you the shape matters — how many people build versus how many receive a task?\nCALL-010 (Juniper Cloud Tools, prospect) [07:42] Leo Grant (Account Executive, OrbitFlow): Usage is scoped on workflow runs and premium connector needs. Growth is eighteen hundred a month up to thirty users, annual. You're an Enterprise conversation given the security list.\nCALL-011 (Lumen Retail Group, renewal) [08:24] Maya Chen (Account Executive, OrbitFlow): List uplift at renewal is seven percent. That's the standard annual adjustment and I'm not going to pretend it's negotiable in principle — it applies to everyone.\nCALL-011 (Lumen Retail Group, renewal) [10:11] Maya Chen (Account Executive, OrbitFlow): That's the shape of it. And I want to be clear that the seat reduction is genuine — I'm not inflating the run tier to compensate.\nCALL-011 (Lumen Retail Group, renewal) [10:54] Maya Chen (Account Executive, OrbitFlow): There is. A two-year commitment lets me fix the uplift for year two, which given where inflation's gone is probably worth more than the discount itself.\nCALL-011 (Lumen Retail Group, renewal) [17:45] Maya Chen (Account Executive, OrbitFlow): Nothing binding. What you'll get from me by Friday is the renewal proposal with last year's line items next to next year's, seven seats, four hundred thousand runs, and one-year, two-year and three-year options priced separately.\nCALL-011 (Lumen Retail Group, renewal) [19:11] Maya Chen (Account Executive, OrbitFlow): That's fine and it's within the window. If it slips past the eighteenth we can bridge it, but I'd rather not because bridging always creates a mess in someone's system.\nCALL-012 (Pinewood Insurance, renewal) [07:50] Leo Grant (Account Executive, OrbitFlow): Growth. Eighteen hundred a month, up to thirty users, annual. You'd lose SCIM, audit export, EU residency as a contractual commitment, some of the governance controls, and priority support drops to standard.\nCALL-012 (Pinewood Insurance, renewal) [09:50] Leo Grant (Account Executive, OrbitFlow): Six months at the annual rate pro-rata, not at a short-term premium. So no uplift, no penalty for the shorter term. That's the concession.\nCALL-013 (Halberd Security, renewal) [00:24] Ruth Adeyemi (Customer Success Manager, OrbitFlow): You're renewing in November, usage is healthy, six builders all active, error rate under one percent, and the only change is a seven percent standard uplift.\nCALL-013 (Halberd Security, renewal) [14:56] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Right, I said I'd be quick and we're at fifteen minutes. Let me summarise. Renewal is agreed subject to papers — seven percent, no other changes, AI consumption estimate included. AI goes on in a contained workspace with two builders, after the fifty-incident test, subject to five written answers from Nina. And you'll introduce a publish permission separate from a build permission, once we've confirmed the mechanism.\nCALL-014 (Verity Payments, churn) [15:15] Maya Chen (Account Executive, OrbitFlow): I can do read-only access through November at no charge. I'd rather you had a clean exit than a scramble.\nCALL-015 (Oakhill Property, churn) [11:53] Ruth Adeyemi (Customer Success Manager, OrbitFlow): I'll give you until the end of November. No charge.\nCALL-018 (Beacon Housing Trust, cold_call) [03:51] Maya Chen (Account Executive, OrbitFlow): First — I don't know your housing management system. There's a reasonable chance we don't have a native connector for it, and we'd be working through an API or building something. That's not a dealbreaker but it's real work and it costs money.\nCALL-019 (Trafford Dental Group, cold_call) [02:12] Alastair McCrae (Account Executive, OrbitFlow): So it depends on the setup, but our entry package starts at eighteen hundred a month.\n\n## TOPIC: SSO, SCIM and identity\nCALL-001 (Acme Logistics, prospect) [20:05] Jon Bell (Solutions Engineer, OrbitFlow): That's fine. Baseline is SOC 2 Type II. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs cover administrative and workflow events. Retention configurable within supported ranges. EU residency available on Enterprise if you ever need it.\nCALL-002 (BrightPath Health, prospect) [01:59] Jon Bell (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM provisioning, both on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. EU data residency available on Enterprise.\nCALL-004 (DeltaWorks Manufacturing, prospect) [02:09] Jon Bell (Solutions Engineer, OrbitFlow): Right. SAML SSO and SCIM provisioning — both supported, both on Enterprise. Audit logs cover administrative and workflow events. Encryption in transit and at rest. Retention is configurable within supported ranges. SOC 2 Type II is our baseline. EU data residency is available on Enterprise.\nCALL-005 (Ember Financial, prospect) [06:49] Nina Patel (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Retention configurable within supported ranges. EU data residency available on Enterprise. Run events and metrics through APIs and webhooks, and audit export on Enterprise. And we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-006 (Fable Media, prospect) [07:23] Alastair McCrae (Account Executive, OrbitFlow): Yeah, so SSO's included on all our plans, that's standard. And we're fully GDPR compliant, so that's all covered.\nCALL-006 (Fable Media, prospect) [14:50] Alastair McCrae (Account Executive, OrbitFlow): [pause] I'm fairly sure it's all plans. But yeah, I'll confirm.\nCALL-007 (Greenline Energy Services, prospect) [16:22] Jon Bell (Solutions Engineer, OrbitFlow): SAML SSO and SCIM on Enterprise, and Azure AD works with that. Audit logs cover administrative and workflow events. On residency — EU data residency is available on Enterprise. UK specifically I'd need to confirm rather than assume, and I'm not going to say yes to make the call go smoothly.\nCALL-008 (Harbor Legal, prospect) [10:56] Nina Patel (Solutions Engineer, OrbitFlow): Taking those in order. SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. Subprocessor list published with change notification. And we do not use customer workflow content to train a shared OrbitFlow model.\nCALL-009 (Inkwell Learning, prospect) [17:29] Jon Bell (Solutions Engineer, OrbitFlow): On the rest of your list — SOC 2 Type II baseline, SAML SSO and SCIM on Enterprise, encryption in transit and at rest, audit logs covering administrative and workflow events, retention configurable within supported ranges. Run events and metrics through APIs and webhooks, audit export on Enterprise.\nCALL-010 (Juniper Cloud Tools, prospect) [17:41] Nina Patel (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. Run events and metrics through APIs and webhooks, and audit export on Enterprise.\nCALL-012 (Pinewood Insurance, renewal) [07:10] Leo Grant (Account Executive, OrbitFlow): Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support. Nadia, how many of those are you using?\nCALL-012 (Pinewood Insurance, renewal) [08:09] Leo Grant (Account Executive, OrbitFlow): SAML SSO is Enterprise. So yes, that's the one that would actually hurt.\n\n## TOPIC: security, compliance and certifications\nCALL-001 (Acme Logistics, prospect) [16:11] Jon Bell (Solutions Engineer, OrbitFlow): Yes to both. AI steps are explicit, inspectable steps. Admins can restrict which models are allowed. Enterprise customers can disable AI features outright. We log the model configuration used for a run. And we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-001 (Acme Logistics, prospect) [18:15] Jon Bell (Solutions Engineer, OrbitFlow): Permissions can separate workflow administration from business viewing. I'd flag that exact field-level masking requirements should be part of security design rather than something I promise now. We do support role-based access, workspace separation, and secrets aren't displayed in run logs.\nCALL-001 (Acme Logistics, prospect) [18:47] Jon Bell (Solutions Engineer, OrbitFlow): Run events and metrics through APIs and webhooks, and audit export on Enterprise. Several customers forward failures into their incident tooling. Happy to show actual payloads in a technical session.\nCALL-001 (Acme Logistics, prospect) [20:05] Jon Bell (Solutions Engineer, OrbitFlow): That's fine. Baseline is SOC 2 Type II. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs cover administrative and workflow events. Retention configurable within supported ranges. EU residency available on Enterprise if you ever need it.\nCALL-001 (Acme Logistics, prospect) [21:34] Jon Bell (Solutions Engineer, OrbitFlow): One thing I'd add — what happens to data sent to an LLM provider is a question you'll get from your security team, and the honest answer is it depends on configuration and provider. We use enterprise API arrangements where available, we document subprocessors. If your policy is strict, AI can be disabled, or we scope the pilot to deterministic steps while security reviews model usage separately.\nCALL-002 (BrightPath Health, prospect) [01:19] Maya Chen (Account Executive, OrbitFlow): Understood, and I want to be careful here because this is exactly the thing people fudge on sales calls. I'm not going to give you a yes on this call. What I will do is get you a written answer from our legal and compliance side within — Jon, what's realistic, a week?\nCALL-002 (BrightPath Health, prospect) [01:59] Jon Bell (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM provisioning, both on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. EU data residency available on Enterprise.\nCALL-002 (BrightPath Health, prospect) [03:04] Jon Bell (Solutions Engineer, OrbitFlow): We publish the list and there's a notification mechanism for changes. The exact notice period is contractual, so — again, that's a document question not a call question.\nCALL-002 (BrightPath Health, prospect) [04:45] Jon Bell (Solutions Engineer, OrbitFlow): Honest answer, it depends on configuration and provider, so I don't want to over-generalise. We use enterprise API arrangements where those exist, and providers are documented as subprocessors. For customers with stricter policies there are two options — disable AI entirely, or scope the initial phase to deterministic workflow steps and let security review model usage on a separate track.\nCALL-002 (BrightPath Health, prospect) [05:45] Jon Bell (Solutions Engineer, OrbitFlow): I'll add — AI steps here are explicit, inspectable workflow steps. They're not ambient. Admins restrict which models are allowed, Enterprise can disable the features entirely, and we log the model configuration used on each run. We also don't use customer workflow content to train a shared OrbitFlow model.\nCALL-002 (BrightPath Health, prospect) [06:15] Maya Chen (Account Executive, OrbitFlow): It needs to be in the contract for you to rely on it, and I'd expect you to insist on that.\nCALL-002 (BrightPath Health, prospect) [07:04] Jon Bell (Solutions Engineer, OrbitFlow): Role-based access, workspace separation, and secrets are never displayed in run logs. Internally, support access is controlled and logged. If you need field-level masking for specific payloads, that's a design conversation rather than a checkbox.\nCALL-002 (BrightPath Health, prospect) [13:25] Jon Bell (Solutions Engineer, OrbitFlow): Understood. And that's a real design constraint — you'd want to pass references rather than payloads wherever possible, and only pull the sensitive field at the point of use, if at all.\nCALL-002 (BrightPath Health, prospect) [30:23] Maya Chen (Account Executive, OrbitFlow): Concrete next steps then. We send the security pack — SOC 2, subprocessors, DPA, architecture diagram, retention docs, pen test summary. Separately, and this is the one that matters, a written position on the BAA within a week. You send us the representative workflow and some sample data, ideally messy. And we jointly write three to five pilot success criteria.\nCALL-004 (DeltaWorks Manufacturing, prospect) [02:09] Jon Bell (Solutions Engineer, OrbitFlow): Right. SAML SSO and SCIM provisioning — both supported, both on Enterprise. Audit logs cover administrative and workflow events. Encryption in transit and at rest. Retention is configurable within supported ranges. SOC 2 Type II is our baseline. EU data residency is available on Enterprise.\nCALL-004 (DeltaWorks Manufacturing, prospect) [04:14] Jon Bell (Solutions Engineer, OrbitFlow): Yes, both available under the normal security process, along with SOC 2, subprocessor list, DPA, and an architecture diagram.\nCALL-004 (DeltaWorks Manufacturing, prospect) [12:07] Jon Bell (Solutions Engineer, OrbitFlow): Secret values are not displayed in run logs, no.\nCALL-004 (DeltaWorks Manufacturing, prospect) [27:45] Jon Bell (Solutions Engineer, OrbitFlow): Run events and metrics through APIs and webhooks, and audit export on Enterprise. Several customers forward failures into their incident tooling.\nCALL-005 (Ember Financial, prospect) [06:49] Nina Patel (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Retention configurable within supported ranges. EU data residency available on Enterprise. Run events and metrics through APIs and webhooks, and audit export on Enterprise. And we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-006 (Fable Media, prospect) [07:23] Alastair McCrae (Account Executive, OrbitFlow): Yeah, so SSO's included on all our plans, that's standard. And we're fully GDPR compliant, so that's all covered.\nCALL-006 (Fable Media, prospect) [07:40] Alastair McCrae (Account Executive, OrbitFlow): We don't train on customer data. That's in the terms.\nCALL-006 (Fable Media, prospect) [07:48] Alastair McCrae (Account Executive, OrbitFlow): Course. I'll send the DPA over.\nCALL-007 (Greenline Energy Services, prospect) [16:22] Jon Bell (Solutions Engineer, OrbitFlow): SAML SSO and SCIM on Enterprise, and Azure AD works with that. Audit logs cover administrative and workflow events. On residency — EU data residency is available on Enterprise. UK specifically I'd need to confirm rather than assume, and I'm not going to say yes to make the call go smoothly.\nCALL-007 (Greenline Energy Services, prospect) [17:12] Jon Bell (Solutions Engineer, OrbitFlow): Role-based access and workspace separation are the mechanisms. If you want region A to be unable to see region B's runs, that's workspace design plus permissions. It's doable, but how you slice it matters and I'd want to design it rather than assert it.\nCALL-008 (Harbor Legal, prospect) [03:38] Nina Patel (Solutions Engineer, OrbitFlow): That's a least-privilege credential design and it's completely reasonable. Connections and credentials are centrally managed and referenced by workflows — a builder uses a connection, they don't see or control the secret. So if the connection is scoped read-only to conflicts, no workflow using it can write.\nCALL-008 (Harbor Legal, prospect) [04:05] Nina Patel (Solutions Engineer, OrbitFlow): Yes. And I'd suggest you review connection scopes as a standing control rather than reviewing workflows, because there'll be far fewer connections than workflows.\nCALL-008 (Harbor Legal, prospect) [06:30] Nina Patel (Solutions Engineer, OrbitFlow): It is encrypted, in transit and at rest. That's not the point you're making.\nCALL-008 (Harbor Legal, prospect) [06:47] Nina Patel (Solutions Engineer, OrbitFlow): So — two answers. Permissions can separate workflow administration from business viewing, and there's role-based access and workspace separation. Secret values are never displayed in run logs. But field-level masking of specific business payloads is a design conversation, not a switch. I'm not going to tell you there's a checkbox.\nCALL-008 (Harbor Legal, prospect) [07:15] Nina Patel (Solutions Engineer, OrbitFlow): There isn't one. What there is, is design — pass references rather than payloads where you can, pull the sensitive field only at the point of use, and restrict who can see run detail.\nCALL-008 (Harbor Legal, prospect) [08:50] Nina Patel (Solutions Engineer, OrbitFlow): Then let me not answer it well either, but honestly. Out of the box, we have role-based access and workspace separation. We do not have a native concept of a matter-level ethical wall that reads your barrier definitions from iManage and enforces them dynamically. That does not exist.\nCALL-008 (Harbor Legal, prospect) [09:14] Nina Patel (Solutions Engineer, OrbitFlow): What you can do is design around it — workspace separation aligned to barriers, credentials scoped so a workflow physically cannot read across, and run visibility restricted accordingly. But that's design and it's your design as much as ours, and it has to be maintained as barriers change.\nCALL-008 (Harbor Legal, prospect) [10:56] Nina Patel (Solutions Engineer, OrbitFlow): Taking those in order. SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. Subprocessor list published with change notification. And we do not use customer workflow content to train a shared OrbitFlow model.\nCALL-008 (Harbor Legal, prospect) [31:45] Nina Patel (Solutions Engineer, OrbitFlow): Yes. Rotation happens at the connection layer. Workflows reference the connection, not the credential.\nCALL-008 (Harbor Legal, prospect) [37:10] Leo Grant (Account Executive, OrbitFlow): Summarising, then. Scope is administrative orchestration around matter opening, with conflicts decisions untouched and enforced at the credential layer. Information barriers are a real unsolved constraint, so phase one avoids barriered matters and we document that as deferred. AI is off for phase one. The decisive question is whether integration effort into iManage and Intapp is proportionate to the value, and we answer that with an operations list and honest difficulty ratings. Two practice groups, not the firm. Q4 PoC, Q1 decision.\nCALL-009 (Inkwell Learning, prospect) [16:03] Jon Bell (Solutions Engineer, OrbitFlow): So the workflow operates on account-level aggregates only.\nCALL-009 (Inkwell Learning, prospect) [17:29] Jon Bell (Solutions Engineer, OrbitFlow): On the rest of your list — SOC 2 Type II baseline, SAML SSO and SCIM on Enterprise, encryption in transit and at rest, audit logs covering administrative and workflow events, retention configurable within supported ranges. Run events and metrics through APIs and webhooks, audit export on Enterprise.\nCALL-010 (Juniper Cloud Tools, prospect) [04:58] Nina Patel (Solutions Engineer, OrbitFlow): Good, because that's a well-supported pattern rather than something we'd be inventing. Connections and credentials are centrally managed and referenced by workflows. A builder uses a connection; they never see the secret. Rotation happens at the connection layer, so you don't edit every workflow when a credential changes.\nCALL-010 (Juniper Cloud Tools, prospect) [05:23] Nina Patel (Solutions Engineer, OrbitFlow): That's a permission. You'd scope it to engineering.\nCALL-010 (Juniper Cloud Tools, prospect) [05:31] Nina Patel (Solutions Engineer, OrbitFlow): Anyone with visibility on the workflow can see the connection is referenced. They can't see the credential.\nCALL-010 (Juniper Cloud Tools, prospect) [05:42] Nina Patel (Solutions Engineer, OrbitFlow): Secret values are never displayed in run logs. Whatever the workflow passes between steps as data is visible, though — so if someone deliberately puts a token into a variable, that's on them.\nCALL-010 (Juniper Cloud Tools, prospect) [17:41] Nina Patel (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. Run events and metrics through APIs and webhooks, and audit export on Enterprise.\nCALL-011 (Lumen Retail Group, renewal) [17:17] Ruth Adeyemi (Customer Success Manager, OrbitFlow): I'll send it. And the statement that we don't use customer workflow content to train a shared model — she'll ask for that and it's in your contract already.\nCALL-011 (Lumen Retail Group, renewal) [17:32] Maya Chen (Account Executive, OrbitFlow): It's clause fourteen. It went in at the original signature because your legal team asked for it.\nCALL-012 (Pinewood Insurance, renewal) [07:10] Leo Grant (Account Executive, OrbitFlow): Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support. Nadia, how many of those are you using?\nCALL-012 (Pinewood Insurance, renewal) [07:50] Leo Grant (Account Executive, OrbitFlow): Growth. Eighteen hundred a month, up to thirty users, annual. You'd lose SCIM, audit export, EU residency as a contractual commitment, some of the governance controls, and priority support drops to standard.\nCALL-013 (Halberd Security, renewal) [06:36] Nina Patel (Solutions Engineer, OrbitFlow): Within your configured retention. What's yours set to?\nCALL-013 (Halberd Security, renewal) [07:05] Nina Patel (Solutions Engineer, OrbitFlow): We do not use customer workflow content to train a shared OrbitFlow model. That's in your contract, not just in the documentation.\nCALL-013 (Halberd Security, renewal) [07:18] Nina Patel (Solutions Engineer, OrbitFlow): Depends on the provider and the arrangement. We use enterprise API arrangements where those exist and the providers are documented as subprocessors. I'm not going to make a blanket statement covering every provider, because it isn't true.\nCALL-013 (Halberd Security, renewal) [07:52] Nina Patel (Solutions Engineer, OrbitFlow): Subprocessor change notification. The notice period is contractual and it's in your agreement.\nCALL-013 (Halberd Security, renewal) [08:01] Ruth Adeyemi (Customer Success Manager, OrbitFlow): It's thirty days for your contract. I checked before the call because I assumed you'd ask.\nCALL-014 (Verity Payments, churn) [15:56] Ruth Adeyemi (Customer Success Manager, OrbitFlow): I'll get that arranged and I'll tell you the timeline for it rather than saying \"shortly after termination.\"\n\n## TOPIC: data residency and hosting\nCALL-001 (Acme Logistics, prospect) [20:05] Jon Bell (Solutions Engineer, OrbitFlow): That's fine. Baseline is SOC 2 Type II. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs cover administrative and workflow events. Retention configurable within supported ranges. EU residency available on Enterprise if you ever need it.\nCALL-002 (BrightPath Health, prospect) [01:59] Jon Bell (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM provisioning, both on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. EU data residency available on Enterprise.\nCALL-002 (BrightPath Health, prospect) [02:30] Jon Bell (Solutions Engineer, OrbitFlow): Default depends on where the workspace is provisioned. I'd rather confirm the specifics in writing than guess at your architecture on a call.\nCALL-003 (Cedar & Finch, prospect) [06:14] Leo Grant (Account Executive, OrbitFlow): That last one I can answer partly. EU data residency is available on Enterprise. On Growth, I'd need to confirm the default processing region for you in writing rather than guess.\nCALL-004 (DeltaWorks Manufacturing, prospect) [02:09] Jon Bell (Solutions Engineer, OrbitFlow): Right. SAML SSO and SCIM provisioning — both supported, both on Enterprise. Audit logs cover administrative and workflow events. Encryption in transit and at rest. Retention is configurable within supported ranges. SOC 2 Type II is our baseline. EU data residency is available on Enterprise.\nCALL-004 (DeltaWorks Manufacturing, prospect) [02:39] Jon Bell (Solutions Engineer, OrbitFlow): EU. I am not going to tell you we have a German region because we don't.\nCALL-005 (Ember Financial, prospect) [06:49] Nina Patel (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Retention configurable within supported ranges. EU data residency available on Enterprise. Run events and metrics through APIs and webhooks, and audit export on Enterprise. And we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-007 (Greenline Energy Services, prospect) [16:22] Jon Bell (Solutions Engineer, OrbitFlow): SAML SSO and SCIM on Enterprise, and Azure AD works with that. Audit logs cover administrative and workflow events. On residency — EU data residency is available on Enterprise. UK specifically I'd need to confirm rather than assume, and I'm not going to say yes to make the call go smoothly.\nCALL-008 (Harbor Legal, prospect) [11:26] Nina Patel (Solutions Engineer, OrbitFlow): EU data residency is available on Enterprise. UK specifically I need to confirm in writing. I'm not going to say yes on a call.\nCALL-010 (Juniper Cloud Tools, prospect) [18:09] Nina Patel (Solutions Engineer, OrbitFlow): EU data residency is available on Enterprise. If you mean something more granular than that, tell me what and I'll answer specifically.\nCALL-012 (Pinewood Insurance, renewal) [07:10] Leo Grant (Account Executive, OrbitFlow): Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support. Nadia, how many of those are you using?\nCALL-012 (Pinewood Insurance, renewal) [07:50] Leo Grant (Account Executive, OrbitFlow): Growth. Eighteen hundred a month, up to thirty users, annual. You'd lose SCIM, audit export, EU residency as a contractual commitment, some of the governance controls, and priority support drops to standard.\nCALL-013 (Halberd Security, renewal) [04:47] Nina Patel (Solutions Engineer, OrbitFlow): Whatever the AI step is given as input. So the design question is what you put in the prompt, and that's yours to decide.\n\n## TOPIC: integrations and connectors\nCALL-001 (Acme Logistics, prospect) [12:12] Jon Bell (Solutions Engineer, OrbitFlow): Yeah, that's fair criticism and I'm not going to pretend. Simple mapping and branching is visual. Transformations use expressions. On Enterprise you can package reusable JavaScript steps if you need to. There's a generic REST action and webhooks. We don't claim every workflow is no-code. What we aim for is that the workflow stays understandable even if an engineer supplied one custom component.\nCALL-001 (Acme Logistics, prospect) [14:02] Jon Bell (Solutions Engineer, OrbitFlow): For your stack it's a mix of native connectors and API-based options. What I'd want to do in a pilot is validate each required operation rather than just point at a logo on our integrations page.\nCALL-001 (Acme Logistics, prospect) [18:47] Jon Bell (Solutions Engineer, OrbitFlow): Run events and metrics through APIs and webhooks, and audit export on Enterprise. Several customers forward failures into their incident tooling. Happy to show actual payloads in a technical session.\nCALL-001 (Acme Logistics, prospect) [27:03] Jon Bell (Solutions Engineer, OrbitFlow): If they're publicly reachable, outbound calls are trivial. For private networks it depends on your environment and may need an agent or a controlled gateway. I'd want to validate that rather than assume.\nCALL-001 (Acme Logistics, prospect) [27:22] Jon Bell (Solutions Engineer, OrbitFlow): Yes. Connections and credentials are centrally managed and referenced. Rotation happens at the connection layer.\nCALL-001 (Acme Logistics, prospect) [27:38] Jon Bell (Solutions Engineer, OrbitFlow): Approval forms can collect structured inputs and those values feed subsequent steps. For heavily customised forms some customers use their own front end and call us through the API.\nCALL-002 (BrightPath Health, prospect) [15:19] Jon Bell (Solutions Engineer, OrbitFlow): Run events and metrics via APIs and webhooks, and audit export on Enterprise. Several customers forward failures into their incident tooling.\nCALL-002 (BrightPath Health, prospect) [18:24] Jon Bell (Solutions Engineer, OrbitFlow): So — triggers and actions on the left, the flow in the middle, config for the selected step on the right. A workflow can start from a SaaS event, a schedule, a webhook, a database query, or another workflow.\nCALL-002 (BrightPath Health, prospect) [19:37] Jon Bell (Solutions Engineer, OrbitFlow): Fair, and I won't pretend. Mapping and branching are visual. Transformations use expressions. On Enterprise you can package reusable JavaScript steps. There's a generic REST action and webhooks. We don't claim every workflow is no-code. The goal is that the workflow stays understandable even when an engineer supplied one custom component.\nCALL-002 (BrightPath Health, prospect) [22:32] Jon Bell (Solutions Engineer, OrbitFlow): It's not impossible. It's API work.\nCALL-002 (BrightPath Health, prospect) [22:55] Jon Bell (Solutions Engineer, OrbitFlow): For your stack it's a mix of native connectors and API-based options. In a pilot I'd want to validate each required operation rather than pointing at a logo on our integrations page.\nCALL-003 (Cedar & Finch, prospect) [05:07] Leo Grant (Account Executive, OrbitFlow): Understood. I'm going to be careful here — I believe the Shopify integration is native and event-driven, but I'm not going to swear to the exact trigger coverage without checking. That's a Nina question and I'll get you a written answer.\nCALL-004 (DeltaWorks Manufacturing, prospect) [17:35] Jon Bell (Solutions Engineer, OrbitFlow): There are a few routes and which one is right depends on your landscape. There are API-based options, there's the generic REST action for anything that exposes a service, and for on-premise components the agent or gateway pattern I mentioned. What I will not do is tell you there's a one-click SAP connector that solves your estate, because your estate is not one thing.\nCALL-004 (DeltaWorks Manufacturing, prospect) [27:45] Jon Bell (Solutions Engineer, OrbitFlow): Run events and metrics through APIs and webhooks, and audit export on Enterprise. Several customers forward failures into their incident tooling.\nCALL-005 (Ember Financial, prospect) [06:49] Nina Patel (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Retention configurable within supported ranges. EU data residency available on Enterprise. Run events and metrics through APIs and webhooks, and audit export on Enterprise. And we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-005 (Ember Financial, prospect) [07:43] Nina Patel (Solutions Engineer, OrbitFlow): [laughs] API and webhook based, so programmatic. Several customers forward failures and audit events into their own tooling continuously rather than pulling reports. That's the pattern I'd recommend for you.\nCALL-005 (Ember Financial, prospect) [15:53] Nina Patel (Solutions Engineer, OrbitFlow): Then that's the one to design for. The others are a mix of native connectors and API options, and I'd validate each required operation in a pilot rather than pointing at logos. The event bus is a real architecture question — probably a gateway or an agent pattern, possibly you publish to a webhook endpoint from your side instead. I'd want an hour with whoever owns it.\nCALL-005 (Ember Financial, prospect) [16:31] Nina Patel (Solutions Engineer, OrbitFlow): We cache metadata but refresh it, and mapping errors surface on the run. For high-impact flows I'd recommend explicit validation at the start rather than assuming every source field is populated. And you can alert when error rates cross a threshold.\nCALL-005 (Ember Financial, prospect) [19:52] Nina Patel (Solutions Engineer, OrbitFlow): There's an internal fallback mechanism, and separately you can call out to your incident tooling. Which one you'd want depends on whether the exception is an operational incident or a business exception, and I'd argue those should be handled differently.\nCALL-006 (Fable Media, prospect) [03:19] Alastair McCrae (Account Executive, OrbitFlow): All of those are native connectors, no problem at all.\nCALL-006 (Fable Media, prospect) [06:31] Alastair McCrae (Account Executive, OrbitFlow): Whoever you want. Slack, email, wherever.\nCALL-007 (Greenline Energy Services, prospect) [12:34] Jon Bell (Solutions Engineer, OrbitFlow): Yeah. So let me be straight about this because it's the thing that'll decide the evaluation. Dynamics 365 and Teams you've said are mandatory. There are integration routes to Dynamics — API-based, plus our generic REST action and webhooks. What I'm not going to tell you is that we have the deepest first-class Dynamics connector on the market, because Microsoft's own tooling will always be closer to Dynamics than we are.\nCALL-008 (Harbor Legal, prospect) [12:28] Nina Patel (Solutions Engineer, OrbitFlow): Run events and metrics through APIs and webhooks, and audit export on Enterprise. Several customers forward events into their own tooling continuously.\nCALL-008 (Harbor Legal, prospect) [17:57] Nina Patel (Solutions Engineer, OrbitFlow): On the rest — Microsoft 365, Teams and SharePoint are well-trodden. Azure is fine. iManage and Intapp are the interesting ones, and I want to be direct: native legal-system connectors are limited. In our catalogue, specifically, limited.\nCALL-008 (Harbor Legal, prospect) [18:22] Nina Patel (Solutions Engineer, OrbitFlow): Meaning we'd be working through their APIs rather than a maintained native connector. Which is entirely doable — both have APIs, and we have a generic REST action and webhooks — but it's integration work rather than configuration, and somebody has to maintain it when their API changes.\nCALL-008 (Harbor Legal, prospect) [31:08] Nina Patel (Solutions Engineer, OrbitFlow): If they're publicly reachable with authentication, outbound calls are straightforward. For genuinely private networks it depends on your environment and may require an agent or a controlled gateway. Given you're largely Azure, I'd want to look at what's already behind API Management before assuming anything.\nCALL-008 (Harbor Legal, prospect) [31:45] Nina Patel (Solutions Engineer, OrbitFlow): Yes. Rotation happens at the connection layer. Workflows reference the connection, not the credential.\nCALL-009 (Inkwell Learning, prospect) [09:37] Jon Bell (Solutions Engineer, OrbitFlow): Sharing. [pause] So this is a workflow that's roughly the pattern we're describing. It's scheduled rather than event-driven — it runs daily, queries the warehouse, joins against the CRM, and evaluates a set of conditions.\nCALL-009 (Inkwell Learning, prospect) [10:00] Jon Bell (Solutions Engineer, OrbitFlow): In the workflow, in this case. But you can also point at a view you own in Snowflake, which for you is probably better.\nCALL-009 (Inkwell Learning, prospect) [10:16] Jon Bell (Solutions Engineer, OrbitFlow): Then the pattern is: you own the definition of \"at risk\" as a view in Snowflake, we consume it and act on it. The intelligence is yours, the orchestration is ours.\nCALL-009 (Inkwell Learning, prospect) [17:29] Jon Bell (Solutions Engineer, OrbitFlow): On the rest of your list — SOC 2 Type II baseline, SAML SSO and SCIM on Enterprise, encryption in transit and at rest, audit logs covering administrative and workflow events, retention configurable within supported ranges. Run events and metrics through APIs and webhooks, audit export on Enterprise.\nCALL-009 (Inkwell Learning, prospect) [27:55] Jon Bell (Solutions Engineer, OrbitFlow): Version history and change metadata are there, so you can see what changed and when. Definitions can be exported through the API. Whether that satisfies you as version control depends on what you mean — it's not a git integration.\nCALL-010 (Juniper Cloud Tools, prospect) [17:41] Nina Patel (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. Run events and metrics through APIs and webhooks, and audit export on Enterprise.\nCALL-010 (Juniper Cloud Tools, prospect) [18:53] Nina Patel (Solutions Engineer, OrbitFlow): That's scoped on the Salesforce side by the permissions of the user or integration account you connect with. We use what you give us. We don't have a separate layer that further restricts it.\nCALL-010 (Juniper Cloud Tools, prospect) [19:57] Nina Patel (Solutions Engineer, OrbitFlow): Yes. That's the run events API. That's what you'd forward into your own observability.\nCALL-010 (Juniper Cloud Tools, prospect) [20:07] Nina Patel (Solutions Engineer, OrbitFlow): Near real-time via webhook. I don't want to quote you a millisecond figure.\nCALL-013 (Halberd Security, renewal) [13:37] Nina Patel (Solutions Engineer, OrbitFlow): The approval could be surfaced somewhere they already are. Teams or Slack — a notification with the context and an action, rather than a link into our UI.\nCALL-014 (Verity Payments, churn) [07:47] Maya Chen (Account Executive, OrbitFlow): It is true. We know.\nCALL-014 (Verity Payments, churn) [13:12] Ruth Adeyemi (Customer Success Manager, OrbitFlow): And I did, and there wasn't, and I emailed you saying there wasn't.\nCALL-015 (Oakhill Property, churn) [10:24] Ruth Adeyemi (Customer Success Manager, OrbitFlow): You can export those through the API. I'll send instructions — and honestly, for eleven simple workflows, screenshots might be more useful than the JSON.\nCALL-015 (Oakhill Property, churn) [11:18] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Run events API. I'll send the pagination details, because two years of records will hit a limit and you'll assume it's broken.\nCALL-018 (Beacon Housing Trust, cold_call) [03:51] Maya Chen (Account Executive, OrbitFlow): First — I don't know your housing management system. There's a reasonable chance we don't have a native connector for it, and we'd be working through an API or building something. That's not a dealbreaker but it's real work and it costs money.\nCALL-019 (Trafford Dental Group, cold_call) [01:50] Alastair McCrae (Account Executive, OrbitFlow): We can integrate with anything that's got an API, so —\nCALL-020 (Kestrel Robotics, cold_call) [03:39] Leo Grant (Account Executive, OrbitFlow): Completely fine. Then let me answer it generally. If it's a mid-market manufacturing ERP, we probably don't have a native connector, and you'd be building against the API with our generic REST action. Which is the same three weeks. Or six.\n\n## TOPIC: no-code vs code, technical skills needed\nCALL-001 (Acme Logistics, prospect) [12:12] Jon Bell (Solutions Engineer, OrbitFlow): Yeah, that's fair criticism and I'm not going to pretend. Simple mapping and branching is visual. Transformations use expressions. On Enterprise you can package reusable JavaScript steps if you need to. There's a generic REST action and webhooks. We don't claim every workflow is no-code. What we aim for is that the workflow stays understandable even if an engineer supplied one custom component.\nCALL-002 (BrightPath Health, prospect) [07:04] Jon Bell (Solutions Engineer, OrbitFlow): Role-based access, workspace separation, and secrets are never displayed in run logs. Internally, support access is controlled and logged. If you need field-level masking for specific payloads, that's a design conversation rather than a checkbox.\nCALL-002 (BrightPath Health, prospect) [18:41] Jon Bell (Solutions Engineer, OrbitFlow): I'll start this one from a record-change event, validate a few required fields, enrich from a second system, then branch. And the thing I want to emphasise, particularly for you given the backlog problem — we push people hard towards small reusable components. If your systems group builds ten good subflows, account lookup, approval, notification, incident creation, then the marginal cost of the eleventh business request drops a lot.\nCALL-002 (BrightPath Health, prospect) [19:37] Jon Bell (Solutions Engineer, OrbitFlow): Fair, and I won't pretend. Mapping and branching are visual. Transformations use expressions. On Enterprise you can package reusable JavaScript steps. There's a generic REST action and webhooks. We don't claim every workflow is no-code. The goal is that the workflow stays understandable even when an engineer supplied one custom component.\nCALL-006 (Fable Media, prospect) [04:33] Alastair McCrae (Account Executive, OrbitFlow): So this is a workflow. Triggers down the left, you drag things in, you connect them up. Really intuitive.\nCALL-006 (Fable Media, prospect) [11:30] Alastair McCrae (Account Executive, OrbitFlow): That's fine, it's completely no-code.\nCALL-006 (Fable Media, prospect) [11:36] Alastair McCrae (Account Executive, OrbitFlow): For what you'd be doing, yeah.\nCALL-006 (Fable Media, prospect) [11:44] Alastair McCrae (Account Executive, OrbitFlow): That's — that's a slightly different question, that's about how you architect it rather than whether you need code.\nCALL-006 (Fable Media, prospect) [12:24] Alastair McCrae (Account Executive, OrbitFlow): Yeah, that's just configuration.\nCALL-007 (Greenline Energy Services, prospect) [14:19] Jon Bell (Solutions Engineer, OrbitFlow): Both of those are things I'd want to be tested on rather than claim. The reusability one specifically — we push people hard towards small reusable subflows rather than one big canvas, and that's the mechanism. But you should make me prove it.\nCALL-008 (Harbor Legal, prospect) [03:38] Nina Patel (Solutions Engineer, OrbitFlow): That's a least-privilege credential design and it's completely reasonable. Connections and credentials are centrally managed and referenced by workflows — a builder uses a connection, they don't see or control the secret. So if the connection is scoped read-only to conflicts, no workflow using it can write.\nCALL-008 (Harbor Legal, prospect) [07:40] Nina Patel (Solutions Engineer, OrbitFlow): You can, and for a firm like yours I'd insist on it. It's more work up front. It's much less painful in your annual review.\nCALL-010 (Juniper Cloud Tools, prospect) [02:19] Nina Patel (Solutions Engineer, OrbitFlow): API and UI both.\nCALL-010 (Juniper Cloud Tools, prospect) [03:01] Nina Patel (Solutions Engineer, OrbitFlow): The pattern I'd suggest is a split. Business logic — thresholds, routing, which channel, which template — authored in the UI by whoever owns the process. Custom components and connector code — the things that touch credentials and external systems — authored by you and version controlled.\nCALL-010 (Juniper Cloud Tools, prospect) [04:44] Nina Patel (Solutions Engineer, OrbitFlow): Then that's the second use case you sent, essentially — engineers build reusable custom connectors while secrets and production credentials stay centrally governed.\nCALL-020 (Kestrel Robotics, cold_call) [03:39] Leo Grant (Account Executive, OrbitFlow): Completely fine. Then let me answer it generally. If it's a mid-market manufacturing ERP, we probably don't have a native connector, and you'd be building against the API with our generic REST action. Which is the same three weeks. Or six.\n\n## TOPIC: billing, usage limits and run volumes\nCALL-001 (Acme Logistics, prospect) [04:50] Maya Chen (Account Executive, OrbitFlow): Fair. Growth starts at eighteen hundred a month, that's up to thirty users, annual agreement. Enterprise is custom — that's where the governance and security capabilities sit, plus higher usage.\nCALL-002 (BrightPath Health, prospect) [01:59] Jon Bell (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM provisioning, both on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. EU data residency available on Enterprise.\nCALL-002 (BrightPath Health, prospect) [03:26] Jon Bell (Solutions Engineer, OrbitFlow): Configurable within supported ranges. Per-workspace granularity I'd want to check against your specific requirement, because there are limits.\nCALL-002 (BrightPath Health, prospect) [25:04] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only can be structured differently depending on package. I'm deliberately not quoting you a figure today because without the user model any figure I give is misleading.\nCALL-003 (Cedar & Finch, prospect) [11:07] Leo Grant (Account Executive, OrbitFlow): Usage is scoped on workflow runs and premium connectors. I'd want to model that for your volumes rather than say \"no\" and surprise you later.\nCALL-005 (Ember Financial, prospect) [20:25] Leo Grant (Account Executive, OrbitFlow): Growth is eighteen hundred a month up to thirty users on an annual agreement. You're not a Growth shape — you're Enterprise, which is custom priced and adds the advanced governance, the security capabilities, and higher usage.\nCALL-005 (Ember Financial, prospect) [21:12] Leo Grant (Account Executive, OrbitFlow): That's the right thing to worry about and I'd rather deal with it now. Usage is scoped on workflow runs and premium connector needs. What I'd want to do is model your actual expected volumes, agree what happens above the threshold before you sign, and put the overage mechanism in the contract explicitly rather than in a rate card that changes.\nCALL-005 (Ember Financial, prospect) [21:40] Leo Grant (Account Executive, OrbitFlow): There are mechanisms. I don't want to promise a specific structure on a call before I've modelled your volumes, because if I say \"yes we can cap it\" and then the cap has conditions, I've made things worse.\nCALL-005 (Ember Financial, prospect) [22:29] Leo Grant (Account Executive, OrbitFlow): Builders and full workspace users are the licensed users. Approval-only or notification-only populations can be structured differently depending on the package. Forty and three hundred is a very common shape and it's exactly why I won't quote you a number before I know it.\nCALL-006 (Fable Media, prospect) [07:57] Alastair McCrae (Account Executive, OrbitFlow): Sure. So our Growth package is eighteen hundred a month, up to thirty users, on an annual agreement.\nCALL-006 (Fable Media, prospect) [08:41] Alastair McCrae (Account Executive, OrbitFlow): The thirty is the package, so the price is the price. But you'd have room to grow, which is good.\nCALL-007 (Greenline Energy Services, prospect) [11:05] Jon Bell (Solutions Engineer, OrbitFlow): Each run keeps state, so yes, it can sit in a waiting state without consuming anything or falling over. You can branch on data, pause for approvals, retry external actions, set timeout rules, and send an exception into a queue rather than failing silently.\nCALL-007 (Greenline Energy Services, prospect) [19:09] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only populations can be structured differently depending on the package. I'm deliberately not giving you a number today, because without knowing your builder count versus your approver count any number I give you would be misleading in one direction or the other.\nCALL-008 (Harbor Legal, prospect) [26:24] Leo Grant (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only populations can be structured differently depending on package. I'm not giving you a number today because without the split it'd be misleading.\nCALL-010 (Juniper Cloud Tools, prospect) [07:42] Leo Grant (Account Executive, OrbitFlow): Usage is scoped on workflow runs and premium connector needs. Growth is eighteen hundred a month up to thirty users, annual. You're an Enterprise conversation given the security list.\nCALL-010 (Juniper Cloud Tools, prospect) [08:17] Nina Patel (Solutions Engineer, OrbitFlow): Partly. It depends what counts as a run.\nCALL-010 (Juniper Cloud Tools, prospect) [08:32] Nina Patel (Solutions Engineer, OrbitFlow): [pause] That's a good question and I want to give you an accurate answer rather than a convenient one. I believe subflow invocations are counted, but I'm not going to state the exact billing semantics from memory. I'll get you the definitive answer in writing.\nCALL-010 (Juniper Cloud Tools, prospect) [16:25] Nina Patel (Solutions Engineer, OrbitFlow): They're documented. There are platform limits and retry controls, and you can design throttling patterns. If you have a strict downstream quota, tell me the number and we should load-test against it rather than assume.\nCALL-011 (Lumen Retail Group, renewal) [00:23] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Right. Let me start with numbers and then you tell me what I've missed. You're fourteen months in. Twenty-two workflows in production, up from six at the end of the first quarter. Run volume's roughly two hundred and eighty thousand a month.\nCALL-011 (Lumen Retail Group, renewal) [02:03] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Overages. You've exceeded your contracted run volume in four of the last six months. June was twenty-two percent over.\nCALL-011 (Lumen Retail Group, renewal) [02:19] Maya Chen (Account Executive, OrbitFlow): You were charged for two of them. Two were waived — one in March because it was a retry storm caused by a Salesforce outage on their side, and one in May which I waived because you'd flagged it to us proactively before the invoice.\nCALL-011 (Lumen Retail Group, renewal) [03:22] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Partly. There are retry controls and you can set caps per workflow, and we can look at whether yours are configured sensibly — I suspect two or three of them aren't. But if a downstream system is down for six hours and your workflows keep firing, you will burn runs.\nCALL-011 (Lumen Retail Group, renewal) [07:38] Ruth Adeyemi (Customer Success Manager, OrbitFlow): No. Instrumentation is light — you're recording state transitions, not orchestrating them. Maybe a few thousand a month.\nCALL-011 (Lumen Retail Group, renewal) [08:02] Maya Chen (Account Executive, OrbitFlow): Right. Current contract is Enterprise, nine builder seats, run tier at two hundred and fifty thousand a month. It expires the eighteenth of October.\nCALL-011 (Lumen Retail Group, renewal) [08:44] Maya Chen (Account Executive, OrbitFlow): But the run tier change is a bigger number than the uplift, and I want to be upfront about that. You need three hundred and fifty thousand, not two fifty, and that's before the supplier onboarding work.\nCALL-011 (Lumen Retail Group, renewal) [09:02] Maya Chen (Account Executive, OrbitFlow): Three fifty gives you about twenty percent headroom on your current trajectory. Four hundred gives you a year and the instrumentation project.\nCALL-011 (Lumen Retail Group, renewal) [17:45] Maya Chen (Account Executive, OrbitFlow): Nothing binding. What you'll get from me by Friday is the renewal proposal with last year's line items next to next year's, seven seats, four hundred thousand runs, and one-year, two-year and three-year options priced separately.\nCALL-012 (Pinewood Insurance, renewal) [07:50] Leo Grant (Account Executive, OrbitFlow): Growth. Eighteen hundred a month, up to thirty users, annual. You'd lose SCIM, audit export, EU residency as a contractual commitment, some of the governance controls, and priority support drops to standard.\nCALL-012 (Pinewood Insurance, renewal) [12:25] Leo Grant (Account Executive, OrbitFlow): It's a six-month term. It ends. There's no auto-renew clause on a term like that and I'd put that in writing.\nCALL-012 (Pinewood Insurance, renewal) [12:38] Leo Grant (Account Executive, OrbitFlow): Your current contract auto-renews with sixty days' notice, which means your notice deadline is the thirtieth of September.\nCALL-012 (Pinewood Insurance, renewal) [15:58] Leo Grant (Account Executive, OrbitFlow): Six months at your current annual rate pro-rata. Four builder seats, unchanged — I'd keep four rather than cut to three, because the whole point is getting more people building. Run tier unchanged, you're nowhere near it. Enablement included, not charged as professional services.\nCALL-012 (Pinewood Insurance, renewal) [20:05] Leo Grant (Account Executive, OrbitFlow): Serve notice. It's an email to your account contact, and I'll send you the exact wording and address so it's unambiguous. That stops the auto-renew and costs you nothing.\nCALL-013 (Halberd Security, renewal) [09:50] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Does that need a commercial conversation? AI usage sits within your run allocation but there's a consumption element.\nCALL-013 (Halberd Security, renewal) [14:56] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Right, I said I'd be quick and we're at fifteen minutes. Let me summarise. Renewal is agreed subject to papers — seven percent, no other changes, AI consumption estimate included. AI goes on in a contained workspace with two builders, after the fifty-incident test, subject to five written answers from Nina. And you'll introduce a publish permission separate from a build permission, once we've confirmed the mechanism.\nCALL-014 (Verity Payments, churn) [14:45] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Through the run events API. I'll send the pagination details because eighteen months is a lot of records and people usually hit a limit and assume it's broken.\nCALL-015 (Oakhill Property, churn) [11:18] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Run events API. I'll send the pagination details, because two years of records will hit a limit and you'll assume it's broken.\nCALL-019 (Trafford Dental Group, cold_call) [02:22] Alastair McCrae (Account Executive, OrbitFlow): For up to thirty users, so —\n\n## TOPIC: AI features\nCALL-001 (Acme Logistics, prospect) [15:05] Maya Chen (Account Executive, OrbitFlow): You'd mentioned AI in your notes. I'll be brief on it because I don't think it's the centre of gravity here. We treat it as optional steps inside a workflow rather than making the whole product autonomous. Classification, summarisation, extracting fields from text, drafting something for a human to approve.\nCALL-001 (Acme Logistics, prospect) [16:11] Jon Bell (Solutions Engineer, OrbitFlow): Yes to both. AI steps are explicit, inspectable steps. Admins can restrict which models are allowed. Enterprise customers can disable AI features outright. We log the model configuration used for a run. And we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-001 (Acme Logistics, prospect) [16:56] Jon Bell (Solutions Engineer, OrbitFlow): You can design for that. Require a minimum set of fields or sources before the AI step runs, ask the model to return structured confidence, route low-confidence cases to review. I wouldn't sell you model confidence as a mathematical guarantee though. The better control is usually evidence plus workflow policy.\nCALL-001 (Acme Logistics, prospect) [21:34] Jon Bell (Solutions Engineer, OrbitFlow): One thing I'd add — what happens to data sent to an LLM provider is a question you'll get from your security team, and the honest answer is it depends on configuration and provider. We use enterprise API arrangements where available, we document subprocessors. If your policy is strict, AI can be disabled, or we scope the pilot to deterministic steps while security reviews model usage separately.\nCALL-002 (BrightPath Health, prospect) [04:45] Jon Bell (Solutions Engineer, OrbitFlow): Honest answer, it depends on configuration and provider, so I don't want to over-generalise. We use enterprise API arrangements where those exist, and providers are documented as subprocessors. For customers with stricter policies there are two options — disable AI entirely, or scope the initial phase to deterministic workflow steps and let security review model usage on a separate track.\nCALL-002 (BrightPath Health, prospect) [05:45] Jon Bell (Solutions Engineer, OrbitFlow): I'll add — AI steps here are explicit, inspectable workflow steps. They're not ambient. Admins restrict which models are allowed, Enterprise can disable the features entirely, and we log the model configuration used on each run. We also don't use customer workflow content to train a shared OrbitFlow model.\nCALL-003 (Cedar & Finch, prospect) [10:05] Leo Grant (Account Executive, OrbitFlow): We do, but I'd underplay it for you. It's optional steps inside a workflow — classification, summarisation, extracting fields out of text, drafting something a human then approves. It's not an autonomous agent thing.\nCALL-003 (Cedar & Finch, prospect) [10:42] Leo Grant (Account Executive, OrbitFlow): That's a reasonable fit — summarise the week's tickets by theme, with links back to the underlying tickets so someone can check it.\nCALL-003 (Cedar & Finch, prospect) [10:57] Leo Grant (Account Executive, OrbitFlow): You shouldn't. And that's how we'd build it — the source references stored next to the generated output.\nCALL-004 (DeltaWorks Manufacturing, prospect) [26:35] Maya Chen (Account Executive, OrbitFlow): The product is a workflow platform. AI steps are optional steps inside a workflow, not the substance of it. If you turn them off, you have a workflow platform. That's fine.\nCALL-004 (DeltaWorks Manufacturing, prospect) [26:50] Jon Bell (Solutions Engineer, OrbitFlow): And to be concrete — Enterprise customers can disable AI features. Administrators can restrict which models are allowed. AI steps are explicit, inspectable workflow steps rather than something ambient. We log the model configuration used on a run. And we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-005 (Ember Financial, prospect) [03:39] Nina Patel (Solutions Engineer, OrbitFlow): Then my honest answer is: it depends entirely on how you use it, and you have full control over whether you use it at all. AI steps are explicit, inspectable steps inside a workflow. They're not ambient and they're not in the execution path unless you put them there. Administrators can restrict which models are allowed. Enterprise customers can disable AI features entirely.\nCALL-005 (Ember Financial, prospect) [04:13] Nina Patel (Solutions Engineer, OrbitFlow): That's a workspace-level governance question and I believe yes, but I want to confirm the exact granularity rather than guess. I'll come back in writing.\nCALL-005 (Ember Financial, prospect) [05:39] Nina Patel (Solutions Engineer, OrbitFlow): Then the design principle is that the AI output is a leaf node, not an intermediate value. It gets rendered to a person, it doesn't feed the next branch.\nCALL-005 (Ember Financial, prospect) [06:01] Nina Patel (Solutions Engineer, OrbitFlow): Today it's a design convention plus review, not a hard platform constraint. I'm not going to tell you there's a switch labelled \"AI outputs cannot feed decisions\", because there isn't.\nCALL-005 (Ember Financial, prospect) [06:49] Nina Patel (Solutions Engineer, OrbitFlow): SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Retention configurable within supported ranges. EU data residency available on Enterprise. Run events and metrics through APIs and webhooks, and audit export on Enterprise. And we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-006 (Fable Media, prospect) [06:17] Alastair McCrae (Account Executive, OrbitFlow): Oh, that's easy. That's the AI stuff. So we've got AI steps you can drop in, it'll summarise anything you want, it's very impressive actually.\nCALL-008 (Harbor Legal, prospect) [10:56] Nina Patel (Solutions Engineer, OrbitFlow): Taking those in order. SOC 2 Type II is the baseline. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs covering administrative and workflow events. Retention configurable within supported ranges. Subprocessor list published with change notification. And we do not use customer workflow content to train a shared OrbitFlow model.\nCALL-008 (Harbor Legal, prospect) [14:04] Nina Patel (Solutions Engineer, OrbitFlow): Yes. Enterprise customers can disable AI features. Administrators can also restrict which models are allowed if you want a middle position rather than off.\nCALL-008 (Harbor Legal, prospect) [15:32] Nina Patel (Solutions Engineer, OrbitFlow): That distinction is actually the whole design. If the AI step only ever receives status fields, dates, and task names, the privilege question mostly evaporates. The risk is scope creep — somebody adds the matter description to the prompt because it makes the summary nicer.\nCALL-008 (Harbor Legal, prospect) [15:56] Nina Patel (Solutions Engineer, OrbitFlow): And I'll be honest — the control for that today is review and design standards, not a platform guarantee. AI steps are explicit and inspectable, so you can see exactly what's being passed. But nothing stops a builder with the right permissions from passing more.\nCALL-008 (Harbor Legal, prospect) [16:32] Nina Patel (Solutions Engineer, OrbitFlow): I believe so, but that's a permissions-granularity question and I want to confirm it rather than guess.\nCALL-008 (Harbor Legal, prospect) [37:10] Leo Grant (Account Executive, OrbitFlow): Summarising, then. Scope is administrative orchestration around matter opening, with conflicts decisions untouched and enforced at the credential layer. Information barriers are a real unsolved constraint, so phase one avoids barriered matters and we document that as deferred. AI is off for phase one. The decisive question is whether integration effort into iManage and Intapp is proportionate to the value, and we answer that with an operations list and honest difficulty ratings. Two practice groups, not the firm. Q4 PoC, Q1 decision.\nCALL-009 (Inkwell Learning, prospect) [12:33] Jon Bell (Solutions Engineer, OrbitFlow): You build it. It's a field on the task and a report. I'm not going to tell you there's a built-in model-monitoring feature, because there isn't.\nCALL-009 (Inkwell Learning, prospect) [13:01] Maya Chen (Account Executive, OrbitFlow): That's the AI use case. As I've got it written: produce a weekly narrative summary of emerging customer themes, with links back to supporting tickets and account records.\nCALL-009 (Inkwell Learning, prospect) [13:32] Jon Bell (Solutions Engineer, OrbitFlow): The links back are the important part and I'm glad you specified them. The way we'd build it is that the source references are stored alongside the generated output, so whoever reads the summary can click through to the tickets that produced each claim.\nCALL-009 (Inkwell Learning, prospect) [14:13] Jon Bell (Solutions Engineer, OrbitFlow): It will if you let it. You can design against that — require a minimum number of supporting tickets before a theme is reported, and route thin cases to review rather than publishing them. What I wouldn't do is rely on the model's own confidence score as a guarantee. The better control is evidence plus workflow policy.\nCALL-009 (Inkwell Learning, prospect) [14:53] Jon Bell (Solutions Engineer, OrbitFlow): Yes. AI steps are explicit, inspectable workflow steps — you can see the prompt, the model, the configuration. Administrators can restrict which models are allowed, and Enterprise customers can disable AI features entirely. We log the model configuration used on each run, and we don't use customer workflow content to train a shared OrbitFlow model.\nCALL-011 (Lumen Retail Group, renewal) [16:04] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Then categorising those into themes so Fiona can see what's recurring across depots — that's a real use, and it's low risk because nobody's making a decision from it directly.\nCALL-011 (Lumen Retail Group, renewal) [16:22] Ruth Adeyemi (Customer Success Manager, OrbitFlow): With one condition. The output has to link back to the underlying exceptions so someone can check it. If it says \"forty percent of exceptions relate to chilled goods handling\", you need to be able to click through to the forty percent.\nCALL-011 (Lumen Retail Group, renewal) [16:51] Ruth Adeyemi (Customer Success Manager, OrbitFlow): You're on Enterprise, so you have the controls — restricting which models are allowed, disabling it per workspace, the model configuration logged per run. You'd want to talk to your security people before switching it on, but it's a conversation rather than a project.\nCALL-012 (Pinewood Insurance, renewal) [07:10] Leo Grant (Account Executive, OrbitFlow): Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support. Nadia, how many of those are you using?\nCALL-013 (Halberd Security, renewal) [03:53] Nina Patel (Solutions Engineer, OrbitFlow): [pause] That's a permissions-granularity question and I want to give you an accurate answer rather than a helpful one. I know you can restrict which models are allowed at the administrator level, and you can disable AI features per workspace. Whether \"can author an AI step\" is a distinct permission from \"can author a workflow\" — I need to confirm.\nCALL-013 (Halberd Security, renewal) [06:22] Nina Patel (Solutions Engineer, OrbitFlow): You choose, within what your administrator allows. And the model configuration used is logged per run, so you can evidence which model produced which draft.\n\n## TOPIC: support, services and onboarding\nCALL-001 (Acme Logistics, prospect) [18:47] Jon Bell (Solutions Engineer, OrbitFlow): Run events and metrics through APIs and webhooks, and audit export on Enterprise. Several customers forward failures into their incident tooling. Happy to show actual payloads in a technical session.\nCALL-001 (Acme Logistics, prospect) [20:35] Maya Chen (Account Executive, OrbitFlow): Yes, all of that under the normal process, and we can complete your questionnaire. One ask from me — if anything on your list is an absolute gate, flag it now. I'd rather not spend six weeks on a pilot that can't pass review.\nCALL-001 (Acme Logistics, prospect) [23:52] Maya Chen (Account Executive, OrbitFlow): For a pilot we can baseline one or two things before we automate — elapsed time, number of manual touches, exception rate, engineer hours spent maintaining the current process.\nCALL-001 (Acme Logistics, prospect) [24:58] Jon Bell (Solutions Engineer, OrbitFlow): That's more or less our recommended model. Start with a few centrally owned templates, define who can publish to production, separate dev from prod.\nCALL-001 (Acme Logistics, prospect) [26:33] Maya Chen (Account Executive, OrbitFlow): That's exactly what I'd want. So — we send the security pack and a short architecture summary, you send the representative workflow and sample data, and we jointly write three to five pilot success criteria. Then we decide on the sandbox.\nCALL-002 (BrightPath Health, prospect) [26:26] Maya Chen (Account Executive, OrbitFlow): For a pilot we can baseline one or two things before automating. Elapsed time, manual touches, exception rate, or systems-group hours spent on requests.\nCALL-002 (BrightPath Health, prospect) [30:23] Maya Chen (Account Executive, OrbitFlow): Concrete next steps then. We send the security pack — SOC 2, subprocessors, DPA, architecture diagram, retention docs, pen test summary. Separately, and this is the one that matters, a written position on the BAA within a week. You send us the representative workflow and some sample data, ideally messy. And we jointly write three to five pilot success criteria.\nCALL-003 (Cedar & Finch, prospect) [16:39] Leo Grant (Account Executive, OrbitFlow): God, no. Please don't. The pattern that works is picking the three that break most, moving those, running both for a bit, then deciding. Big-bang migrations of sixty automations is how these projects die.\nCALL-004 (DeltaWorks Manufacturing, prospect) [28:06] Jon Bell (Solutions Engineer, OrbitFlow): That's a contractual and configuration question and I'd rather it be answered in writing by someone who can commit to it. I'll flag it for the pack.\nCALL-004 (DeltaWorks Manufacturing, prospect) [37:34] Maya Chen (Account Executive, OrbitFlow): And I'll send the security pack in parallel — SOC 2, subprocessor list, DPA, architecture diagram, retention documentation, DR documentation, pen test material. Plus Jon's note on team-level versus individual-level visibility for the works council question.\nCALL-005 (Ember Financial, prospect) [27:44] Leo Grant (Account Executive, OrbitFlow): Let me list what we owe you. Security pack — SOC 2, subprocessor list, DPA, architecture diagram, retention documentation, encryption details. The audit event payload schema for Hannah. A written answer on per-workspace AI disablement granularity. Sandbox access. And a six-week pilot proposal with three to five success criteria that we write jointly, not that I write and you approve.\nCALL-006 (Fable Media, prospect) [04:19] Alastair McCrae (Account Executive, OrbitFlow): So I'm not the technical one, normally I'd have a solutions engineer with me, but I can do the basics. [pause] Sharing. Can you see that?\nCALL-006 (Fable Media, prospect) [11:05] Alastair McCrae (Account Executive, OrbitFlow): No, absolutely, and I can get you a reference. We've got loads of happy customers.\nCALL-006 (Fable Media, prospect) [11:17] Alastair McCrae (Account Executive, OrbitFlow): I'll dig one out.\nCALL-006 (Fable Media, prospect) [11:58] Alastair McCrae (Account Executive, OrbitFlow): We could have you up and running in a couple of weeks.\nCALL-006 (Fable Media, prospect) [12:17] Alastair McCrae (Account Executive, OrbitFlow): September's no problem at all.\nCALL-006 (Fable Media, prospect) [13:23] Alastair McCrae (Account Executive, OrbitFlow): I could set it up for you, it takes five minutes.\nCALL-006 (Fable Media, prospect) [13:44] Alastair McCrae (Account Executive, OrbitFlow): Yeah, I can do a Loom.\nCALL-006 (Fable Media, prospect) [14:13] Alastair McCrae (Account Executive, OrbitFlow): Yep, all of it. I'll get it over.\nCALL-007 (Greenline Energy Services, prospect) [23:45] Jon Bell (Solutions Engineer, OrbitFlow): Yes, and I'd want to be careful about one thing — I can talk about architecture patterns in detail, and I can talk about roadmap direction, but I can't commit to roadmap dates. If I say \"Dynamics improvements are coming in Q1\" and they don't, I've done more harm than the gap did.\nCALL-007 (Greenline Energy Services, prospect) [24:30] Jon Bell (Solutions Engineer, OrbitFlow): I can do that as a worked example.\nCALL-007 (Greenline Energy Services, prospect) [24:38] Jon Bell (Solutions Engineer, OrbitFlow): Yes. I'll build something that has a sync-event trigger and a timeout branch and I'll break it on purpose so you can see what the failure looks like.\nCALL-008 (Harbor Legal, prospect) [18:22] Nina Patel (Solutions Engineer, OrbitFlow): Meaning we'd be working through their APIs rather than a maintained native connector. Which is entirely doable — both have APIs, and we have a generic REST action and webhooks — but it's integration work rather than configuration, and somebody has to maintain it when their API changes.\nCALL-008 (Harbor Legal, prospect) [27:01] Leo Grant (Account Executive, OrbitFlow): What about professional services? Given what Nina said about iManage and Intapp, there'll be an implementation number and I'd rather quote it honestly than have it appear after a discovery phase.\nCALL-008 (Harbor Legal, prospect) [27:23] Leo Grant (Account Executive, OrbitFlow): Then it'll be a separate line with its assumptions written next to it, and where we don't know, it'll say so rather than showing a placeholder that looks like a quote.\nCALL-008 (Harbor Legal, prospect) [31:59] Nina Patel (Solutions Engineer, OrbitFlow): Workflow definitions and run data can be exported through supported APIs. What happens to the copy you leave behind is contractual and I'd want that answered by someone who can commit to it, not by me.\nCALL-008 (Harbor Legal, prospect) [33:27] Leo Grant (Account Executive, OrbitFlow): Let me set out next steps and you tell me what's missing. We send the security pack — SOC 2, subprocessor list, DPA, architecture diagram, retention documentation, pen test summary. Plus written answers on UK residency, the retention floor, AI-step permission granularity, the audit payload schema, and termination data handling.\nCALL-008 (Harbor Legal, prospect) [34:22] Leo Grant (Account Executive, OrbitFlow): And then Nina comes back with the integration assessment and a services estimate, and we can have the \"is this proportionate\" conversation with actual numbers.\nCALL-009 (Inkwell Learning, prospect) [20:46] Maya Chen (Account Executive, OrbitFlow): It'll be itemised — assumed builders, task recipients, expected run volume, and any one-time services separately.\nCALL-009 (Inkwell Learning, prospect) [26:18] Maya Chen (Account Executive, OrbitFlow): The security pack — SOC 2, subprocessor list, DPA, architecture diagram, retention documentation. The cost model comparing us with expanding Gainsight, including implementation effort on both sides. And a written recap separating what you confirmed today from what you estimated.\nCALL-010 (Juniper Cloud Tools, prospect) [01:48] Nina Patel (Solutions Engineer, OrbitFlow): Yes. I'll send those today.\nCALL-010 (Juniper Cloud Tools, prospect) [27:07] Leo Grant (Account Executive, OrbitFlow): You'll have it in week two. I'll need volume estimates from you — expected business events per day, expected workflow runs, and how those scale.\nCALL-010 (Juniper Cloud Tools, prospect) [30:49] Nina Patel (Solutions Engineer, OrbitFlow): Friday. And Ava — the three definitions will be in your inbox this afternoon, not Friday.\nCALL-011 (Lumen Retail Group, renewal) [12:56] Ruth Adeyemi (Customer Success Manager, OrbitFlow): What I can do is name a specific engineer as the escalation contact for SAP issues on your account. What I can't do is promise you a resolution SLA on connector defects, because we don't offer one and I'm not going to invent it at a renewal.\nCALL-011 (Lumen Retail Group, renewal) [13:26] Maya Chen (Account Executive, OrbitFlow): Your Enterprise agreement already includes priority support with response-time commitments. Resolution-time commitments are a different thing and we don't do them. If someone tells you otherwise, check the paper.\nCALL-011 (Lumen Retail Group, renewal) [18:15] Ruth Adeyemi (Customer Success Manager, OrbitFlow): From me — the retry configuration session with Devan, the subprocessor list for Priyanka, a short note on what the supplier onboarding instrumentation phase would look like, and the named SAP escalation contact.\nCALL-011 (Lumen Retail Group, renewal) [18:35] Ruth Adeyemi (Customer Success Manager, OrbitFlow): This week. That one's easy.\nCALL-012 (Pinewood Insurance, renewal) [01:49] Ruth Adeyemi (Customer Success Manager, OrbitFlow): There is a training portal.\nCALL-012 (Pinewood Insurance, renewal) [01:54] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Nobody opens it.\nCALL-012 (Pinewood Insurance, renewal) [03:10] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Not proactively at your account tier, no. And I'd rather tell you that plainly than imply we're watching when we aren't.\nCALL-012 (Pinewood Insurance, renewal) [03:26] Ruth Adeyemi (Customer Success Manager, OrbitFlow): There's more proactive review on the largest accounts. It's not a product feature you can buy, it's how our team allocates time, and I don't want to dress that up as something it isn't.\nCALL-012 (Pinewood Insurance, renewal) [07:10] Leo Grant (Account Executive, OrbitFlow): Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support. Nadia, how many of those are you using?\nCALL-012 (Pinewood Insurance, renewal) [07:50] Leo Grant (Account Executive, OrbitFlow): Growth. Eighteen hundred a month, up to thirty users, annual. You'd lose SCIM, audit export, EU residency as a contractual commitment, some of the governance controls, and priority support drops to standard.\nCALL-012 (Pinewood Insurance, renewal) [09:21] Leo Grant (Account Executive, OrbitFlow): Option two is a shorter renewal with a genuine re-implementation attached. Six months rather than twelve, with a defined enablement programme, and we agree measurable criteria at the start. If it works, you renew properly in May. If it doesn't, you leave in May and you've spent six months' fees finding out rather than twelve.\nCALL-012 (Pinewood Insurance, renewal) [15:58] Leo Grant (Account Executive, OrbitFlow): Six months at your current annual rate pro-rata. Four builder seats, unchanged — I'd keep four rather than cut to three, because the whole point is getting more people building. Run tier unchanged, you're nowhere near it. Enablement included, not charged as professional services.\nCALL-012 (Pinewood Insurance, renewal) [16:34] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Three properly trained builders is about four days of someone's time. I'd have to check what we'd normally charge.\nCALL-012 (Pinewood Insurance, renewal) [16:43] Leo Grant (Account Executive, OrbitFlow): We'd normally charge for it. I'd rather not.\nCALL-012 (Pinewood Insurance, renewal) [20:40] Leo Grant (Account Executive, OrbitFlow): I'll send both by Thursday. The proposal, and a one-page comparison of renew-six-months versus lapse, with what you'd lose in each case.\nCALL-012 (Pinewood Insurance, renewal) [21:03] Ruth Adeyemi (Customer Success Manager, OrbitFlow): From me — the list of the six failing workflows today, the alert redirection instructions today, and I'll draft what the enablement programme would look like with specific dates rather than a description.\nCALL-014 (Verity Payments, churn) [05:17] Maya Chen (Account Executive, OrbitFlow): We do offer that.\nCALL-014 (Verity Payments, churn) [05:23] Maya Chen (Account Executive, OrbitFlow): [pause] It's a paid professional services engagement.\nCALL-014 (Verity Payments, churn) [11:16] Ruth Adeyemi (Customer Success Manager, OrbitFlow): That's a known problem and it's a triage problem rather than a capability problem.\nCALL-014 (Verity Payments, churn) [11:40] Ruth Adeyemi (Customer Success Manager, OrbitFlow): That's the answer, isn't it. You were an eighty-thousand-pound account in a book of accounts where that's below median.\nCALL-015 (Oakhill Property, churn) [06:04] Ruth Adeyemi (Customer Success Manager, OrbitFlow): We look at it. Whether anyone acts on it for an account your size is a different question, and the answer is usually no.\nCALL-015 (Oakhill Property, churn) [08:45] Ruth Adeyemi (Customer Success Manager, OrbitFlow): [pause] I'm going to be direct with you. Your account was in a segment that doesn't get an assigned CSM. I'm on this call because it's a churn, not because I've been managing you.\nCALL-015 (Oakhill Property, churn) [10:39] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Then I'll get someone to produce those. It's not a thing we offer, but it's eleven workflows and it'll take an hour.\nCALL-015 (Oakhill Property, churn) [11:31] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Everyone does. And I'll arrange a deletion confirmation for afterwards with an actual date on it.\nCALL-018 (Beacon Housing Trust, cold_call) [06:28] Maya Chen (Account Executive, OrbitFlow): The first phase of something like this shouldn't be automating the voids process. It should be instrumenting it. Just recording state transitions — property became void, inspection booked, inspection done, works raised, works complete, compliance requested, certificate received, re-let. Timestamps only. No automation, no changing anyone's job.\nCALL-018 (Beacon Housing Trust, cold_call) [06:58] Maya Chen (Account Executive, OrbitFlow): Run it for eight weeks and look at where the time actually goes. Then automate the two stages that turn out to matter, rather than the eight stages people complain about.\nCALL-019 (Trafford Dental Group, cold_call) [03:25] Alastair McCrae (Account Executive, OrbitFlow): Right, and we could definitely help with the onboarding side of that, so when someone's hired you could automate the —\nCALL-020 (Kestrel Robotics, cold_call) [06:42] Leo Grant (Account Executive, OrbitFlow): Would it be worth a thirty-minute call before mid-October? Not a pitch. I'd walk through how I'd structure the seven stages and you can use the thinking whichever vendor you pick.\n\n## TOPIC: roadmap and future features\nCALL-007 (Greenline Energy Services, prospect) [23:45] Jon Bell (Solutions Engineer, OrbitFlow): Yes, and I'd want to be careful about one thing — I can talk about architecture patterns in detail, and I can talk about roadmap direction, but I can't commit to roadmap dates. If I say \"Dynamics improvements are coming in Q1\" and they don't, I've done more harm than the gap did.\nCALL-008 (Harbor Legal, prospect) [12:07] Leo Grant (Account Executive, OrbitFlow): If it's on the roadmap we'll say \"it's on the roadmap and here's what that means and doesn't mean.\" I won't dress a roadmap item as a capability.\nCALL-008 (Harbor Legal, prospect) [37:10] Leo Grant (Account Executive, OrbitFlow): Summarising, then. Scope is administrative orchestration around matter opening, with conflicts decisions untouched and enforced at the credential layer. Information barriers are a real unsolved constraint, so phase one avoids barriered matters and we document that as deferred. AI is off for phase one. The decisive question is whether integration effort into iManage and Intapp is proportionate to the value, and we answer that with an operations list and honest difficulty ratings. Two practice groups, not the firm. Q4 PoC, Q1 decision.\nCALL-015 (Oakhill Property, churn) [09:31] Alastair McCrae (Account Executive, OrbitFlow): I think — looking back, I probably should have pushed harder on whether you had the capacity for the roadmap we talked about. I was excited about it and you were excited about it and neither of us asked who was actually going to do it.\n\n## TOPIC: other product facts\nCALL-001 (Acme Logistics, prospect) [07:45] Maya Chen (Account Executive, OrbitFlow): That's a much better framing than most people give us, honestly. And to be clear, we're not trying to replace every integration platform. Plenty of our customers keep an iPaaS or internal services for deep systems integration and use us for the business-owned workflows — the ones with human decisions, exceptions, cross-functional handoffs.\nCALL-001 (Acme Logistics, prospect) [09:18] Jon Bell (Solutions Engineer, OrbitFlow): That's exactly the right level to test at, and it's the bit I'd want you to push on. Workflows are event-driven but each run holds state. So you can branch on data, pause for approvals, retry external actions, set timeout rules, and push an exception into a queue rather than just failing quietly.\nCALL-001 (Acme Logistics, prospect) [09:53] Jon Bell (Solutions Engineer, OrbitFlow): Yes. Route to a group, resolve a person dynamically from a field, or use an on-call style fallback. And the run history persists, so an admin can see the inputs, which steps ran, where it stopped.\nCALL-001 (Acme Logistics, prospect) [11:18] Jon Bell (Solutions Engineer, OrbitFlow): Right. So left-hand side is triggers and actions, middle is the flow, right-hand panel is the config for whatever step you've selected. A workflow can start from a SaaS event, a schedule, a webhook, a database query, or another workflow.\nCALL-001 (Acme Logistics, prospect) [11:36] Jon Bell (Solutions Engineer, OrbitFlow): I'll start this one from a record-change event, check a few required fields, enrich from a second system, then branch. And the thing I'd draw your attention to is that we push people towards small reusable components. You really don't want a single two-hundred-step workflow. You want subflows — account lookup, approval, notification, incident creation.\nCALL-001 (Acme Logistics, prospect) [13:04] Jon Bell (Solutions Engineer, OrbitFlow): We cache metadata but refresh it, and mapping errors surface on the run. For high-impact flows I'd genuinely recommend explicit validation at the start rather than assuming every source field is populated. And you can alert when error rates cross a threshold.\nCALL-001 (Acme Logistics, prospect) [17:45] Jon Bell (Solutions Engineer, OrbitFlow): Let me show you run history, actually, because it's related. [pause] So — filter by workflow, status, time, or a business field. Open a run, you get every step, inputs, outputs, timing, retries, any human approval.\nCALL-001 (Acme Logistics, prospect) [19:13] Jon Bell (Solutions Engineer, OrbitFlow): Version history and change metadata, yes. Rollback and promotion patterns vary a bit by workflow and package. For your evaluation I'd actually suggest we include a change-management scenario rather than just building the thing once.\nCALL-001 (Acme Logistics, prospect) [27:38] Jon Bell (Solutions Engineer, OrbitFlow): Approval forms can collect structured inputs and those values feed subsequent steps. For heavily customised forms some customers use their own front end and call us through the API.\nCALL-001 (Acme Logistics, prospect) [27:58] Jon Bell (Solutions Engineer, OrbitFlow): Yes, permissions allowing. It's useful during migration and for exception recovery.\nCALL-002 (BrightPath Health, prospect) [04:03] Jon Bell (Solutions Engineer, OrbitFlow): Workspace separation is supported, and Enterprise has stronger governance around who can publish where. What I'd want to understand is whether you mean separate data planes or separate logical workspaces, because those are very different asks.\nCALL-002 (BrightPath Health, prospect) [12:15] Maya Chen (Account Executive, OrbitFlow): That's the right question, and we won't try to replace everything. Plenty of customers keep an iPaaS or internal services for deep integration and use us for business-owned workflows — the ones with human decisions, exceptions, cross-functional handoffs.\nCALL-002 (BrightPath Health, prospect) [14:07] Jon Bell (Solutions Engineer, OrbitFlow): That's the right level to test at. Workflows are event-driven but each run holds state. Branch on data, pause for approvals, retry external actions, set timeout rules, push an exception into a queue rather than failing silently.\nCALL-002 (BrightPath Health, prospect) [14:41] Jon Bell (Solutions Engineer, OrbitFlow): Yes. Route to a group, resolve a person dynamically from a field, or use an on-call style fallback. Run history persists so an admin can see inputs, which steps ran, and where it stopped.\nCALL-002 (BrightPath Health, prospect) [20:41] Jon Bell (Solutions Engineer, OrbitFlow): Let me show run history since it came up. [pause] Filter by workflow, status, time, business field. Open a run and you get every step, inputs, outputs, timing, retries, any human approval.\nCALL-002 (BrightPath Health, prospect) [21:40] Jon Bell (Solutions Engineer, OrbitFlow): We cache metadata but refresh it, and mapping errors surface on the run. For high-impact flows I'd recommend explicit validation at the start rather than assuming every source field is populated. You can also alert when error rates cross a threshold.\nCALL-002 (BrightPath Health, prospect) [27:48] Jon Bell (Solutions Engineer, OrbitFlow): That matches what we recommend. A few centrally owned templates, defined publishing rights, dev separated from prod.\nCALL-002 (BrightPath Health, prospect) [28:07] Jon Bell (Solutions Engineer, OrbitFlow): Version history and change metadata, yes. Rollback and promotion patterns vary by workflow and package. For your evaluation I'd suggest we include a change-management scenario rather than just building it once.\nCALL-003 (Cedar & Finch, prospect) [01:09] Leo Grant (Account Executive, OrbitFlow): So this is the workflow builder. Triggers and actions on the left, the flow in the middle, and whatever step you've clicked gets its config on the right.\nCALL-003 (Cedar & Finch, prospect) [01:48] Leo Grant (Account Executive, OrbitFlow): Then let me just run it. [pause] So it's triggered off the order event, it checks the value threshold, it checks the exception flag, and then it branches.\nCALL-003 (Cedar & Finch, prospect) [02:07] Leo Grant (Account Executive, OrbitFlow): Good. So — this branch here. If the required fields aren't populated it doesn't just carry on, it drops into an exception queue.\nCALL-003 (Cedar & Finch, prospect) [02:19] Leo Grant (Account Executive, OrbitFlow): A team, not a person. You can route to a group, or resolve a person dynamically off a field, or use an on-call style fallback.\nCALL-003 (Cedar & Finch, prospect) [03:18] Leo Grant (Account Executive, OrbitFlow): No. Okay, so let me show you the bit that speaks to that. [pause] This is run history. Filter by workflow, status, time. Open any run and you see every step, the inputs, the outputs, timings, retries.\nCALL-003 (Cedar & Finch, prospect) [03:50] Leo Grant (Account Executive, OrbitFlow): Yes — you can alert when error rates cross a threshold. And that's the right instinct, everyone who alerts per-failure ends up ignoring all of them.\nCALL-003 (Cedar & Finch, prospect) [08:36] Leo Grant (Account Executive, OrbitFlow): Let me show you two more things and then I'll stop. [pause] This is the templates and reusable components bit. Rather than sixty separate automations, you'd typically build a handful of subflows — order lookup, notification, ticket creation — and assemble from those.\nCALL-003 (Cedar & Finch, prospect) [09:34] Leo Grant (Account Executive, OrbitFlow): Version history and change metadata on every workflow. So you can see what changed and when. And you'd typically define who can publish to production versus who can build in a dev workspace.\nCALL-003 (Cedar & Finch, prospect) [09:54] Leo Grant (Account Executive, OrbitFlow): [laughs] You'd get one. That's not extra cost, it's just how it's structured.\nCALL-004 (DeltaWorks Manufacturing, prospect) [02:59] Jon Bell (Solutions Engineer, OrbitFlow): On IP restrictions and private connectivity — I want to be careful. There are controls available, and there are patterns customers use for private network access, but \"private connectivity\" means at least four different things depending on who says it. Can you tell me what you mean specifically?\nCALL-004 (DeltaWorks Manufacturing, prospect) [03:41] Jon Bell (Solutions Engineer, OrbitFlow): Understood. So the pattern there is generally an agent or a controlled gateway sitting inside your network that the platform communicates with, rather than direct outbound calls to your systems. But I want to validate that against your actual environment rather than describe it in the abstract.\nCALL-004 (DeltaWorks Manufacturing, prospect) [06:14] Jon Bell (Solutions Engineer, OrbitFlow): That's genuinely designable. You would aggregate at the queue or team level rather than the individual level, and you would restrict who can view run-level detail. It's a permissions and reporting design question.\nCALL-004 (DeltaWorks Manufacturing, prospect) [11:10] Maya Chen (Account Executive, OrbitFlow): That's exactly how we'd position it, and I'd rather you said it than me. We're not trying to replace an integration platform. Some customers keep an iPaaS or internal services for deep systems integration and use us for business-owned workflows.\nCALL-004 (DeltaWorks Manufacturing, prospect) [11:43] Jon Bell (Solutions Engineer, OrbitFlow): Agreed, and that's how it's structured. Connections and credentials are centrally managed and referenced by workflows. A builder uses a connection; they don't see the secret. Rotation happens at the connection layer, so you don't edit every workflow when a credential changes.\nCALL-004 (DeltaWorks Manufacturing, prospect) [15:17] Jon Bell (Solutions Engineer, OrbitFlow): That's the right level to test. Workflows are event-driven but each run holds state. So you can branch on data, pause for approvals, retry external actions, set timeout rules, and push an exception into a queue rather than failing silently.\nCALL-004 (DeltaWorks Manufacturing, prospect) [16:29] Jon Bell (Solutions Engineer, OrbitFlow): Yes. Route to a group, resolve a person dynamically from a field, or use an on-call style fallback. Run history persists, so an administrator can see inputs, which steps ran, and where it stopped.\nCALL-004 (DeltaWorks Manufacturing, prospect) [16:49] Jon Bell (Solutions Engineer, OrbitFlow): Permissions can separate workflow administration from business viewing. Field-level masking for specific payloads is a design conversation rather than a checkbox — I don't want to say \"yes, masking\" and have you discover the nuance later.\nCALL-004 (DeltaWorks Manufacturing, prospect) [23:12] Jon Bell (Solutions Engineer, OrbitFlow): Workspace separation is supported and Enterprise has stronger governance around who can publish where. There's version history and change metadata on every workflow. Rollback and promotion patterns vary a bit depending on the workflow and the package, and I'd want to walk through your specific promotion process rather than assume it maps.\nCALL-005 (Ember Financial, prospect) [01:04] Leo Grant (Account Executive, OrbitFlow): That's a fair criticism of the category, honestly, not just of them. Big visual workflows are hard to debug everywhere. What we'd argue is composition — small subflows rather than one enormous canvas — but I'd rather Nina show you that than me claim it.\nCALL-005 (Ember Financial, prospect) [11:04] Nina Patel (Solutions Engineer, OrbitFlow): So this is run history. Filter by workflow, status, time, or a business field. I'll open a run — and you get every step, its inputs, its outputs, timing, retries, and any human approval with who approved and when.\nCALL-005 (Ember Financial, prospect) [11:28] Nina Patel (Solutions Engineer, OrbitFlow): [pause] This one. So it timed out on the external call, retried twice, went to the exception queue, a human picked it up, modified a value, approved, and it resumed. And all of that is one record.\nCALL-005 (Ember Financial, prospect) [11:54] Nina Patel (Solutions Engineer, OrbitFlow): [pause] You can see both here — the value at the point the step ran and the value after the approval form. So yes, but I want to be precise: that's because this approval was configured to collect a structured input. If someone had just clicked approve, there'd be nothing to compare.\nCALL-005 (Ember Financial, prospect) [13:17] Nina Patel (Solutions Engineer, OrbitFlow): Let me show the composition point since it came up at the start. [pause] Rather than one large canvas, you build subflows — partner lookup, enrichment, approval, incident creation — and assemble them. So when something fails, you're debugging a twelve-step subflow, not step forty of sixty.\nCALL-005 (Ember Financial, prospect) [13:44] Nina Patel (Solutions Engineer, OrbitFlow): You can run one in isolation with a given input, yes. Whether that meets your definition of a unit test is a different question, and I suspect it doesn't quite.\nCALL-005 (Ember Financial, prospect) [14:36] Nina Patel (Solutions Engineer, OrbitFlow): That's a genuinely hard problem and I'm not going to claim we solve it for you. Each run keeps state, retries are visible in the run record, and you can see whether a step executed. But if a downstream system isn't idempotent and you retry a write, you can absolutely create a duplicate. The mitigation is design — idempotency keys, checks before writes — and it's the same mitigation anywhere.\nCALL-005 (Ember Financial, prospect) [18:47] Nina Patel (Solutions Engineer, OrbitFlow): Workspace separation is supported, and Enterprise has stronger governance around who can publish where. There's version history and change metadata on every workflow, so you can see what changed and when. Rollback and promotion patterns vary a bit by package.\nCALL-005 (Ember Financial, prospect) [19:37] Nina Patel (Solutions Engineer, OrbitFlow): Yes. Route to a group, resolve a person dynamically from a field, or use an on-call style fallback.\nCALL-006 (Fable Media, prospect) [00:31] Alastair McCrae (Account Executive, OrbitFlow): Yeah, so let me just give you a bit of context on OrbitFlow first and then we can dig in. So we're a workflow automation platform, right, but the way I'd describe it is we're the layer that sits above all your tools and actually makes them talk to each other, but with, like, proper governance and visibility on top.\nCALL-006 (Fable Media, prospect) [00:54] Alastair McCrae (Account Executive, OrbitFlow): And the thing that makes us different — this is the bit I always say — is we're not just an integration tool. Anyone can move data from A to B. We're about the process. Ownership, exceptions, approvals, all of that.\nCALL-006 (Fable Media, prospect) [02:56] Alastair McCrae (Account Executive, OrbitFlow): No, no, totally, and that's the beauty of it — you can build it however you want. It's completely flexible.\nCALL-006 (Fable Media, prospect) [05:01] Alastair McCrae (Account Executive, OrbitFlow): Yeah, all of that's doable.\nCALL-006 (Fable Media, prospect) [05:29] Alastair McCrae (Account Executive, OrbitFlow): So you'd set up a condition. If date greater than whatever, then notify.\nCALL-006 (Fable Media, prospect) [05:42] Alastair McCrae (Account Executive, OrbitFlow): It'd be event driven, so when the record changes it fires.\nCALL-006 (Fable Media, prospect) [05:52] Alastair McCrae (Account Executive, OrbitFlow): [pause] You'd have a — you could have a scheduled one as well.\nCALL-006 (Fable Media, prospect) [06:00] Alastair McCrae (Account Executive, OrbitFlow): Possibly. I'd want to check with an SE, honestly. But it's definitely doable.\nCALL-006 (Fable Media, prospect) [06:52] Alastair McCrae (Account Executive, OrbitFlow): No, totally. And you can always check the underlying data.\nCALL-006 (Fable Media, prospect) [09:35] Alastair McCrae (Account Executive, OrbitFlow): Well, you get the governance, you get the visibility, the audit trail —\nCALL-007 (Greenline Energy Services, prospect) [01:34] Maya Chen (Account Executive, OrbitFlow): That's actually a distinction I wish more people made. We see two separate things — connecting systems, which you've largely done, and operating the process on top of the connections, which is where the pain usually sits.\nCALL-007 (Greenline Energy Services, prospect) [02:47] Maya Chen (Account Executive, OrbitFlow): Let me try a candidate workflow and you tell me if it's the right one. An installation is blocked because equipment or permissions are missing. The system creates the appropriate remediation task, notifies regional operations, and keeps Dynamics updated as the issue changes state.\nCALL-007 (Greenline Energy Services, prospect) [05:11] Maya Chen (Account Executive, OrbitFlow): Right, I'm writing that down as a question for Jon rather than answering it myself. My general understanding is you'd design the workflow so the sync from the mobile app is eventual rather than assumed, and the workflow tolerates delay rather than treating it as failure. But how that's actually built is his answer, not mine.\nCALL-007 (Greenline Energy Services, prospect) [10:19] Jon Bell (Solutions Engineer, OrbitFlow): Then you're in a much better position than most. The pattern would be that the workflow doesn't poll the device and doesn't assume presence. It reacts to the sync event when it arrives, and separately it has a timeout rule — if we haven't heard anything in N hours, that itself becomes an exception rather than a silent hang.\nCALL-007 (Greenline Energy Services, prospect) [11:05] Jon Bell (Solutions Engineer, OrbitFlow): Each run keeps state, so yes, it can sit in a waiting state without consuming anything or falling over. You can branch on data, pause for approvals, retry external actions, set timeout rules, and send an exception into a queue rather than failing silently.\nCALL-007 (Greenline Energy Services, prospect) [11:34] Jon Bell (Solutions Engineer, OrbitFlow): Yes. Route to a group, resolve a person dynamically from a field, or use an on-call style fallback. And the run history persists so you can see the inputs, which steps ran, and where it stopped.\nCALL-007 (Greenline Energy Services, prospect) [17:46] Jon Bell (Solutions Engineer, OrbitFlow): That's a well-trodden pattern — central templates and standards, regional workspaces for local building, controlled promotion to production.\nCALL-008 (Harbor Legal, prospect) [06:15] Nina Patel (Solutions Engineer, OrbitFlow): Whatever the workflow passes between steps is visible in the run record, yes. That's the honest answer and it's the thing you should be worried about.\nCALL-008 (Harbor Legal, prospect) [31:59] Nina Patel (Solutions Engineer, OrbitFlow): Workflow definitions and run data can be exported through supported APIs. What happens to the copy you leave behind is contractual and I'd want that answered by someone who can commit to it, not by me.\nCALL-008 (Harbor Legal, prospect) [32:39] Nina Patel (Solutions Engineer, OrbitFlow): That's a reasonable concern and here's the honest answer. Definitions and run data export through APIs, but this is a product with its own execution model. I would not claim you can export a workflow and run it unchanged somewhere else. You can't.\nCALL-008 (Harbor Legal, prospect) [37:10] Leo Grant (Account Executive, OrbitFlow): Summarising, then. Scope is administrative orchestration around matter opening, with conflicts decisions untouched and enforced at the credential layer. Information barriers are a real unsolved constraint, so phase one avoids barriered matters and we document that as deferred. AI is off for phase one. The decisive question is whether integration effort into iManage and Intapp is proportionate to the value, and we answer that with an operations list and honest difficulty ratings. Two practice groups, not the firm. Q4 PoC, Q1 decision.\nCALL-009 (Inkwell Learning, prospect) [04:08] Maya Chen (Account Executive, OrbitFlow): Weight the signals by how they're produced. Machine-generated usage data and structured ticket data carry the flag. Human-maintained fields are context you show to the person, not inputs the logic depends on.\nCALL-009 (Inkwell Learning, prospect) [10:47] Jon Bell (Solutions Engineer, OrbitFlow): In this flow — create a structured follow-up task with the account, the signal that triggered it, and links back to the underlying tickets and usage. Assign it to the account's CSM, or to a queue if the owner field is stale. Escalate if nothing happens in N days.\nCALL-009 (Inkwell Learning, prospect) [11:50] Jon Bell (Solutions Engineer, OrbitFlow): Then route to a group, resolve dynamically from a field, or use an on-call style fallback. And run history persists so you can see the inputs, which steps ran, and where it stopped.\nCALL-009 (Inkwell Learning, prospect) [27:55] Jon Bell (Solutions Engineer, OrbitFlow): Version history and change metadata are there, so you can see what changed and when. Definitions can be exported through the API. Whether that satisfies you as version control depends on what you mean — it's not a git integration.\nCALL-009 (Inkwell Learning, prospect) [29:03] Jon Bell (Solutions Engineer, OrbitFlow): That's the right question and it's mostly not a product answer. The product parts are: workflows built as small readable subflows rather than one enormous canvas, version history so someone can see what changed, and run history so someone can see what actually happens. The rest is your operating model — naming conventions, a rule that someone other than the builder can understand each production flow, documentation as a deliverable rather than a hope.\nCALL-010 (Juniper Cloud Tools, prospect) [00:36] Nina Patel (Solutions Engineer, OrbitFlow): Definitions export through the API. It's a structured representation, not an opaque blob. But I want to be precise — it's our schema. It's readable, it's diffable in the sense that text is diffable, but it is not a portable format that another engine could execute.\nCALL-010 (Juniper Cloud Tools, prospect) [01:18] Nina Patel (Solutions Engineer, OrbitFlow): The first two, yes, with your own tooling around the export. The third one depends on how readable our representation is for the specific change, and I'd want you to look at real examples before you believe me.\nCALL-010 (Juniper Cloud Tools, prospect) [14:19] Nina Patel (Solutions Engineer, OrbitFlow): Honestly? Not automatically. A sixty-step canvas is as unreadable here as anywhere. What we push is composition — small reusable subflows, so the top-level flow reads like a sentence and the complexity is inside named components.\nCALL-010 (Juniper Cloud Tools, prospect) [14:52] Nina Patel (Solutions Engineer, OrbitFlow): No. We recommend it. There's no linter.\nCALL-010 (Juniper Cloud Tools, prospect) [19:43] Nina Patel (Solutions Engineer, OrbitFlow): Sharing. [pause] This is a run record. Every step, inputs, outputs, timing, retries, any human approval.\nCALL-010 (Juniper Cloud Tools, prospect) [20:39] Nina Patel (Solutions Engineer, OrbitFlow): No. So: manual re-trigger yes, deterministic replay no.\nCALL-010 (Juniper Cloud Tools, prospect) [28:13] Nina Patel (Solutions Engineer, OrbitFlow): If the downstream system isn't idempotent and the write succeeded but the response was lost, then yes, potentially. Each run keeps state and retries are visible in the run record, so you can see that it happened. But we can't make a non-idempotent API idempotent.\nCALL-011 (Lumen Retail Group, renewal) [08:02] Maya Chen (Account Executive, OrbitFlow): Right. Current contract is Enterprise, nine builder seats, run tier at two hundred and fifty thousand a month. It expires the eighteenth of October.\nCALL-012 (Pinewood Insurance, renewal) [08:53] Leo Grant (Account Executive, OrbitFlow): Two options and I'll be straight about both. Option one, you don't renew. We part on good terms, you export your workflow definitions and run data, and if the Guidewire route works out you were right.\nCALL-012 (Pinewood Insurance, renewal) [21:23] Ruth Adeyemi (Customer Success Manager, OrbitFlow): For your definitions and run data? Yes.\nCALL-013 (Halberd Security, renewal) [03:18] Nina Patel (Solutions Engineer, OrbitFlow): Not by the analyst. By someone with permission to edit the workflow, yes, because they could remove the step.\nCALL-013 (Halberd Security, renewal) [04:24] Nina Patel (Solutions Engineer, OrbitFlow): I will. And if the answer is no, the workaround is a separate workspace where AI is enabled and only two people can build.\nCALL-013 (Halberd Security, renewal) [08:46] Nina Patel (Solutions Engineer, OrbitFlow): The control is not putting facts in the summary that the analyst has to verify. Times, asset counts, classifications — those should be templated from the record directly, not generated. Let the model write the prose around fixed facts.\nCALL-013 (Halberd Security, renewal) [11:26] Nina Patel (Solutions Engineer, OrbitFlow): Can I suggest the lightest version? You don't need a full dev-test-prod pipeline for six people. What you need is that publishing to production requires a second person, and that there's version history so you can see what changed. The version history exists already.\nCALL-013 (Halberd Security, renewal) [11:48] Nina Patel (Solutions Engineer, OrbitFlow): Version history and change metadata on every workflow. You can see what changed and when and by whom.\nCALL-013 (Halberd Security, renewal) [13:18] Nina Patel (Solutions Engineer, OrbitFlow): The web experience works on a phone in the sense that it renders. It is not a mobile product and I wouldn't sell it as one. If your analysts need to approve at two in the morning from a phone, that's going to be a poor experience.\nCALL-013 (Halberd Security, renewal) [14:41] Nina Patel (Solutions Engineer, OrbitFlow): That's a useful distinction for the design. Some approvals belong on a phone and some don't, and you'd want that decided per workflow rather than as a platform setting.\nCALL-014 (Verity Payments, churn) [09:34] Ruth Adeyemi (Customer Success Manager, OrbitFlow): We do say that, in fairness. It's in the operating model guidance.\nCALL-015 (Oakhill Property, churn) [00:08] Ruth Adeyemi (Customer Success Manager, OrbitFlow): We won't need twenty. Just so you know the format — this isn't a save call. Your notice is served, you're leaving on the eleventh of November, and I'm not going to try to reverse that.\nCALL-015 (Oakhill Property, churn) [05:58] Ruth Adeyemi (Customer Success Manager, OrbitFlow): That's a fair criticism. We look at that data.\nCALL-015 (Oakhill Property, churn) [11:41] Ruth Adeyemi (Customer Success Manager, OrbitFlow): Your contract ends the eleventh of November. Do you want read-only access past that?\nCALL-016 (Quarry Ridge Foods, cold_call) [00:17] Maya Chen (Account Executive, OrbitFlow): We work with operations teams in manufacturing where processes are spread across a few systems and the handoffs between them happen over email and spreadsheets. The specific thing we usually fix is that nobody can see where something's stuck until it's late.\nCALL-017 (Silverline Travel, cold_call) [00:21] Leo Grant (Account Executive, OrbitFlow): Workflow automation. Which I know sounds like every other call you get.\nCALL-017 (Silverline Travel, cold_call) [03:52] Leo Grant (Account Executive, OrbitFlow): [laughs] Then I'll be quicker. We work with customer operations teams where a booking or a case has to move through several systems and several people, and the failure mode is that nothing's actually broken — it's just sitting somewhere and nobody knows.\nCALL-017 (Silverline Travel, cold_call) [04:14] Leo Grant (Account Executive, OrbitFlow): In travel specifically, the version we see most is a disruption event. Flight cancels, and then there's rebooking, supplier notification, customer communication, and a refund or a credit, and those four things happen in four systems with people chasing between them.\nCALL-018 (Beacon Housing Trust, cold_call) [00:18] Maya Chen (Account Executive, OrbitFlow): We do workflow automation, but the specific problem we're usually brought in for is cross-team processes where the work is technically visible in a system somewhere but nobody actually owns moving it along. So things sit, and you find out late.\nCALL-018 (Beacon Housing Trust, cold_call) [09:02] Maya Chen (Account Executive, OrbitFlow): I'll be honest — I don't have a housing association reference. We have public sector customers but not in your sector.\nCALL-019 (Trafford Dental Group, cold_call) [00:13] Alastair McCrae (Account Executive, OrbitFlow): OrbitFlow. So we're a workflow automation platform, we work with loads of multi-site healthcare groups — I won't name them but you'd know a couple — and basically what we do is we sit above all your systems and we make them actually talk to each other, with proper governance on top.\nCALL-019 (Trafford Dental Group, cold_call) [01:00] Alastair McCrae (Account Executive, OrbitFlow): Exactly. And that's exactly the problem we solve. So what we'd typically do is come in, look at your onboarding processes, your compliance, your referrals, and just automate the whole lot.\nCALL-019 (Trafford Dental Group, cold_call) [02:00] Alastair McCrae (Account Executive, OrbitFlow): But look — the referrals thing was just an example. The main thing is the visibility across sites, and that's where we —\nCALL-019 (Trafford Dental Group, cold_call) [02:33] Alastair McCrae (Account Executive, OrbitFlow): Right, but this isn't practice management software, this is —\nCALL-020 (Kestrel Robotics, cold_call) [00:55] Leo Grant (Account Executive, OrbitFlow): Our marketing is aimed at companies with a governance function. You don't have one, so it isn't aimed at you.\nCALL-020 (Kestrel Robotics, cold_call) [04:00] Leo Grant (Account Executive, OrbitFlow): No advantage on that specific point, no. There might be one on what happens afterwards — who maintains it, whether it's reusable across the seven stages — but that's a subtler argument and I'm not going to pretend it's decisive."
+      },
+      "answer": {
+        "relevant_turns": [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "07:23"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "14:50"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "20:05"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "01:59"
+          },
+          {
+            "call_id": "CALL-004",
+            "timestamp": "02:09"
+          },
+          {
+            "call_id": "CALL-005",
+            "timestamp": "06:49"
+          },
+          {
+            "call_id": "CALL-007",
+            "timestamp": "16:22"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "10:56"
+          },
+          {
+            "call_id": "CALL-009",
+            "timestamp": "17:29"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "17:41"
+          },
+          {
+            "call_id": "CALL-012",
+            "timestamp": "07:10"
+          },
+          {
+            "call_id": "CALL-003",
+            "timestamp": "06:41"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "03:19"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "17:57"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "18:22"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "12:12"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "11:30"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "12:24"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "03:01"
+          }
+        ],
+        "summary": "Yes. The transcripts show several vendor inconsistencies, most clearly on SSO/identity, connectors, and whether the platform is fully no-code. In those cases, later technical reps often give the narrower or more qualified answer, while an earlier account executive gave a broader claim. The product is therefore described inconsistently in the calls.",
+        "claims": [
+          {
+            "statement": "A vendor rep said SSO was included on all plans.",
+            "citations": [
+              {
+                "call_id": "CALL-006",
+                "timestamp": "07:23",
+                "speaker": "Alastair McCrae",
+                "quote": "SSO's included on all our plans, that's standard."
+              },
+              {
+                "call_id": "CALL-006",
+                "timestamp": "14:50",
+                "speaker": "Alastair McCrae",
+                "quote": "I'm fairly sure it's all plans."
+              }
+            ]
+          },
+          {
+            "statement": "Multiple other vendor reps said SAML SSO and SCIM are on Enterprise only.",
+            "citations": [
+              {
+                "call_id": "CALL-001",
+                "timestamp": "20:05",
+                "speaker": "Jon Bell",
+                "quote": "SAML SSO and SCIM on Enterprise."
+              },
+              {
+                "call_id": "CALL-002",
+                "timestamp": "01:59",
+                "speaker": "Jon Bell",
+                "quote": "SAML SSO and SCIM provisioning, both on Enterprise."
+              },
+              {
+                "call_id": "CALL-004",
+                "timestamp": "02:09",
+                "speaker": "Jon Bell",
+                "quote": "SAML SSO and SCIM provisioning — both supported, both on Enterprise."
+              },
+              {
+                "call_id": "CALL-005",
+                "timestamp": "06:49",
+                "speaker": "Nina Patel",
+                "quote": "SAML SSO and SCIM on Enterprise."
+              },
+              {
+                "call_id": "CALL-007",
+                "timestamp": "16:22",
+                "speaker": "Jon Bell",
+                "quote": "SAML SSO and SCIM on Enterprise, and Azure AD works with that."
+              },
+              {
+                "call_id": "CALL-008",
+                "timestamp": "10:56",
+                "speaker": "Nina Patel",
+                "quote": "SAML SSO and SCIM on Enterprise."
+              },
+              {
+                "call_id": "CALL-009",
+                "timestamp": "17:29",
+                "speaker": "Jon Bell",
+                "quote": "SAML SSO and SCIM on Enterprise, encryption in transit and at rest, audit logs covering administrative and workflow events."
+              },
+              {
+                "call_id": "CALL-010",
+                "timestamp": "17:41",
+                "speaker": "Nina Patel",
+                "quote": "SAML SSO and SCIM on Enterprise."
+              },
+              {
+                "call_id": "CALL-012",
+                "timestamp": "07:10",
+                "speaker": "Leo Grant",
+                "quote": "Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support."
+              }
+            ]
+          },
+          {
+            "statement": "A vendor rep said native connectors covered the relevant systems.",
+            "citations": [
+              {
+                "call_id": "CALL-006",
+                "timestamp": "03:19",
+                "speaker": "Alastair McCrae",
+                "quote": "All of those are native connectors, no problem at all."
+              }
+            ]
+          },
+          {
+            "statement": "Another vendor rep said native legal-system connectors are limited and the work would go through APIs instead.",
+            "citations": [
+              {
+                "call_id": "CALL-008",
+                "timestamp": "17:57",
+                "speaker": "Nina Patel",
+                "quote": "native legal-system connectors are limited. In our catalogue, specifically, limited."
+              },
+              {
+                "call_id": "CALL-008",
+                "timestamp": "18:22",
+                "speaker": "Nina Patel",
+                "quote": "we'd be working through their APIs rather than a maintained native connector."
+              }
+            ]
+          },
+          {
+            "statement": "A vendor rep said the platform is completely no-code / just configuration.",
+            "citations": [
+              {
+                "call_id": "CALL-006",
+                "timestamp": "11:30",
+                "speaker": "Alastair McCrae",
+                "quote": "That's fine, it's completely no-code."
+              },
+              {
+                "call_id": "CALL-006",
+                "timestamp": "12:24",
+                "speaker": "Alastair McCrae",
+                "quote": "Yeah, that's just configuration."
+              }
+            ]
+          },
+          {
+            "statement": "Other vendor reps said some workflows use expressions, JavaScript steps, custom components or connector code, and that not every workflow is no-code.",
+            "citations": [
+              {
+                "call_id": "CALL-001",
+                "timestamp": "12:12",
+                "speaker": "Jon Bell",
+                "quote": "Transformations use expressions. On Enterprise you can package reusable JavaScript steps if you need to."
+              },
+              {
+                "call_id": "CALL-001",
+                "timestamp": "12:12",
+                "speaker": "Jon Bell",
+                "quote": "We don't claim every workflow is no-code."
+              },
+              {
+                "call_id": "CALL-010",
+                "timestamp": "03:01",
+                "speaker": "Nina Patel",
+                "quote": "Custom components and connector code — the things that touch credentials and external systems — authored by you and version controlled."
+              }
+            ]
+          },
+          {
+            "statement": "One vendor rep said the product could be described as completely no-code for the customer’s use case.",
+            "citations": [
+              {
+                "call_id": "CALL-006",
+                "timestamp": "11:36",
+                "speaker": "Alastair McCrae",
+                "quote": "For what you'd be doing, yeah."
+              }
+            ]
+          }
+        ],
+        "conflicts": [
+          {
+            "description": "SSO coverage: one rep said SSO is on all plans, while multiple others said SAML SSO/SCIM are Enterprise-only.",
+            "citations": [
+              {
+                "call_id": "CALL-006",
+                "timestamp": "07:23",
+                "speaker": "Alastair McCrae",
+                "quote": "SSO's included on all our plans, that's standard."
+              },
+              {
+                "call_id": "CALL-001",
+                "timestamp": "20:05",
+                "speaker": "Jon Bell",
+                "quote": "SAML SSO and SCIM on Enterprise."
+              },
+              {
+                "call_id": "CALL-002",
+                "timestamp": "01:59",
+                "speaker": "Jon Bell",
+                "quote": "SAML SSO and SCIM provisioning, both on Enterprise."
+              },
+              {
+                "call_id": "CALL-012",
+                "timestamp": "07:10",
+                "speaker": "Leo Grant",
+                "quote": "Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support."
+              }
+            ],
+            "better_supported": "Enterprise-only",
+            "why": "More different vendor reps say Enterprise-only, across more calls, and the later technical/AE answers are more specific (SAML SSO and SCIM) than the broad 'SSO' claim."
+          },
+          {
+            "description": "Connector coverage: one rep said the needed systems had native connectors, while another said native legal-system connectors are limited and API work is needed.",
+            "citations": [
+              {
+                "call_id": "CALL-006",
+                "timestamp": "03:19",
+                "speaker": "Alastair McCrae",
+                "quote": "All of those are native connectors, no problem at all."
+              },
+              {
+                "call_id": "CALL-008",
+                "timestamp": "17:57",
+                "speaker": "Nina Patel",
+                "quote": "native legal-system connectors are limited. In our catalogue, specifically, limited."
+              },
+              {
+                "call_id": "CALL-008",
+                "timestamp": "18:22",
+                "speaker": "Nina Patel",
+                "quote": "we'd be working through their APIs rather than a maintained native connector."
+              }
+            ],
+            "better_supported": "limited native connectors / API work",
+            "why": "The limited/API answer is more specific and comes from a solutions engineer; the contrary claim is broad and offhand."
+          },
+          {
+            "description": "No-code: one rep said the platform is completely no-code/just configuration, while others said expressions, JavaScript, custom components, and connector code are sometimes needed and not every workflow is no-code.",
+            "citations": [
+              {
+                "call_id": "CALL-006",
+                "timestamp": "11:30",
+                "speaker": "Alastair McCrae",
+                "quote": "That's fine, it's completely no-code."
+              },
+              {
+                "call_id": "CALL-001",
+                "timestamp": "12:12",
+                "speaker": "Jon Bell",
+                "quote": "Transformations use expressions. On Enterprise you can package reusable JavaScript steps if you need to."
+              },
+              {
+                "call_id": "CALL-001",
+                "timestamp": "12:12",
+                "speaker": "Jon Bell",
+                "quote": "We don't claim every workflow is no-code."
+              },
+              {
+                "call_id": "CALL-010",
+                "timestamp": "03:01",
+                "speaker": "Nina Patel",
+                "quote": "Custom components and connector code — the things that touch credentials and external systems — authored by you and version controlled."
+              }
+            ],
+            "better_supported": "not completely no-code",
+            "why": "Multiple technical reps across calls said expressions, JavaScript, and connector code can be needed, and one explicitly disclaimed that every workflow is no-code."
+          }
+        ],
+        "not_found": [],
+        "confidence": "high",
+        "confidence_reason": "The transcripts explicitly contain several vendor-vendor contradictions, especially on SSO/SCIM, connectors, and no-code claims, with repeated technical follow-up answers that are more specific than the broader AE statements."
+      },
+      "confidence": "high",
+      "claim_checks": [
+        [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "07:23",
+            "speaker": "Alastair McCrae",
+            "quote": "SSO's included on all our plans, that's standard.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [07:23] line 82"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "14:50",
+            "speaker": "Alastair McCrae",
+            "quote": "I'm fairly sure it's all plans.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [14:50] line 162"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-001",
+            "timestamp": "20:05",
+            "speaker": "Jon Bell",
+            "quote": "SAML SSO and SCIM on Enterprise.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-001 [20:05] line 140"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "01:59",
+            "speaker": "Jon Bell",
+            "quote": "SAML SSO and SCIM provisioning, both on Enterprise.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-002 [01:59] line 31"
+          },
+          {
+            "call_id": "CALL-004",
+            "timestamp": "02:09",
+            "speaker": "Jon Bell",
+            "quote": "SAML SSO and SCIM provisioning — both supported, both on Enterprise.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-004 [02:09] line 35"
+          },
+          {
+            "call_id": "CALL-005",
+            "timestamp": "06:49",
+            "speaker": "Nina Patel",
+            "quote": "SAML SSO and SCIM on Enterprise.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-005 [06:49] line 60"
+          },
+          {
+            "call_id": "CALL-007",
+            "timestamp": "16:22",
+            "speaker": "Jon Bell",
+            "quote": "SAML SSO and SCIM on Enterprise, and Azure AD works with that.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-007 [16:22] line 149"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "10:56",
+            "speaker": "Nina Patel",
+            "quote": "SAML SSO and SCIM on Enterprise.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [10:56] line 101"
+          },
+          {
+            "call_id": "CALL-009",
+            "timestamp": "17:29",
+            "speaker": "Jon Bell",
+            "quote": "SAML SSO and SCIM on Enterprise, encryption in transit and at rest, audit logs covering administrative and workflow events.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-009 [17:29] line 159"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "17:41",
+            "speaker": "Nina Patel",
+            "quote": "SAML SSO and SCIM on Enterprise.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-010 [17:41] line 180"
+          },
+          {
+            "call_id": "CALL-012",
+            "timestamp": "07:10",
+            "speaker": "Leo Grant",
+            "quote": "Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-012 [07:10] line 90"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "03:19",
+            "speaker": "Alastair McCrae",
+            "quote": "All of those are native connectors, no problem at all.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [03:19] line 45"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-008",
+            "timestamp": "17:57",
+            "speaker": "Nina Patel",
+            "quote": "native legal-system connectors are limited. In our catalogue, specifically, limited.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [17:57] line 164"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "18:22",
+            "speaker": "Nina Patel",
+            "quote": "we'd be working through their APIs rather than a maintained native connector.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [18:22] line 166"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "11:30",
+            "speaker": "Alastair McCrae",
+            "quote": "That's fine, it's completely no-code.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [11:30] line 127"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "12:24",
+            "speaker": "Alastair McCrae",
+            "quote": "Yeah, that's just configuration.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [12:24] line 138"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-001",
+            "timestamp": "12:12",
+            "speaker": "Jon Bell",
+            "quote": "Transformations use expressions. On Enterprise you can package reusable JavaScript steps if you need to.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-001 [12:12] line 98"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "12:12",
+            "speaker": "Jon Bell",
+            "quote": "We don't claim every workflow is no-code.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-001 [12:12] line 98"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "03:01",
+            "speaker": "Nina Patel",
+            "quote": "Custom components and connector code — the things that touch credentials and external systems — authored by you and version controlled.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-010 [03:01] line 49"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "11:36",
+            "speaker": "Alastair McCrae",
+            "quote": "For what you'd be doing, yeah.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [11:36] line 129"
+          }
+        ]
+      ],
+      "conflict_checks": [
+        [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "07:23",
+            "speaker": "Alastair McCrae",
+            "quote": "SSO's included on all our plans, that's standard.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [07:23] line 82"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "20:05",
+            "speaker": "Jon Bell",
+            "quote": "SAML SSO and SCIM on Enterprise.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-001 [20:05] line 140"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "01:59",
+            "speaker": "Jon Bell",
+            "quote": "SAML SSO and SCIM provisioning, both on Enterprise.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-002 [01:59] line 31"
+          },
+          {
+            "call_id": "CALL-012",
+            "timestamp": "07:10",
+            "speaker": "Leo Grant",
+            "quote": "Enterprise gives you SAML SSO and SCIM, EU data residency, audit export, advanced workspace governance, the ability to disable AI features, priority support.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-012 [07:10] line 90"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "03:19",
+            "speaker": "Alastair McCrae",
+            "quote": "All of those are native connectors, no problem at all.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [03:19] line 45"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "17:57",
+            "speaker": "Nina Patel",
+            "quote": "native legal-system connectors are limited. In our catalogue, specifically, limited.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [17:57] line 164"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "18:22",
+            "speaker": "Nina Patel",
+            "quote": "we'd be working through their APIs rather than a maintained native connector.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [18:22] line 166"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "11:30",
+            "speaker": "Alastair McCrae",
+            "quote": "That's fine, it's completely no-code.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [11:30] line 127"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "12:12",
+            "speaker": "Jon Bell",
+            "quote": "Transformations use expressions. On Enterprise you can package reusable JavaScript steps if you need to.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-001 [12:12] line 98"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "12:12",
+            "speaker": "Jon Bell",
+            "quote": "We don't claim every workflow is no-code.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-001 [12:12] line 98"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "03:01",
+            "speaker": "Nina Patel",
+            "quote": "Custom components and connector code — the things that touch credentials and external systems — authored by you and version controlled.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-010 [03:01] line 49"
+          }
+        ]
+      ],
+      "cited_calls": [
+        "CALL-006",
+        "CALL-001",
+        "CALL-002",
+        "CALL-004",
+        "CALL-005",
+        "CALL-007",
+        "CALL-008",
+        "CALL-009",
+        "CALL-010",
+        "CALL-012"
+      ],
+      "warnings": [],
+      "usage": {
+        "calls": 14,
+        "prompt_tokens": 67763,
+        "completion_tokens": 7156,
+        "embed_tokens": 0
+      },
+      "seconds": 19.85,
+      "steps": {
+        "plan": {
+          "seconds": 3.37,
+          "prompt_tokens": 1866,
+          "completion_tokens": 371
+        },
+        "context": {
+          "seconds": 5.89,
+          "prompt_tokens": 34416,
+          "completion_tokens": 4783
+        },
+        "answer": {
+          "seconds": 10.58,
+          "prompt_tokens": 31481,
+          "completion_tokens": 2002
+        },
+        "check": {
+          "seconds": 0.0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0
+        }
+      }
+    }
+  }
+]

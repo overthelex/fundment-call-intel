@@ -110,19 +110,20 @@ class ClaimStore:
             self._claims = self.store.claims()
         return self._claims
 
-    def context(self, usage: Usage | None = None, topics: list[str] | None = None) -> tuple[str, list[Turn]]:
-        """Every vendor claim grouped by topic (or only the given topics), each shown as the full turn it came from."""
+    def topics(self, usage: Usage | None = None, topics: list[str] | None = None) -> list[tuple[str, str, list[Turn]]]:
+        """Per topic (all, or only the given ones): the topic, its block of statements, each shown as the
+        full turn it came from, and those turns."""
         by_topic: dict[str, list[StoredClaim]] = {}
         for c in self.load(usage):
             by_topic.setdefault(c.topic, []).append(c)
-        parts, turns, seen = [], [], set()
+        out = []
         for topic in Topic.__args__:
             if topics is not None and topic not in topics:
                 continue
             items = sorted(by_topic.get(topic, []), key=lambda c: (c.call_id, c.turn_idx))
             if not items:
                 continue
-            lines, shown = [f"## TOPIC: {topic}"], set()
+            lines, turns, shown = [f"## TOPIC: {topic}"], [], set()
             for c in items:
                 if (c.call_id, c.turn_idx) in shown:
                     continue
@@ -130,8 +131,17 @@ class ClaimStore:
                 call = self.calls[c.call_id]
                 t = call.turns[c.turn_idx]
                 lines.append(f"{c.call_id} ({call.company}, {call.category}) {turn_line(call, t)}")
-                if (c.call_id, t.idx) not in seen:
-                    seen.add((c.call_id, t.idx))
+                turns.append(t)
+            out.append((topic, "\n".join(lines), turns))
+        return out
+
+    def context(self, usage: Usage | None = None, topics: list[str] | None = None) -> tuple[str, list[Turn]]:
+        """Every vendor claim grouped by topic (or only the given topics), each shown as the full turn it came from."""
+        blocks = self.topics(usage, topics)
+        turns, seen = [], set()
+        for _, _, ts in blocks:
+            for t in ts:
+                if (t.call_id, t.idx) not in seen:
+                    seen.add((t.call_id, t.idx))
                     turns.append(t)
-            parts.append("\n".join(lines))
-        return "\n\n".join(parts), turns
+        return "\n\n".join(text for _, text, _ in blocks), turns

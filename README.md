@@ -56,7 +56,8 @@ question
   │                                 · does it ask whether the vendor contradicts itself?
   │                                 · is it about a product fact? which of 12 topics?
   │                                 · across calls? which note fields hold the answer?
-  ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic
+  ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic,
+  │                                   + contradictions found by checking each topic on its own (in parallel)
   │                                 candidate calls fit in 12K words? → send whole transcripts
   │                                 question across calls? → the turns behind the notes written at ingestion
   │                                   in those fields (+ retrieved excerpts), and the calls with none
@@ -129,7 +130,11 @@ question
    the question, so similarity search cannot find it. Putting
    every vendor statement on a topic side by side makes a contradiction visible: "SSO is on all plans"
    (one AE) next to statements in nine other calls that SAML SSO is Enterprise. The planner switches to this
-   context only for questions about the vendor's consistency.
+   context only for questions about the vendor's consistency. Comparing ~600 statements in one pass
+   was not reliable with low reasoning (the "completely no-code" contradiction was found in 3 of 5
+   replays on the same context), so each of the 12 topics is first checked for contradictions by its
+   own small call, in parallel (`callqa/conflicts.py`, ~5 s), and the answer step weighs what they
+   found: 5 of 5 asks found it, 3 of 3 judged "yes".
    The same table answers product-fact questions: retrieval gives the passages most similar to the
    question, so a fact stated in nine calls and contradicted in one can reach the model as one statement
    against one, and it cannot weigh what it does not see. For a question on one to three product topics
@@ -236,10 +241,12 @@ What I take from it:
   renewals differ from new business?") reaches about a third of its evidence turns, and a pattern that only
   shows across calls is not in any one call's notes.
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
-- **Unstable questions**: q11 (vendor contradictions) found both contradictions in one run and only
-  the SSO one in the other, although both sides of the no-code one were in the context; q07 ("who
-  is most likely to buy?") is a judgement call and was "no" once, for ranking BrightPath on top
-  without its blocker. q30 (bonus) needs a second retrieval hop and is declined.
+- **Unstable questions**: q07 ("who is most likely to buy?") is a judgement call and was "no" once,
+  for ranking BrightPath on top without its blocker; q10 ("which cold calls produced a follow-up?")
+  sometimes says all five did, although Trafford's Yvonne said "I won't read it" (see *Known
+  limitations*). q11 (vendor contradictions) was "partly" in the fresh-clone run; the per-topic
+  contradiction check added after it made it "yes" in 3 of 3 runs (`…-q11-topic-check`). q30 (bonus)
+  needs a second retrieval hop and is declined.
 
 ### Options for questions across calls
 
@@ -277,6 +284,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | one call, whole transcript ("What was Verity paying?") | 5.5 s |
 | product fact, excerpts + vendor statements ("SSO on Growth?") | 10.2 s |
 | across calls, ingestion notes ("Why do prospects hesitate?") | 18.9 s |
+| vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
 | the task's 11 example questions (`…-001127-auto-examples-low`): mean / median / slowest | 17.1 / 18.2 / 26.3 s |
 | full eval, 4 in parallel: mean / p50 / p95 | 8.6 / 7.8 / 21.0 s |
 
@@ -327,6 +335,10 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
   that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
   notes in the relevant fields, but "this list is complete" is still only as good as the notes.
   `--across map` reads every candidate call for the question and reaches ~0.9, at ~5× the tokens.
+- **Per-call verdicts with low reasoning.** A question that needs a verdict for every call ("which
+  cold calls produced a follow-up?") gets the calls whole, but on 5 replays of the same context the
+  answer said "all five" 3 times; with `ANSWER_EFFORT=medium` 0 of 3, at 4× the output tokens. The
+  same fix as for contradictions (one small check per call, then the answer) would apply.
 - **Judgement questions** ("most likely to buy") are only as good as one model's read of the notes;
   the answer cites signals but there is no scoring rubric behind it, and q07 moves between "partly"
   and "no" across runs.

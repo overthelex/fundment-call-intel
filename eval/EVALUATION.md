@@ -131,8 +131,10 @@ would cut the noise.
 - **Cross-call patterns (q09 "how do renewals differ from new business?")**: a pattern that shows
   only across calls is in no single call's notes; evidence recall about a third. `--across map`
   reaches more turns (README, *Options for questions across calls*) and still misses it.
-- **Unstable: q11 (vendor contradictions)** found both contradictions in one run and only the SSO one
-  in the other (example 2).
+- **q10 ("which cold calls produced a follow-up?")**: five whole calls in context, and the answer
+  sometimes says all five did; Trafford's Yvonne said "I won't read it". On 5 replays of the same
+  context with low reasoning, 3 said "all five"; with medium, 0 of 3.
+- **q11 (vendor contradictions)** was "partly" in the fresh-clone run; fixed after it (example 2).
 - **Judgement: q07 ("who is most likely to buy?")** was "no" in one run for putting BrightPath in the
   top tier without its security blocker, "partly" in the other.
 - **q30 (bonus, two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the
@@ -173,7 +175,7 @@ Baseline, all 20 transcripts in the prompt, verdict **no**:
 
 Every statement was in its prompt; it picked the one that answered the question most directly.
 
-### 2. Unstable: q11
+### 2. Found in one run, missed in the next, then fixed: q11
 
 > Has anyone from the vendor given inconsistent answers about the product?
 
@@ -190,9 +192,24 @@ Second run (`results/20261023-235835-auto-effort-low`), verdict **yes**:
 
 Fresh clone, verdict **partly**: SSO, plus a weaker one (Alastair's "all of those are native
 connectors" vs other reps' "a mix of native connectors and API-based options"), and no word on
-no-code. Both no-code claims were in the context it saw; the answer step stopped at two. The
-baseline also found only SSO. This is the variance the per-question comparison is for; a product-fact
-table with conflicts recorded at ingestion (README, *With more time*) would make it a lookup.
+no-code. The baseline also found only SSO.
+
+Both no-code claims were in the context it saw, so this was the answer step. Re-running only the
+answer step on that saved context 5 times found no-code 3 times with low reasoning and 5 times with
+medium (at 31–47 s). One pass comparing ~600 statements under 12 topics stops after the clearest
+contradictions. Checking one topic per call did not fix it by itself: the first version of that
+prompt excluded "statements about different customers or conditions", and "completely no-code" was
+said about one customer's use case. With that clause replaced by "a blanket claim made to one
+customer contradicts a general statement made to another", the 12 parallel topic checks found
+no-code in 5 of 5 runs, in ~5 s (`callqa/conflicts.py`). The answer step now gets their findings
+first and must weigh each one. Three judged runs (`results/…-q11-topic-check`), verdict **yes** each:
+
+> Yes. The clearest inconsistency is about identity/security: one OrbitFlow rep said "SSO's included
+> on all our plans," while several others said "SAML SSO and SCIM on Enterprise." There is also a
+> connector claim conflict [...]. A third conflict is around no-code: one rep said a workflow is
+> "completely no-code," while others said "We don't claim every workflow is no-code" [...].
+
+The question takes ~16–23 s instead of ~8 s.
 
 ### 3. The checker catches a real misattribution: q08
 
@@ -211,7 +228,8 @@ attributed every quote correctly (verdict yes vs partly).
 
 ## What the eval led to
 
-Each of these came from a question that failed: the vendor-claims table (q11); giving product
+Each of these came from a question that failed: the vendor-claims table and the per-topic
+contradiction check (q11); giving product
 questions every vendor statement on the topic and weighing conflicts (q24); checking first names in
 code and showing the notes on names under the answer (q06 "Acme Corp", q16 "Priya"); checking the
 speaker and the call, not only the words (a run credited Sarah's words to Maya); notes written at

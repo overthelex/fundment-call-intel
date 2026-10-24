@@ -81,6 +81,9 @@ Grounding rules:
    same rep later corrects still counts; say so. Differences in detail or emphasis are not conflicts.
    Go through every topic before answering and report all such pairs, not only the clearest one.
    Cite both sides, naming the reps and calls. If no topic has such a pair, say so.
+   The block CONTRADICTIONS FOUND TOPIC BY TOPIC comes from checking each topic on its own: report
+   every one of them in `conflicts` (merge duplicates), each weighed, unless on reading the turns the
+   two statements can both be true; then say so in not_found. Add any pair the block missed.
 11. NOTES FROM QUERY PLANNING report a name in the question that matched nothing exactly ("Acme Corp"
    -> Acme Logistics) or that could mean more than one person ("Priya"). Whenever there is such a note,
    the summary MUST open with whom or what you took the name to mean and why, and name the others

@@ -13,6 +13,7 @@ Runs of the current code:
 | `20261023-235835-auto-effort-low` | pipeline, a second run of the same code | 18 / 10 / 1; latency 9.9 s mean, 21.7 s p95 |
 | `20261024-001127-auto-examples-low` | the task's 11 example questions, one at a time | 17.1 s mean |
 | `20261024-002657-auto-examples-medium` | the same with `ANSWER_EFFORT=medium` | 72.9 s mean |
+| `20261024-1022*-auto-q11-topic-check` | q11 three times, with the per-topic contradiction check added after the runs above | yes, yes, yes |
 | `comparison.md` | per-question verdicts of the first three runs (`compare.py`) | which questions are unstable |
 
 Options for questions across calls (`--across`), measured with `ANSWER_EFFORT=medium`:
