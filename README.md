@@ -141,14 +141,10 @@ question
    the question, so similarity search cannot find it. Putting
    every vendor statement on a topic side by side makes a contradiction visible: "SSO is on all plans"
    (one AE) next to statements in nine other calls that SAML SSO is Enterprise. The planner switches to this
-   context only for questions about the vendor's consistency. Comparing ~550 statements in one pass
-   was not reliable with low reasoning (the "completely no-code" contradiction was found in 3 of 5
-   replays on the same context), so each of the 12 topics is first checked for contradictions by its
-   own small call, in parallel (`callqa/conflicts.py`), and the answer step weighs what they found.
-   One check of a topic is not reliable either: the "no-code" topic's found that contradiction in 7
-   of 10 runs, and q11 missed it in one run of the 11 example questions. So every topic is checked
-   twice, in parallel, and the pairs are merged: q11 "yes" in 6 of 6 runs since, each with the
-   no-code contradiction (`…-q11-two-passes`), at ~$0.04 more and 15–37 s instead of 14–17 s.
+   context only for questions about the vendor's consistency. One pass over ~550 statements missed
+   cases with low reasoning, so each of the 12 topics is checked by its own small call, twice in
+   parallel, and the pairs are merged (`callqa/conflicts.py`; one check of the "no-code" topic found
+   that contradiction 7 times in 10); the answer step weighs what they found.
    The same table answers product-fact questions: retrieval gives the passages most similar to the
    question, so a fact stated in nine calls and contradicted in one can reach the model as one statement
    against one, and it cannot weigh what it does not see. For a question on one to three product topics
@@ -228,73 +224,51 @@ Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/
 
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
-| run | `…-154829-auto-parts` | `…-154956-auto-parts` | `…-094601-full-fresh-clone` |
-| correct: yes / partly / no | **16 / 13 / 0** | **17 / 12 / 0** | 13 / 14 / 2 |
-| core / atomic fact recall | 0.77 / 0.66 | 0.79 / 0.67 | 0.73 / 0.61 |
-| context recall · evidence recall | 1.00 · 0.89 | 1.00 · 0.90 | 1.00 · 1.00 (by construction) |
-| citation validity | 1.00 | 0.99 | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 0 · 1 · 1 | 0 · 4 · 0 | 4 · 10 · 3 |
-| abstention: right on unanswerable · false on answerable | 5/5 · 0 of 24 | 5/5 · 0 of 24 | 5/5 · 0 of 24 |
-| penalties hit | 1 | 0 | 3 |
-| prompt tokens per question | 34K | 34K | 123K |
-| latency mean / p95, 4 questions in parallel | 9.9 / 23.7 s | 10.2 / 22.6 s | 11.3 / 38.5 s |
-| first failed step | answer 7, retrieval 5 | answer 8, retrieval 3, attribution 2 | answer 15, attribution 4 |
+| run | `…-211125-auto-final` | `…-211257-auto-final` | `…-094601-full-fresh-clone` |
+| correct: yes / partly / no | **19 / 10 / 0** | **19 / 10 / 0** | 13 / 14 / 2 |
+| core / atomic fact recall | 0.78 / 0.68 | 0.76 / 0.66 | 0.73 / 0.61 |
+| context recall · evidence recall | 1.00 · 0.90 | 1.00 · 0.90 | 1.00 · 1.00 (by construction) |
+| citation validity | 0.99 | 1.00 | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 1 · 4 · 2 | 0 · 1 · 1 | 4 · 10 · 3 |
+| abstention: right on unanswerable · false on answerable | 4/5 · 0 of 24 | 4/5 · 0 of 24 | 5/5 · 0 of 24 |
+| penalties hit | 0 | 0 | 3 |
+| prompt tokens per question (from the prompt cache) | 33K (23%) | 37K (34%) | 123K |
+| latency mean / p95, 4 questions in parallel | 10.4 / 23.1 s | 10.7 / 22.9 s | 11.3 / 38.5 s |
+| first failed step | retrieval 5, answer 4, attribution 1, abstention 1 | answer 6, retrieval 4, attribution 1, abstention 1 | answer 15, attribution 4 |
 
-Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 7 of 30, all on the
-yes/partly line. Two runs of the same code on the previous index gave 20 and 15 "yes": that spread
-is the judge and answer noise this eval measures, so compare per question, not the totals. The
-baseline is worse than both runs on q07 and q11 and better on q30, where it sees every call.
+Per question (`eval/results/comparison.md`): the two runs disagree on 6 of 30 (q03, q08, q09, q16,
+q24, q26), all on the yes/partly line; earlier runs of nearly the same code gave between 15 and 20
+"yes", which is the judge and answer noise this eval measures, so compare per question, not totals.
+The baseline is worse than both runs on q07, q11, q12, q15 and q19 and better on q17 and q30 (the
+bonus, where it sees every call). The two abstention misses (q29 in run 1, q26 in run 2) are judged
+"yes" and do say the data has no answer; the judge's abstention flag disagrees with its own verdict.
 
 What I take from it:
 
-- **The pipeline is ahead of the brute-force baseline at about 1/4 of the tokens.** The yes/partly
-  gap (16–17 vs 13) is about the size of the judge's own noise (re-judging the same answers moved
-  6 of 30 verdicts), so the safe claim is "at least as good". Two differences are not noise: the
-  baseline attaches far more quotes to the wrong call or speaker (17 failed citations vs 2–4), and
-  on q24 ("Is SSO on Growth?") it concluded "yes, all plans" from one AE against nine calls that say
-  Enterprise, the error the vendor-statement table and the weighing rules exist to prevent (example 1
-  in `eval/EVALUATION.md`).
-- **Two different bottlenecks.** Questions about one or a few calls get whole transcripts, evidence
-  recall is ~1.0, and the misses are in the answer step (details left out: q13–q15, q18). Questions
-  across all calls get the notes written at ingestion, which reach 0.75–0.77 of the evidence turns on
-  the 7 such questions (from ~0.4 on q05 to 0.93 on q09), and a pattern that only shows across calls is not in
-  any one call's notes.
+- **The pipeline is at least as good as the brute-force baseline, at about a quarter of the
+  tokens.** The gap in "yes" is about the size of the judge's own noise (re-judging the same answers
+  moved 6 of 30 verdicts), so "at least as good" is the safe claim. Two differences are not noise: the
+  baseline attaches far more quotes to the wrong call or speaker (17 failed citations vs 2–7), and on q24 ("Is SSO
+  on Growth?") it concluded "yes, all plans" from one AE against nine calls that say Enterprise, the
+  error the vendor-statement table and the weighing rules exist to prevent (example 1 in
+  `eval/EVALUATION.md`).
+- **Two bottlenecks.** Questions about one or a few calls get whole transcripts, evidence recall is
+  ~1.0, and the misses are details the answer leaves out (q13–q15, q18). Questions across all calls
+  get the notes written at ingestion, which reach about three quarters of the evidence turns (q05
+  lowest, ~0.4), and a pattern that only shows across calls is not in any one call's notes.
+- **One pass over many calls or statements drops one; small parallel checks do not.** The answer step
+  over five cold calls said "all five" produced a follow-up (q10), left Acme out of the likely buyers
+  (q07), listed two calls that never mentioned Salesforce (q02), and found only some of the vendor's
+  contradictions (q11). Each call is now read on its own for the question (a verdict per call), each
+  claim topic is checked on its own, and code checks that the answer covers every call its verdict
+  counts, answering once more if not. q02, q10, q11 and q28 are now "yes" in nearly every run.
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
-- **Fixed by splitting one pass into small parallel checks.** One pass of the answer step over many
-  calls or statements dropped a call or a case. q11 (vendor contradictions) found only some of them;
-  a check per claim topic, run twice and merged, makes it "yes" in 6 of 6 runs. q10 ("which cold calls produced a follow-up?")
-  said "all five" although Trafford's Yvonne said "I won't read it"; q07 ("which prospects seem most
-  likely to purchase?") left Acme out and put BrightPath on top without its BAA gate; q02 listed
-  BrightPath and Greenline among the Salesforce customers. A verdict per call, read on its own, makes
-  q10, q02 and q28 "yes" in both runs and q07 "yes" in 6 of the 13 runs since (it was "partly" or
-  "no" before). Once, with all five verdicts in its context, the answer to q10 still wrote "three of
-  the four cold calls" and dropped Kestrel. So each verdict also says whether the call counts toward
-  the answer, and code checks that the answer cites or names every call that does; if one is
-  missing, the answer step runs once more, told which calls it left out, and a warning is shown if it
-  still does. Checked by replaying that answer (flagged, re-answered with all four follow-ups); in
-  8 live answers to q02, q07, q10 and q28 it never had to fire (`…-coverage-check`).
-- **Improved, not fixed**: q09 ("how do renewals differ from new business?") had a third of its
-  evidence in context, because one note field was chosen and the renewal calls were seen only as
-  notes. The planner now takes every field an answer can sit in, and a comparison sends the small
-  kinds of call whole (the 3 renewals and 5 cold calls, ~11.5K words): evidence recall 0.93, core
-  recall 0.2 → 0.4–1.0, "yes" in one of the two current runs; when "partly", the answer stays general
-  (the 7% uplift, the jointly written pilot criteria). q05 ("which capabilities matter most to prospects?") missed customer
-  questions such as "Can we export audit logs to our own SIEM?", which the notes did not record; the
-  notes prompt now records them as needs (10 of the 14 missed turns are noted now, 0 before):
-  evidence recall 0.42 → 0.38–0.54 (it moves with the index and the fields the planner picks);
-  "partly" in every full run (core recall 0.5–0.67) and in the latest run of the 11 example
-  questions, "yes" in the two before. Of its missed turns, most are noted but ranked below the budget:
-  "Can the queue be owned by a team?", asked in 5 of 10 calls, is not similar to the abstract
-  question. Ranking notes by the planner's search queries too, with a budget of 350 turns, raised its
-  evidence recall on saved plans (0.43 → 0.72) but not in live runs (0.33–0.50), because the
-  planner's queries differ from run to run, and q07 fell to "no" twice (`…-query-rank`); not kept.
-  A bonus for points that recur across calls did not help either. What does work is reading each
-  call for the question and counting across calls (`--across map`, below): evidence recall 1.0 and
-  core recall 0.50–0.83 on q05, "yes" in 1 of 3 runs, but ~45 s and ~150K tokens against 15–18 s and
-  ~25K, so it is an option, not the default (`…-q05-map-tally`).
-- **Known failures**: q18 ("are the lead scores reliable?") once concluded flatly that they are not,
-  from one person's impression. q21 once took Sarah's rhetorical "costs a hundred thousand a year" over the £80K account value, a
-  trap noted in `eval/GOLD_NOTES.md`. q30 (bonus) needs a second retrieval hop and is declined.
+- **Open**: q05 ("which capabilities matter most?") is a count over calls that note similarity
+  ranks poorly; `--across map` closes it (evidence recall 1.0) at ~45 s and ~150K tokens, so it is
+  an option, not the default. q07 ("most likely to buy?") is a judgement with no scoring rubric
+  behind it, "yes" in about half the runs. q09 ("renewals vs new business") has its evidence (0.93)
+  but the answer stays general in some runs. q30 (bonus) needs a second retrieval hop and is declined.
+  What was tried for each, including what did not hold up in live runs, is in `eval/EVALUATION.md`.
 
 ### Options for questions across calls
 
@@ -345,76 +319,43 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
 | vendor contradictions, 12 topics checked twice + answer ("Has the vendor given inconsistent answers?") | 15–37 s |
 | the task's 11 example questions, one at a time (`…-205327-auto-examples-low`): mean / median / slowest | 15.7 / 14.4 / 22.3 s |
-| full eval, 4 in parallel (`…-154829/154956-auto-parts`): mean / p50 / p95 | 9.9–10.2 / 7.7–8.4 / 22.6–23.7 s |
+| full eval, 4 in parallel (`…-211125/211257-auto-final`): mean / p50 / p95 | 10.4–10.7 / 8.0–9.8 / ~23 s |
 
 What keeps it there:
 
 - **Low reasoning in the answer step** (`ANSWER_EFFORT`, default `low`). The inventory of relevant
-  turns, written before the answer, does the work extra reasoning would do. `ANSWER_EFFORT=medium`
-  is ~4× slower (63.8 s mean on the 11 examples, slowest 197 s, `…-144652-auto-examples-medium`)
-  with no better verdicts: 7 / 4 / 0 against 8 / 3 / 0 at `low` on the same (previous) index; 9 / 2 / 0
-  at `low` on the current one. q07, q08 and q09 are "partly" at
-  both, so what they miss is not fixed by more reasoning.
+  turns, written before the answer, does the work extra reasoning would do: `medium` is ~4× slower on
+  the 11 example questions (63.8 s mean) with no better verdicts (7 / 4 / 0 against 8 / 3 / 0).
 - **The inventory is call and timestamp only**: every token in it is generated before the answer.
 - **Calls are read at ingestion**, so a question across calls selects notes instead of reading calls.
-- **Static text first, the question last**, in every prompt (system prompt, then the catalogue, the
-  transcript or the topic's statements, then the question), so the provider's prefix cache serves the
-  shared part: 40% of all prompt tokens in a full eval came from the cache
-  (`…-180924-auto-prompt-cache`), billed at a discount. A call read for several questions (per-call
-  verdicts on the same 10 prospect calls for q02, q07, q28) is paid in full once.
-- **A duplicate for a lost request at question time**: a planner or answer call with no answer after
-  45 s (answer step p99 21 s, maximum 28 s over 101 answers), and a per-call verdict or per-topic
-  check after 20 s (maximum 7.9 s and 13.6 s; a question waits for the slowest of 10-20 of them), is
-  sent again and the first answer wins, so a request the provider never answers does not hold the question for the
-  120 s timeout (one question took 135 s instead of 12). Off for `ANSWER_EFFORT=medium`, whose
-  answers take a minute.
-- **Ingestion in parts, in parallel**: every call is split into parts of ~1,700 words and every
-  part of every call is read at once (two claims passes and a notes pass each, ≤180 requests, well
-  under the deployment's 1M tokens and 1,000 requests a minute). Ingestion waits for its slowest
-  request, and one request over a whole ~5K-word call generated up to 40K tokens, took 1.5–3 min and
-  sometimes hung (12.8 min for one fresh ingestion on 24.10). Parts finish in 20–100 s. Two causes
-  of the hangs, found with a request log and thread dumps over repeated ingestions (`callqa/llm.py`):
-  - **TLS handshakes one at a time.** The HTTP client's default SSL context (`truststore`) holds one
-    lock for a whole handshake, network round trips included, so the ~180 connections opened at once
-    shook hands in turn: connections queued for ~10 s were closed by the server, and one stalled
-    handshake held every other thread (100+ threads waiting, sockets in CLOSE_WAIT, 13 min). A plain
-    `ssl` context with `certifi` shakes hands in parallel: 0 handshake failures since, against 30–70
-    per ingestion.
-  - **Requests the provider never answers**, ~4% of them (also with separate clients and tiny
-    prompts): no response until the read timeout. An extraction with no answer after 60 s gets a
-    duplicate and the first answer wins; embeddings, which answer in under 2 s, time out after 20 s.
-
-  Four fresh ingestions with both fixes: 80–129 s (before: 92–413 s). Timeouts: 180 s for ingestion
-  calls, 120 s for question-time calls.
-
-  Measured on the longest call (CALL-004, 4,904 words, 3 parts), 2 repeats, variants interleaved
-  (`uv run python eval/bench_ingest.py`):
-
-  | read | reasoning: claims / notes | requests | time for the call | output tokens | claims | notes |
-  |---|---|---|---|---|---|---|
-  | whole call | medium / medium | 3 | 98–116 s | 41K | 38–41 | 60–93 |
-  | parts | low / low | 9 | 21–24 s | 21K | 46–47 | 105–117 |
-  | **parts (used)** | **low / medium** | 9 | 63–79 s | 48K | 52–54 | 111–121 |
-
-  All-low is the fastest, but its notes, though more numerous, rank worse against questions: on the
-  7 questions across calls the answer got 0.74 of the evidence turns from an all-low index, 0.79
-  with notes at medium, 0.77 from the whole-call index (same saved plans, `NOTE_BUDGET` 250 turns).
-  Claims lose nothing at low (14–15 of the 15 vendor statements behind the gold contradictions in
-  every index). Over all 20 calls: 80–130 s from scratch, against ~2–3 min for whole calls when no
-  request hangs. The eval verdicts are within noise of the whole-call index (16 / 13 / 0 and
-  17 / 12 / 0, against 20 / 9 / 0 and 15 / 13 / 1).
+- **Static text first, the question last** in every prompt, so the provider's prefix cache serves
+  the shared part (23–40% of prompt tokens in a full eval, billed at a discount): a call read for several
+  questions, like the 10 prospect calls behind q02, q07 and q28, is paid in full once.
+- **A duplicate for a request the provider never answers** (~4% of them): a planner or answer call
+  with no answer after 45 s (answer p99 21 s), a per-call verdict or topic check after 20 s (max 7.9 s
+  and 13.6 s), is sent again and the first answer wins, instead of waiting out the 120 s timeout.
+- **Ingestion in parts, in parallel**: every call is split into parts of ~1,700 words, and every
+  part of every call is read at once (claims at low reasoning, notes at medium). One request over a
+  whole ~5K-word call took 1.5–3 min; parts take 20–100 s, and a fresh ingestion of all 20 calls
+  80–130 s (`eval/bench_ingest.py`). Ingestion also used to hang for up to 13 min; a request log and
+  thread dumps showed two causes: the HTTP client's default SSL context (`truststore`) shook hands one
+  connection at a time under one lock, and the provider never answers ~4% of requests. The client now
+  uses a plain `ssl` context, and a request with no answer after 60 s gets a duplicate. The
+  benchmark and the investigation: `eval/EVALUATION.md`, *Engineering notes*.
 - **Progress on screen**: the CLI prints each step as it starts (`planning` → `plan: across question
   over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first
   output arrives in well under 2 s even when the answer takes 15 s.
 
-Not done yet, in order of expected gain: stream the answer text and check each citation as it
-arrives (the first claim on screen in 2–3 s instead of ~13 s on questions across calls; the total
-does not change: the answer's own output tokens set it, reasoning at `low` is 20–30 tokens); run the
-planner on a smaller model (~1 s per question; no smaller model is deployed on the Azure resource
-used here) and embed the question while it plans; cache answers by normalised question and data
-version; and
-provisioned throughput, since the spread under load (8 s alone vs up to 21 s p95 with 4 in parallel)
-is the provider's.
+**Cost**, at list prices for `gpt-5.4-mini` ($0.75 / $4.50 per 1M input / output tokens, cached input
+at a tenth): ~$0.03 for a typical question, $0.11–0.14 for one that reads 10–20 calls on their own
+(q02, q07, q11), ~$0.07 mean over the 11 example questions; the baseline with every transcript in
+the prompt is ~$0.10 for any question.
+
+Not done yet, in order of expected gain: stream the answer and check each citation as it arrives
+(the summary on screen in ~6 s instead of ~11 s; the total does not change, since the answer's own
+output tokens set it); run the planner on a smaller model (~1 s per question; none is deployed on the
+Azure resource used here); cache answers by normalised question and data version; provisioned
+throughput, since the spread under load is the provider's.
 
 ## Diagnosing a bad answer
 
@@ -440,21 +381,20 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
   extraction pass caught them; "who else said X" and two-step questions like q30 still rely on
   retrieval, which finds passages similar to the question, not passages that relate to each other.
 - **Exhaustive lists**: "which customers mentioned X" uses the notes written at ingestion, which
-  reach 0.75–0.77 of the supporting turns on the cross-call questions (evidence recall, q05 lowest
-  at ~0.4); a call that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
+  reach about three quarters of the supporting turns on the cross-call questions (evidence recall,
+  q05 lowest at ~0.4); a call that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
   notes in the relevant fields, but "this list is complete" is still only as good as the notes.
   `--across map` reads every candidate call for the question and reaches ~0.9, at ~5× the tokens.
 - **Judgement questions** ("most likely to buy") get a verdict per call, each call read whole on its
   own, but there is no scoring rubric behind the ranking: it is one model's read of the signals, and
-  q07 is "yes" in 6 of 13 runs and "partly" in the rest.
+  q07 is "yes" in about half the runs and "partly" or "no" in the rest.
 - **The checker verifies that the quote exists and that the cited person said it, not that it supports
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
 - **Header vs body disagreements** are only surfaced when the question touches them.
-- **Ingestion is not deterministic.** Fresh indexes of the same 20 calls differ: in one, a single
-  claims pass left out "That's fine, it's completely no-code", so q11 could not find that
-  contradiction on that index. Claims are now extracted twice and merged (14 or 15 of the 15 vendor
-  statements behind the contradictions in `eval/GOLD_NOTES.md` across three fresh indexes, against 13
-  with one pass; the usual miss is Leo offering enablement free), an empty extraction is retried, and the index behind the headline runs is committed, so a fresh clone
+- **Ingestion is not deterministic.** Fresh indexes of the same 20 calls differ; one single claims
+  pass once left out "That's fine, it's completely no-code". Claims are extracted twice and merged
+  (14 or 15 of the 15 vendor statements behind the gold contradictions in every fresh index), an empty
+  extraction is retried, and the index behind the headline runs is committed, so a fresh clone
   answers from the same claims and notes (inspectable in `.cache/callqa.db`).
 - **The gold set is small (30) and LLM-drafted** (see `eval/EVALUATION.md`). The judge is
   from a different vendor than the answering model, but it is still an LLM and it is noisy on the

@@ -75,23 +75,25 @@ The current code, 29 headline questions (q30 excluded), `gpt-5.4-mini` answering
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
 | context recall | 1.00 | 1.00 | 1.00 (by construction) |
-| evidence recall | 0.89 | 0.90 | 1.00 (by construction) |
-| cited recall | 0.98 | 1.00 | 0.93 |
-| citation validity | **1.00** | **0.99** | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 0 · 1 · 1 | 0 · 4 · 0 | 4 · 10 · 3 |
-| answer correct: yes / partly / no | **16 / 13 / 0** | **17 / 12 / 0** | 13 / 14 / 2 |
-| core fact recall | 0.77 | 0.79 | 0.73 |
-| atomic fact recall | 0.66 | 0.67 | 0.61 |
-| compound fact recall (strictest) | 0.60 | 0.63 | 0.55 |
-| core facts contradicted · penalties hit | 1 · 1 | 1 · 0 | 1 · 3 |
-| correct abstention on unanswerable | 5 / 5 | 5 / 5 | 5 / 5 |
+| evidence recall | 0.90 | 0.90 | 1.00 (by construction) |
+| cited recall | 0.98 | 0.97 | 0.93 |
+| citation validity | **0.99** | **1.00** | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 1 · 4 · 2 | 0 · 1 · 1 | 4 · 10 · 3 |
+| answer correct: yes / partly / no | **19 / 10 / 0** | **19 / 10 / 0** | 13 / 14 / 2 |
+| core fact recall | 0.78 | 0.76 | 0.73 |
+| atomic fact recall | 0.68 | 0.66 | 0.61 |
+| compound fact recall (strictest) | 0.63 | 0.57 | 0.55 |
+| core facts contradicted · penalties hit | 0 · 0 | 0 · 0 | 1 · 3 |
+| correct abstention on unanswerable | 4 / 5 | 4 / 5 | 5 / 5 |
 | false abstention on answerable | 0 / 24 | 0 / 24 | 0 / 24 |
-| prompt tokens / question | **34K** | 34K | 123K |
-| latency mean / p95, 4 in parallel | 9.9 / 23.7 s | 10.2 / 22.6 s | 11.3 / 38.5 s |
+| prompt tokens / question (from the prompt cache) | **33K** (23%) | 37K (34%) | 123K |
+| latency mean / p95, 4 in parallel | 10.4 / 23.1 s | 10.7 / 22.9 s | 11.3 / 38.5 s |
 
-`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 7 of 30, all
-on the yes/partly line; two runs on the previous index gave 20 and 15 "yes" from the same code. The
-baseline is worse than both runs on q07 and q11 and better on q30.
+`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 6 of 30, all
+on the yes/partly line; earlier runs of nearly the same code gave 15 to 20 "yes". The baseline is
+worse than both runs on q07, q11, q12, q15 and q19 and better on q17 and q30. The two abstention misses
+(q29, q26) are judged "yes" and do say the data has no answer: the judge's abstention flag and its
+verdict disagree.
 
 ### How far the judge can be trusted
 
@@ -108,12 +110,12 @@ would cut the noise.
 
 - **Routing is not the bottleneck; for cross-call questions retrieval is.** Every gold call reaches
   the model, but the turn that answers does not always: evidence recall is ~1.0 when whole calls are
-  sent and lower for questions across calls, which use the notes written at ingestion (0.75–0.77 on
-  the 7 such questions; q05 about 0.4). The answer cannot list what it never saw.
+  sent and lower for questions across calls, which use the notes written at ingestion (about three
+  quarters on the 7 such questions; q05 about 0.4). The answer cannot list what it never saw.
 - **The pipeline is at least as good as the baseline at about 1/4 of the input tokens.** The gap in
-  "yes" (16–17 vs 13) is within the judge noise, so the claim is "no worse"; q24 and q11 are clear
+  "yes" (19 vs 13) is about the size of the judge noise, so the claim is "no worse"; q24 and q11 are clear
   per-question differences (examples 1 and 2).
-- **Quotes are more reliable with less context**: 2–4 failed citations for the pipeline vs 17 for
+- **Quotes are more reliable with less context**: 2–7 failed citations for the pipeline vs 17 for
   the baseline, mostly *wrong call*: real quotes attached to the wrong customer (example 3). Wrong
   call and not found are reported separately because they are different failures (attribution vs
   invention); both count as errors.
@@ -123,47 +125,32 @@ would cut the noise.
 - **Completeness depends on how you count**: about 0.6 compound, 0.7 atomic, 0.8 core. The answers
   usually get the points and drop supporting detail.
 
-### Where it fails
+### Where it fails, question by question
 
-- **Single-call details (q13, q14, q15, q18)**: whole transcript in context, the answer gives the main
-  point and leaves out a required detail; first failed step "answer".
-- **q09 ("how do renewals differ from new business?")**: evidence recall was about a third. The
-  planner chose one note field ("how the team ran the call") while the uplift and the pricing sit
-  under pricing and decision process, and the renewal calls were seen only as notes. Now the planner
-  takes every field an answer can sit in, and a comparison sends the small kinds of call whole (3
-  renewals and 5 cold calls, ~11.5K words; prospects stay as notes): evidence recall 0.93, core
-  recall 0.2 → 0.4–0.6. Still "partly": the answer stays general and leaves out the 7% uplift and the
-  jointly written pilot criteria. Per-call verdicts made it worse (core 0.0 and 0.27,
-  `results/…-assess-incl-comparisons`), so comparisons do not get them.
-- **q05 ("which capabilities matter most to prospects?")**: 7 of the 14 missed evidence turns had no
-  note at all: customer questions such as "Can we export audit logs to our own SIEM?" or "Version
-  history?" were not recorded as needs. The notes prompt now records a question about a capability as
-  a need (10 of the 14 are noted now) and the planner takes integrations and objections too: evidence
-  recall 0.42 → 0.56, but still "partly" in the saved runs (core recall 0.5–0.67): the answer now
-  misses team-owned exception queues or the change-management test instead.
-- **q10 ("which cold calls produced a follow-up?")**: five whole calls in context, and the answer
-  sometimes said all five did, although Trafford's Yvonne said "I won't read it" (3 of 5 replays of
-  the same context with low reasoning; 0 of 3 with medium). Fixed after the fresh-clone run: for a
-  question across a few whole calls, each call is first read on its own for the question and gives a
-  verdict with verified quotes (`callqa/mapper.py`, in parallel), and the answer is built call by call
-  from them. q10 "yes" in 4 of 4 runs and in both current runs; q08, q19 and q20, which take the same path, judged as before
-  (`results/…-per-call-check`).
-- **q11 (vendor contradictions)** was "partly" before the per-topic check; "yes" in both current runs
-  (example 2).
-- **Judgement: q07 ("which prospects seem most likely to purchase?")** left Acme out, dropped the
-  caveats on the top prospects or put BrightPath on top without its BAA gate ("partly" or "no" in
-  every run). Fixed in part: the planner marks questions that rank or classify calls, each candidate
-  call (at most 25) gets its own verdict before the answer, and the answer must place every call in
-  a tier with its condition or blocker. q07 "yes" in 6 of the 13 runs since; q02 ("which customers
-  mentioned Salesforce?"), which once listed BrightPath and Greenline, "yes" in all 11 runs since; q28 too
-  (`results/…-assess-each-call`, `…-before-notes-v2`, `…-final`, `…-parts`). It costs 100–150K prompt tokens on those questions
-  (32–34K mean per question, was 21K). Comparisons between groups (q09) got worse with it, core recall
-  0.27, and are left out (`results/…-assess-incl-comparisons`).
+- **Single-call details (q13, q14, q15, q18)**: the whole transcript is in context; the answer gives
+  the main point and leaves out a required detail (first failed step "answer").
+- **q05 ("which capabilities matter most to prospects?")**, "partly" in most runs. It is a count over
+  calls, and notes ranked by similarity to an abstract question miss concrete asks: "Can the queue be
+  owned by a team?" is raised in 5 of 10 calls but ranked 389th–479th of 509 noted turns, below the
+  budget. See *Engineering notes* for what was tried; `--across map` closes the evidence gap.
+- **q07 ("which prospects seem most likely to purchase?")**, "yes" in about half the runs. Each
+  candidate call gets its own verdict and the answer must place every call in a tier with its
+  condition, so Acme is no longer left out; what remains is a judgement (the rubric puts Juniper in the
+  top tier; the verdict on Juniper is "viable, not a sure buyer").
+- **q09 ("how do renewals differ from new business?")**: evidence recall 0.93 since the planner takes
+  every note field an answer can sit in and comparisons send the small kinds of call whole (3
+  renewals, 5 cold calls); "yes" in some runs, and when "partly" the answer stays general (the 7%
+  uplift, the jointly written pilot criteria). Per-call verdicts made comparisons worse (core recall
+  0.0 and 0.27, `results/…-assess-incl-comparisons`), so comparisons do not get them.
 - **q21 ("how much was Verity paying?")** once took Sarah's rhetorical "costs a hundred thousand a
-  year" over the £80K account value, the trap in `GOLD_NOTES.md`; "yes" in the other run.
+  year" over the £80K account value, the trap in `GOLD_NOTES.md`.
 - **q30 (bonus, two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the
   question and the Juniper call to answer it. The planner routes to Verity only, so the pipeline
   declines; the baseline, which sees every call, answers it.
+
+Fixed, and how (details in *Engineering notes*): q10 and q02 (a verdict per call, and a coverage
+check), q11 (each claim topic checked twice), q24 (every vendor statement on the topic, weighed),
+q06 and q16 (names checked in code).
 
 ## Three worked examples
 
@@ -220,7 +207,7 @@ no-code. The baseline also found only SSO.
 
 Both no-code claims were in the context it saw, so this was the answer step. Re-running only the
 answer step on that saved context 5 times found no-code 3 times with low reasoning and 5 times with
-medium (at 31–47 s). One pass comparing ~600 statements under 12 topics stops after the clearest
+medium (at 31–47 s). One pass comparing ~550 statements under 12 topics stops after the clearest
 contradictions. Checking one topic per call did not fix it by itself: the first version of that
 prompt excluded "statements about different customers or conditions", and "completely no-code" was
 said about one customer's use case. With that clause replaced by "a blanket claim made to one
@@ -233,7 +220,9 @@ first and must weigh each one. Three judged runs (`results/…-q11-topic-check`)
 > connector claim conflict [...]. A third conflict is around no-code: one rep said a workflow is
 > "completely no-code," while others said "We don't claim every workflow is no-code" [...].
 
-The question takes ~16–23 s instead of ~8 s.
+Later, on another index, a run of the 11 example questions missed no-code again: one check of that
+topic found it 7 times in 10. Each topic is now checked twice and the pairs merged; q11 "yes" in 6
+of 6 runs since (`results/…-q11-two-passes`). The question takes 15–37 s instead of ~8 s.
 
 ### 3. The checker catches a real misattribution: q08
 
@@ -262,6 +251,88 @@ ingestion for cross-call questions (turn-level evidence recall, 0.54 on retrieve
 inventory of relevant turns written before the answer (the answer-step failures, tested with
 `--replay` so retrieval was held fixed); and low reasoning in the answer step (per-step timings showed
 latency follows generated tokens).
+
+## Engineering notes
+
+What was measured, changed or dropped along the way, with the runs in `results/` (index:
+`results/README.md`).
+
+### Small parallel checks instead of one pass
+
+- **q10**: with five whole cold calls in context, the answer said all five produced a follow-up in 3 of
+  5 replays, although Trafford's Yvonne said "I won't read it". Each call is now read on its own for
+  the question and gives a verdict with verified quotes (`callqa/mapper.py`), for a few whole calls
+  always and for questions that rank or classify calls (q02, q07, q28) when the planner says so, at
+  most 25 calls. q10 "yes" in 4 of 4 runs after (`…-per-call-check`).
+- **Coverage check**: once, with all five verdicts in context, the answer to q10 wrote "three of the
+  four cold calls" and dropped Kestrel. Each verdict now says whether the call counts toward the answer;
+  code checks that the answer cites or names every call that does, and runs the answer step once more,
+  told which calls it left out, if not. Replaying that answer: flagged and re-answered with all four
+  follow-ups; in 8 live answers to q02, q07, q10 and q28 it did not need to fire (`…-coverage-check`).
+- **q11**: one pass over ~550 vendor statements found the "completely no-code" contradiction in 3 of 5
+  replays; one small call per claim topic, in parallel, fixed that, but one check of the "no-code"
+  topic still found it only 7 times in 10. Each topic is now checked twice and the pairs merged: q11
+  "yes" in 6 of 6 runs, each with the no-code contradiction (`…-q11-two-passes`), 15–37 s instead of
+  14–17 s.
+
+### q05: what was tried
+
+| change | evidence recall on q05 | kept? |
+|---|---|---|
+| notes prompt records customer questions about capabilities as needs | 0.42 → ~0.5 | yes |
+| a bonus for points that recur across calls | no better on average (0.72–0.76 vs 0.76 over the 7 cross-call questions) | no |
+| rank notes by the question and the planner's search queries, budget 350 turns | 0.43 → 0.72 on saved plans, 0.33–0.50 live: the planner's queries change between runs; q07 fell to "no" twice (`…-query-rank`) | no |
+| `--across map`: read each call for the question, group the points into items, count calls in code | 1.0; core recall 0.50–0.83, "yes" in 1 of 3, at ~45 s and ~150K tokens (`…-q05-map-tally`) | as an option |
+
+The counting step still groups too coarsely ("security, compliance and access controls" instead of
+"export audit logs to our own SIEM"), which is what q05 loses on when it is "partly".
+
+### Ingestion: reading calls in parts
+
+One request over a whole ~5K-word call generated up to 40K tokens and took 1.5–3 min, and ingestion
+waits for its slowest request. Calls are now read in parts of ~1,700 words, overlapping by two turns,
+all at once. Measured on the longest call (CALL-004, 4,904 words, 3 parts), 2 repeats, variants
+interleaved (`eval/bench_ingest.py`):
+
+| read | reasoning: claims / notes | requests | time for the call | output tokens | claims | notes |
+|---|---|---|---|---|---|---|
+| whole call | medium / medium | 3 | 98–116 s | 41K | 38–41 | 60–93 |
+| parts | low / low | 9 | 21–24 s | 21K | 46–47 | 105–117 |
+| **parts (used)** | **low / medium** | 9 | 63–79 s | 48K | 52–54 | 111–121 |
+
+All-low is the fastest, but its notes, though more numerous, rank worse against questions: the 7
+cross-call questions got 0.74 of their evidence turns from an all-low index, 0.79 with notes at
+medium, 0.77 from the whole-call index (same saved plans). Claims lose nothing at low (14–15 of the 15
+vendor statements behind the gold contradictions in every index). The eval on the parts index was
+within noise of the whole-call one (`…-parts`). The note budget counts turns, not notes, since a
+turn noted under three fields used to take three places.
+
+### Ingestion: the hangs
+
+Fresh ingestions took 92 s to 13 min. A request log and thread dumps (`faulthandler`) over repeated
+ingestions showed two causes:
+
+- **TLS handshakes one at a time.** The HTTP client's default SSL context (`truststore` 0.10) holds
+  one lock for a whole handshake, network round trips included, so the ~180 connections opened at once
+  shook hands in turn: connections queued for ~10 s were closed by the server (30–70 `SSLEOFError` per
+  ingestion), and one stalled handshake held every other thread (100+ threads waiting on the lock,
+  sockets in CLOSE_WAIT, 0% CPU). Bursts of separate clients, each with its own context, never failed,
+  which pointed at the shared lock. A plain `ssl` context with `certifi`: 0 handshake failures since.
+- **Requests the provider never answers**: ~4% of them, also reproduced with separate clients and
+  tiny prompts (4 of 120 sent at once); no response until the read timeout, and an embedding response
+  whose body never arrived. Extractions get a duplicate after 60 s (p90 42 s, p99 86 s) and the first
+  answer wins; embeddings, normally under 2 s, time out after 20 s. At question time the same applies
+  after 45 s for the planner and the answer, 20 s for verdicts and topic checks.
+
+Four fresh ingestions with both fixes: 80–129 s.
+
+### Cost and the prompt cache
+
+Prompts put static text first and the question last, so the provider's prefix cache serves the
+shared part: per-call readers used to put the question first, so a transcript read for several
+questions was never cached. 40% of prompt tokens in a full eval now come from the cache
+(`…-prompt-cache`). At list prices a typical question costs ~$0.03 and one with 10–20 per-call checks
+$0.11–0.14.
 
 ## Where the gold set comes from
 
