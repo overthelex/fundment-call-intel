@@ -273,7 +273,12 @@ What I take from it:
   notes prompt now records them as needs (10 of the 14 missed turns are noted now, 0 before):
   evidence recall 0.42 → 0.38–0.54 (it moves with the index and the fields the planner picks);
   "partly" in every full run (core recall 0.5–0.67) and in the latest run of the 11 example
-  questions, "yes" in the two before.
+  questions, "yes" in the two before. Of its missed turns, most are noted but ranked below the budget:
+  "Can the queue be owned by a team?", asked in 5 of 10 calls, is not similar to the abstract
+  question. Ranking notes by the planner's search queries too, with a budget of 350 turns, raised its
+  evidence recall on saved plans (0.43 → 0.72) but not in live runs (0.33–0.50), because the
+  planner's queries differ from run to run, and q07 fell to "no" twice (`…-query-rank`); not kept.
+  A bonus for points that recur across calls did not help either.
 - **Known failures**: q18 ("are the lead scores reliable?") once concluded flatly that they are not,
   from one person's impression. q21 once took Sarah's rhetorical "costs a hundred thousand a year" over the £80K account value, a
   trap noted in `eval/GOLD_NOTES.md`. q30 (bonus) needs a second retrieval hop and is declined.
