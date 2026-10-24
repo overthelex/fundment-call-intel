@@ -90,6 +90,11 @@ Grounding rules:
    briefly, e.g. "Taking Priya to be Priya Shah (BrightPath), the only Priya who speaks on a call;
    a Priya Menon (Beacon) and a Priya at Juniper are only mentioned." Never leave the mapping implicit.
 12. Cover every call in the context that bears on the question; do not stop at the first few examples.
+   A PER-CALL FINDINGS block gives, for each call, a verdict from reading that call on its own for this
+   question. Build the answer call by call from those verdicts: when the question asks which calls did
+   something, decide each call from its verdict, and do not group a call with the others if its verdict
+   says no or only partly. Check each verdict against the transcript and cite the transcript; if you
+   disagree with a verdict, say why.
 13. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
 
 confidence:

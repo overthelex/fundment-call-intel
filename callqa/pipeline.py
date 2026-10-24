@@ -15,7 +15,7 @@ from .claims import ClaimStore, Topic
 from .conflicts import find_conflicts, render as render_conflicts
 from .index import Chunk, Index, turn_line
 from .llm import LLM, Usage
-from .mapper import map_calls
+from .mapper import call_findings, map_calls, render_findings
 from .notes import NoteField
 from .store import Store
 from .names import ambiguous_names
@@ -364,6 +364,10 @@ class Pipeline:
                 context = self.claims_context(usage)
             elif size <= FULL_TEXT_WORD_BUDGET:
                 context = self.full_context(ids)
+                if plan.scope == "across" and len(ids) > 1:
+                    say(f"reading each of {len(ids)} calls on its own")
+                    found = call_findings(question, ids, self.calls, self.llm, usage)
+                    context.text = render_findings(found) + "\n\n" + context.text
             elif plan.scope == "across" and self.across == "notes":
                 context = self.notes_context(question, plan, ids, usage)
             elif plan.scope == "across" and self.across == "map" and len(ids) <= MAX_MAP_CALLS:

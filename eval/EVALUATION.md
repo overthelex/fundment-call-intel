@@ -132,8 +132,12 @@ would cut the noise.
   only across calls is in no single call's notes; evidence recall about a third. `--across map`
   reaches more turns (README, *Options for questions across calls*) and still misses it.
 - **q10 ("which cold calls produced a follow-up?")**: five whole calls in context, and the answer
-  sometimes says all five did; Trafford's Yvonne said "I won't read it". On 5 replays of the same
-  context with low reasoning, 3 said "all five"; with medium, 0 of 3.
+  sometimes said all five did, although Trafford's Yvonne said "I won't read it" (3 of 5 replays of
+  the same context with low reasoning; 0 of 3 with medium). Fixed after the fresh-clone run: for a
+  question across a few whole calls, each call is first read on its own for the question and gives a
+  verdict with verified quotes (`callqa/mapper.py`, in parallel), and the answer is built call by call
+  from them. q10 "yes" in 4 of 4 runs; q08, q19 and q20, which take the same path, judged as before
+  (`results/…-per-call-check`).
 - **q11 (vendor contradictions)** was "partly" in the fresh-clone run; fixed after it (example 2).
 - **Judgement: q07 ("who is most likely to buy?")** was "no" in one run for putting BrightPath in the
   top tier without its security blocker, "partly" in the other.
@@ -229,7 +233,7 @@ attributed every quote correctly (verdict yes vs partly).
 ## What the eval led to
 
 Each of these came from a question that failed: the vendor-claims table and the per-topic
-contradiction check (q11); giving product
+contradiction check (q11); a verdict per call for questions across a few whole calls (q10); giving product
 questions every vendor statement on the topic and weighing conflicts (q24); checking first names in
 code and showing the notes on names under the answer (q06 "Acme Corp", q16 "Priya"); checking the
 speaker and the call, not only the words (a run credited Sarah's words to Maya); notes written at

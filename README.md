@@ -59,6 +59,7 @@ question
   ├─ 2. context                     vendor-consistency question? → every vendor claim, grouped by topic,
   │                                   + contradictions found by checking each topic on its own (in parallel)
   │                                 candidate calls fit in 12K words? → send whole transcripts
+  │                                   (across several calls: + a verdict from reading each call on its own)
   │                                 question across calls? → the turns behind the notes written at ingestion
   │                                   in those fields (+ retrieved excerpts), and the calls with none
   │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
@@ -242,10 +243,12 @@ What I take from it:
   shows across calls is not in any one call's notes.
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
 - **Unstable questions**: q07 ("who is most likely to buy?") is a judgement call and was "no" once,
-  for ranking BrightPath on top without its blocker; q10 ("which cold calls produced a follow-up?")
-  sometimes says all five did, although Trafford's Yvonne said "I won't read it" (see *Known
-  limitations*). q11 (vendor contradictions) was "partly" in the fresh-clone run; the per-topic
-  contradiction check added after it made it "yes" in 3 of 3 runs (`…-q11-topic-check`). q30 (bonus)
+  for ranking BrightPath on top without its blocker; two questions were fixed after the fresh-clone
+  run, each by splitting one pass over everything into small parallel checks: q11 (vendor
+  contradictions, "partly" there) by a check per claim topic, "yes" in 3 of 3 runs
+  (`…-q11-topic-check`); q10 ("which cold calls produced a follow-up?", which said "all five" in 3 of
+  5 replays although Trafford's Yvonne said "I won't read it") by a verdict per call, "yes" in 4 of 4
+  (`…-per-call-check`). q30 (bonus)
   needs a second retrieval hop and is declined.
 
 ### Options for questions across calls
@@ -284,6 +287,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | one call, whole transcript ("What was Verity paying?") | 5.5 s |
 | product fact, excerpts + vendor statements ("SSO on Growth?") | 10.2 s |
 | across calls, ingestion notes ("Why do prospects hesitate?") | 18.9 s |
+| across a few whole calls, a verdict per call + answer ("Which cold calls produced a follow-up?") | 13–16 s |
 | vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
 | the task's 11 example questions (`…-001127-auto-examples-low`): mean / median / slowest | 17.1 / 18.2 / 26.3 s |
 | full eval, 4 in parallel: mean / p50 / p95 | 8.6 / 7.8 / 21.0 s |
@@ -335,10 +339,6 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
   that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
   notes in the relevant fields, but "this list is complete" is still only as good as the notes.
   `--across map` reads every candidate call for the question and reaches ~0.9, at ~5× the tokens.
-- **Per-call verdicts with low reasoning.** A question that needs a verdict for every call ("which
-  cold calls produced a follow-up?") gets the calls whole, but on 5 replays of the same context the
-  answer said "all five" 3 times; with `ANSWER_EFFORT=medium` 0 of 3, at 4× the output tokens. The
-  same fix as for contradictions (one small check per call, then the answer) would apply.
 - **Judgement questions** ("most likely to buy") are only as good as one model's read of the notes;
   the answer cites signals but there is no scoring rubric behind it, and q07 moves between "partly"
   and "no" across runs.

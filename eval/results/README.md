@@ -14,6 +14,7 @@ Runs of the current code:
 | `20261024-001127-auto-examples-low` | the task's 11 example questions, one at a time | 17.1 s mean |
 | `20261024-002657-auto-examples-medium` | the same with `ANSWER_EFFORT=medium` | 72.9 s mean |
 | `20261024-1022*-auto-q11-topic-check` | q11 three times, with the per-topic contradiction check added after the runs above | yes, yes, yes |
+| `20261024-1031*-auto-per-call-check` | q08, q10, q19, q20 four times, with per-call verdicts added after the runs above | q10 yes ×4, q08 3 yes 1 partly, q19 partly, q20 yes |
 | `comparison.md` | per-question verdicts of the first three runs (`compare.py`) | which questions are unstable |
 
 Options for questions across calls (`--across`), measured with `ANSWER_EFFORT=medium`:

@@ -87,3 +87,18 @@ def test_topic_conflict_check_drops_a_side_with_no_verified_quote():
     found = check_topic(topic, "text", turns, CALLS, ConflictLLM())
     assert [c.what for c in found] == ["real"]
     assert [(s.call_id, s.timestamp) for s in found[0].side_b] == [("CALL-001", "12:12")]  # normalised, invented one dropped
+
+
+def test_per_call_verdict_keeps_only_verified_evidence():
+    from callqa.mapper import CallVerdict, MapPoint, judge_call
+
+    class VerdictLLM:
+        def structured(self, system, user, schema, **kw):
+            return CallVerdict(verdict="no real next step", evidence=[
+                MapPoint(timestamp="07:23", speaker="Alastair McCrae", quote="SSO's included on all our plans"),
+                MapPoint(timestamp="07:23", speaker="Alastair McCrae", quote="We'll book the pilot today"),
+            ])
+
+    f = judge_call("q", CALLS["CALL-006"], CALLS, VerdictLLM())
+    assert f.verdict == "no real next step"
+    assert [p.quote for p in f.evidence] == ["SSO's included on all our plans"]
