@@ -18,7 +18,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from .index import call_parts, turn_line
-from .llm import LLM, QUESTION_HEDGE_AFTER, Usage
+from .llm import CHECK_HEDGE_AFTER, LLM, QUESTION_HEDGE_AFTER, Usage
 from .parse import Call, Turn
 from .verify import check_citation
 
@@ -182,7 +182,7 @@ def judge_call(question: str, call: Call, calls: dict[str, Call], llm: LLM,
     # several questions is billed once at full price
     user = f"{call.call_id} · {call.company} · {call.stage}\n\n{text}\n\nQUESTION\n{question}"
     out = llm.structured(VERDICT_SYSTEM, user, CallVerdict, reasoning_effort="low", usage=usage,
-                         hedge_after=QUESTION_HEDGE_AFTER)
+                         hedge_after=CHECK_HEDGE_AFTER)
     in_call = {(call.call_id, t.idx) for t in call.turns}
     kept = []
     for p in out.evidence:

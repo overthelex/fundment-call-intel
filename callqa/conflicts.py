@@ -17,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from pydantic import BaseModel
 
-from .llm import LLM, QUESTION_HEDGE_AFTER, Usage
+from .llm import CHECK_HEDGE_AFTER, LLM, Usage
 from .parse import Call, Turn
 from .verify import check_citation
 
@@ -66,7 +66,7 @@ class FoundConflict(BaseModel):
 def check_topic(topic: str, text: str, turns: list[Turn], calls: dict[str, Call], llm: LLM,
                 usage: Usage | None = None) -> list[FoundConflict]:
     out = llm.structured(CONFLICT_SYSTEM, text, TopicConflicts, reasoning_effort="low", usage=usage,
-                         hedge_after=QUESTION_HEDGE_AFTER)
+                         hedge_after=CHECK_HEDGE_AFTER)
     shown = {(t.call_id, t.idx) for t in turns}
 
     def verified(side: list[Statement]) -> list[Statement]:

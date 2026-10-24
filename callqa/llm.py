@@ -71,6 +71,10 @@ INGEST_HEDGE_AFTER = 60  # p90 of ingestion requests 42 s, p99 86 s
 # Question-time calls at low reasoning: the answer step's p99 is 21 s and its maximum 28 s (101 answers);
 # a lost request otherwise holds the question for the full 120 s timeout (one took 135 s instead of 12).
 QUESTION_HEDGE_AFTER = 45
+# The small parallel checks finish much sooner (per-call verdict p50 2.9 s, max 7.9 s over 65 calls;
+# per-topic contradiction check p50 4.2 s, max 13.6 s over 24), and a question waits for the slowest
+# of 10-20 of them: at 45 s a lost verdict held q07 for 64 s.
+CHECK_HEDGE_AFTER = 20
 _hedges = ThreadPoolExecutor(512, thread_name_prefix="hedge")
 
 

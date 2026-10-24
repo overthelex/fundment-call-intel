@@ -341,7 +341,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
 | comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
 | vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
-| the task's 11 example questions, one at a time (`…-172455-auto-examples-low`): mean / median / slowest | 15.0 / 15.2 / 21.1 s |
+| the task's 11 example questions, one at a time (`…-205327-auto-examples-low`): mean / median / slowest | 15.7 / 14.4 / 22.3 s |
 | full eval, 4 in parallel (`…-154829/154956-auto-parts`): mean / p50 / p95 | 9.9–10.2 / 7.7–8.4 / 22.6–23.7 s |
 
 What keeps it there:
@@ -359,9 +359,10 @@ What keeps it there:
   shared part: 40% of all prompt tokens in a full eval came from the cache
   (`…-180924-auto-prompt-cache`), billed at a discount. A call read for several questions (per-call
   verdicts on the same 10 prospect calls for q02, q07, q28) is paid in full once.
-- **A duplicate for a lost request at question time**: a planner, verdict, topic-check or answer call
-  with no answer after 45 s (answer step p99 21 s, maximum 28 s over 101 answers) is sent again and
-  the first answer wins, so a request the provider never answers does not hold the question for the
+- **A duplicate for a lost request at question time**: a planner or answer call with no answer after
+  45 s (answer step p99 21 s, maximum 28 s over 101 answers), and a per-call verdict or per-topic
+  check after 20 s (maximum 7.9 s and 13.6 s; a question waits for the slowest of 10-20 of them), is
+  sent again and the first answer wins, so a request the provider never answers does not hold the question for the
   120 s timeout (one question took 135 s instead of 12). Off for `ANSWER_EFFORT=medium`, whose
   answers take a minute.
 - **Ingestion in parts, in parallel**: every call is split into parts of ~1,700 words and every

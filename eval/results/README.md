@@ -54,6 +54,7 @@ Runs that show one change, referenced from the README and `EVALUATION.md`:
 | `20261023-235835-auto-effort-low` | the same code on another index | 18 / 10 / 1 |
 | `20261024-1022*-auto-q11-topic-check` | q11 three times, after adding the per-topic contradiction check | yes, yes, yes |
 | `20261024-1031*-auto-per-call-check` | q08, q10, q19, q20 four times, after adding per-call verdicts | q10 yes ×4, q08 3 yes 1 partly, q19 partly, q20 yes |
+| `20261024-205327-auto-examples-low` | the same with the coverage check and a 20 s duplicate for verdicts and topic checks | 8 / 3 / 0; 15.7 s mean, slowest 22.3 s |
 | `20261024-182756-auto-examples-low` | the same after the prompt-cache change; q10 dropped Kestrel (fixed by the coverage check) | 6 / 5 / 0; 19.8 s mean (q07 64 s, a lost request) |
 | `20261024-172455-auto-examples-low` | the task's 11 example questions, one at a time, current index | 9 / 2 / 0; 15.0 s mean |
 | `20261024-143451-auto-examples-low` | the same on the previous index | 8 / 3 / 0; 16.7 s mean |
