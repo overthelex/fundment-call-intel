@@ -86,12 +86,38 @@ def check_topic(topic: str, text: str, turns: list[Turn], calls: dict[str, Call]
     return found
 
 
+# Each topic is checked this many times, in parallel, and the contradictions found are merged: one
+# pass over the 29 statements on "no-code vs code" found the "completely no-code" contradiction in 7 of
+# 10 runs, so q11 missed it in about one run in three; two passes miss it in about one in eleven.
+PASSES = 2
+
+
+def merge(found: list[FoundConflict]) -> list[FoundConflict]:
+    """One entry per contradiction: a pair on the same topic that shares a statement with one already
+    kept (from another pass, or split by the same pass, e.g. "SSO on all plans" against "SAML SSO on
+    Enterprise" and against "SAML SSO and SCIM on Enterprise") adds its statements to that one."""
+    key = lambda side: {(s.call_id, s.timestamp) for s in side}  # noqa: E731
+    out: list[FoundConflict] = []
+    for c in found:
+        a, b = key(c.side_a), key(c.side_b)
+        for k in out:
+            ka, kb = key(k.side_a), key(k.side_b)
+            if k.topic == c.topic and (a & ka or b & kb or a & kb or b & ka):
+                same = bool(a & ka or b & kb)
+                for side, extra in ((k.side_a, c.side_a if same else c.side_b), (k.side_b, c.side_b if same else c.side_a)):
+                    side += [s for s in extra if (s.call_id, s.timestamp) not in key(side)]
+                break
+        else:
+            out.append(c)
+    return out
+
+
 def find_conflicts(blocks: list[tuple[str, str, list[Turn]]], calls: dict[str, Call], llm: LLM,
-                   usage: Usage | None = None, workers: int = 12) -> list[FoundConflict]:
+                   usage: Usage | None = None, workers: int = 24, passes: int = PASSES) -> list[FoundConflict]:
     """blocks: (topic, statements text, turns) per topic, as from ClaimStore.topics()."""
     with ThreadPoolExecutor(workers) as pool:
-        per_topic = pool.map(lambda b: check_topic(b[0], b[1], b[2], calls, llm, usage), blocks)
-        return [c for found in per_topic for c in found]
+        per_topic = list(pool.map(lambda b: check_topic(b[0], b[1], b[2], calls, llm, usage), blocks * passes))
+    return merge([c for found in per_topic for c in found])
 
 
 def render(found: list[FoundConflict]) -> str:

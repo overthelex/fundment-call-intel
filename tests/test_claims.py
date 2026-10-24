@@ -147,3 +147,22 @@ def test_a_call_the_findings_count_but_the_answer_drops_is_reported():
     texts = ["Three of the four cold calls produced a follow-up; Beacon Housing Trust agreed to a meeting."]
     missing = uncovered(findings, texts, cited={"CALL-016"})
     assert [m.call_id for m in missing] == ["CALL-020"]  # a "no" may go unmentioned; named or cited is covered
+
+
+def test_the_same_contradiction_from_two_passes_is_merged():
+    from callqa.conflicts import FoundConflict, Statement, merge
+
+    def st(cid, ts):
+        return Statement(call_id=cid, timestamp=ts, speaker="x", quote="q")
+
+    sso1 = FoundConflict(topic="SSO", what="all plans vs Enterprise", side_a=[st("CALL-006", "07:23")],
+                         side_b=[st("CALL-001", "20:05")])
+    sso2 = FoundConflict(topic="SSO", what="Enterprise only vs all plans", side_a=[st("CALL-002", "01:59"), st("CALL-001", "20:05")],
+                         side_b=[st("CALL-006", "07:23")])  # the same pair, sides swapped, one more statement
+    nocode = FoundConflict(topic="no-code", what="completely no-code vs needs code", side_a=[st("CALL-006", "11:30")],
+                           side_b=[st("CALL-001", "12:12")])
+    sso3 = FoundConflict(topic="SSO", what="all plans vs SAML and SCIM on Enterprise", side_a=[st("CALL-006", "07:23")],
+                         side_b=[st("CALL-004", "02:09")])  # split by the same pass: shares one side only
+    out = merge([sso1, nocode, sso2, sso3])
+    assert [c.topic for c in out] == ["SSO", "no-code"]
+    assert sorted(s.timestamp for s in out[0].side_b) == ["01:59", "02:09", "20:05"]

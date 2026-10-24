@@ -144,8 +144,11 @@ question
    context only for questions about the vendor's consistency. Comparing ~550 statements in one pass
    was not reliable with low reasoning (the "completely no-code" contradiction was found in 3 of 5
    replays on the same context), so each of the 12 topics is first checked for contradictions by its
-   own small call, in parallel (`callqa/conflicts.py`, ~5 s), and the answer step weighs what they
-   found: 5 of 5 asks found it, 3 of 3 judged "yes".
+   own small call, in parallel (`callqa/conflicts.py`), and the answer step weighs what they found.
+   One check of a topic is not reliable either: the "no-code" topic's found that contradiction in 7
+   of 10 runs, and q11 missed it in one run of the 11 example questions. So every topic is checked
+   twice, in parallel, and the pairs are merged: q11 "yes" in 6 of 6 runs since, each with the
+   no-code contradiction (`…-q11-two-passes`), at ~$0.04 more and 15–37 s instead of 14–17 s.
    The same table answers product-fact questions: retrieval gives the passages most similar to the
    question, so a fact stated in nine calls and contradicted in one can reach the model as one statement
    against one, and it cannot weigh what it does not see. For a question on one to three product topics
@@ -259,7 +262,7 @@ What I take from it:
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
 - **Fixed by splitting one pass into small parallel checks.** One pass of the answer step over many
   calls or statements dropped a call or a case. q11 (vendor contradictions) found only some of them;
-  a check per claim topic makes it "yes" in both runs. q10 ("which cold calls produced a follow-up?")
+  a check per claim topic, run twice and merged, makes it "yes" in 6 of 6 runs. q10 ("which cold calls produced a follow-up?")
   said "all five" although Trafford's Yvonne said "I won't read it"; q07 ("which prospects seem most
   likely to purchase?") left Acme out and put BrightPath on top without its BAA gate; q02 listed
   BrightPath and Greenline among the Salesforce customers. A verdict per call, read on its own, makes
@@ -340,7 +343,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | across a few whole calls, a verdict per call + answer ("Which cold calls produced a follow-up?") | 13–16 s |
 | a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
 | comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
-| vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
+| vendor contradictions, 12 topics checked twice + answer ("Has the vendor given inconsistent answers?") | 15–37 s |
 | the task's 11 example questions, one at a time (`…-205327-auto-examples-low`): mean / median / slowest | 15.7 / 14.4 / 22.3 s |
 | full eval, 4 in parallel (`…-154829/154956-auto-parts`): mean / p50 / p95 | 9.9–10.2 / 7.7–8.4 / 22.6–23.7 s |
 
