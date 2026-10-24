@@ -17,7 +17,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from .index import part_note, turn_line
-from .llm import INGEST_TIMEOUT, LLM, Usage
+from .llm import INGEST_HEDGE_AFTER, INGEST_TIMEOUT, LLM, Usage
 from .parse import Call
 from .verify import check_citation
 
@@ -91,7 +91,8 @@ def extract(call: Call, calls: dict[str, Call], llm: LLM, usage: Usage | None = 
     text = "\n".join(turn_line(call, t) for t in call.turns)
     out = llm.structured(NOTES_SYSTEM, f"{call.call_id} · {call.company} · {call.stage}{part_note(call, calls)}\n\n{text}",
                          CallNotes,
-                         reasoning_effort=EFFORT, usage=usage, timeout=INGEST_TIMEOUT)
+                         reasoning_effort=EFFORT, usage=usage, timeout=INGEST_TIMEOUT,
+                         hedge_after=INGEST_HEDGE_AFTER)
     in_call = {(call.call_id, t.idx) for t in call.turns}
     kept = []
     for n in out.notes:

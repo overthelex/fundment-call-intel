@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel
 
 from .index import part_note, turn_line
-from .llm import INGEST_TIMEOUT, LLM, Usage
+from .llm import INGEST_HEDGE_AFTER, INGEST_TIMEOUT, LLM, Usage
 from .parse import Call, Turn
 from .verify import check_citation
 
@@ -89,7 +89,8 @@ class StoredClaim(BaseModel):
 def extract(call: Call, calls: dict[str, Call], llm: LLM, usage: Usage | None = None) -> list[StoredClaim]:
     text = "\n".join(turn_line(call, t) for t in call.turns)
     out = llm.structured(CLAIMS_SYSTEM, f"{call.call_id} · {call.company}{part_note(call, calls)}\n\n{text}", CallClaims,
-                         reasoning_effort=EFFORT, usage=usage, timeout=INGEST_TIMEOUT)
+                         reasoning_effort=EFFORT, usage=usage, timeout=INGEST_TIMEOUT,
+                         hedge_after=INGEST_HEDGE_AFTER)
     in_call = {(call.call_id, t.idx) for t in call.turns}
     kept = []
     for c in out.claims:

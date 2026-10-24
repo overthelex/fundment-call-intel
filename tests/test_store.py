@@ -89,3 +89,26 @@ def test_notes_on_an_overlap_turn_come_from_the_first_part():
     first = [n(10, "needs and requirements", "a"), n(11, "needs and requirements", "b")]
     second = [n(11, "needs and requirements", "b again"), n(11, "pains and current process", "c"), n(12, "needs and requirements", "d")]
     assert [(m.turn_idx, m.point) for m in merge_notes(first, second)] == [(10, "a"), (11, "b"), (11, "c"), (12, "d")]
+
+
+def test_a_request_with_no_answer_gets_a_duplicate_and_the_first_answer_wins():
+    import threading
+    import time
+
+    from callqa.llm import LLM
+
+    calls, lost = [], threading.Event()
+
+    def once(*a):
+        calls.append(1)
+        if len(calls) == 1:  # the provider never answers the first request
+            lost.wait(5)
+            raise TimeoutError
+        return CallClaims(claims=[])
+
+    llm = LLM.__new__(LLM)
+    llm._structured = once
+    t = time.time()
+    assert llm.structured("s", "u", CallClaims, hedge_after=0.2) == CallClaims(claims=[])
+    assert len(calls) == 2 and time.time() - t < 2
+    lost.set()

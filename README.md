@@ -313,7 +313,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | one call, whole transcript ("What was Verity paying?") | 5.5 s |
 | product fact, excerpts + vendor statements ("SSO on Growth?") | 10.2 s |
 | across calls, ingestion notes ("Why do prospects hesitate?") | 18.9 s |
-| ingestion of all 20 calls from scratch (`rm -rf .cache && callqa index`) | 96–112 s |
+| ingestion of all 20 calls from scratch (`rm -rf .cache && callqa index`) | 80–130 s |
 | across a few whole calls, a verdict per call + answer ("Which cold calls produced a follow-up?") | 13–16 s |
 | a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
 | comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
@@ -334,8 +334,20 @@ What keeps it there:
   part of every call is read at once (two claims passes and a notes pass each, ≤180 requests, well
   under the deployment's 1M tokens and 1,000 requests a minute). Ingestion waits for its slowest
   request, and one request over a whole ~5K-word call generated up to 40K tokens, took 1.5–3 min and
-  sometimes hung at the provider (12.8 min for one fresh ingestion on 24.10). Parts finish in 20–80 s,
-  so ingestion calls get a 180 s timeout and question-time calls 120 s (`callqa/llm.py`).
+  sometimes hung (12.8 min for one fresh ingestion on 24.10). Parts finish in 20–100 s. Two causes
+  of the hangs, found with a request log and thread dumps over repeated ingestions (`callqa/llm.py`):
+  - **TLS handshakes one at a time.** The HTTP client's default SSL context (`truststore`) holds one
+    lock for a whole handshake, network round trips included, so the ~180 connections opened at once
+    shook hands in turn: connections queued for ~10 s were closed by the server, and one stalled
+    handshake held every other thread (100+ threads waiting, sockets in CLOSE_WAIT, 13 min). A plain
+    `ssl` context with `certifi` shakes hands in parallel: 0 handshake failures since, against 30–70
+    per ingestion.
+  - **Requests the provider never answers**, ~4% of them (also with separate clients and tiny
+    prompts): no response until the read timeout. An extraction with no answer after 60 s gets a
+    duplicate and the first answer wins; embeddings, which answer in under 2 s, time out after 20 s.
+
+  Four fresh ingestions with both fixes: 80–129 s (before: 92–413 s). Timeouts: 180 s for ingestion
+  calls, 120 s for question-time calls.
 
   Measured on the longest call (CALL-004, 4,904 words, 3 parts), 2 repeats, variants interleaved
   (`uv run python eval/bench_ingest.py`):
@@ -350,15 +362,16 @@ What keeps it there:
   7 questions across calls the answer got 0.74 of the evidence turns from an all-low index, 0.79
   with notes at medium, 0.77 from the whole-call index (same saved plans, `NOTE_BUDGET` 250 turns).
   Claims lose nothing at low (14–15 of the 15 vendor statements behind the gold contradictions in
-  every index). Over all 20 calls: 96–112 s from scratch, against ~2–3 min for whole calls when no
+  every index). Over all 20 calls: 80–130 s from scratch, against ~2–3 min for whole calls when no
   request hangs. The eval verdicts are within noise of the whole-call index (16 / 13 / 0 and
   17 / 12 / 0, against 20 / 9 / 0 and 15 / 13 / 1).
 - **Progress on screen**: the CLI prints each step as it starts (`planning` → `plan: across question
   over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first
   output arrives in well under 2 s even when the answer takes 15 s.
 
-Not done yet, in order of expected gain: stream the answer text and check each citation as it
-arrives; run the planner on a smaller model and embed the question while it plans (~1–2 s); keep the
+Not done yet, in order of expected gain: a duplicate for a question-time request with no answer
+after ~45 s (the lost requests above; one question took 135 s instead of 12); stream the answer text
+and check each citation as it arrives; run the planner on a smaller model and embed the question while it plans (~1–2 s); keep the
 static prompt and the transcripts ahead of the question so the provider's prefix cache applies to
 repeated questions on the same calls; cache answers by normalised question and data version; and
 provisioned throughput, since the spread under load (8 s alone vs up to 21 s p95 with 4 in parallel)
