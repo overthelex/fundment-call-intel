@@ -75,22 +75,23 @@ The current code, 29 headline questions (q30 excluded), `gpt-5.4-mini` answering
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
 | context recall | 1.00 | 1.00 | 1.00 (by construction) |
-| evidence recall | 0.87 | 0.87 | 1.00 (by construction) |
-| cited recall | 0.99 | 0.99 | 0.93 |
+| evidence recall | 0.90 | 0.91 | 1.00 (by construction) |
+| cited recall | 0.97 | 1.00 | 0.93 |
 | citation validity | **0.99** | **0.99** | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 2 · 3 · 1 | 2 · 2 · 1 | 4 · 10 · 3 |
-| answer correct: yes / partly / no | **19 / 9 / 1** | **17 / 12 / 0** | 13 / 14 / 2 |
-| core fact recall | 0.76 | 0.81 | 0.73 |
-| atomic fact recall | 0.68 | 0.69 | 0.61 |
-| compound fact recall (strictest) | 0.60 | 0.64 | 0.55 |
-| core facts contradicted · penalties hit | 1 · 0 | 0 · 0 | 1 · 3 |
+| failed citations: not found · wrong call · wrong speaker | 1 · 2 · 1 | 1 · 2 · 0 | 4 · 10 · 3 |
+| answer correct: yes / partly / no | **20 / 9 / 0** | **15 / 13 / 1** | 13 / 14 / 2 |
+| core fact recall | 0.82 | 0.75 | 0.73 |
+| atomic fact recall | 0.70 | 0.68 | 0.61 |
+| compound fact recall (strictest) | 0.62 | 0.61 | 0.55 |
+| core facts contradicted · penalties hit | 0 · 0 | 1 · 2 | 1 · 3 |
 | correct abstention on unanswerable | 5 / 5 | 4 / 5 | 5 / 5 |
 | false abstention on answerable | 0 / 24 | 0 / 24 | 0 / 24 |
-| prompt tokens / question | **31K** | 31K | 123K |
-| latency mean / p95, 4 in parallel | 9.9 / 20.7 s | 11.2 / 31.2 s | 11.3 / 38.5 s |
+| prompt tokens / question | **32K** | 33K | 123K |
+| latency mean / p95, 4 in parallel | 10.5 / 21.3 s | 11.2 / 21.6 s | 11.3 / 38.5 s |
 
-`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 6 of 30. The
-baseline differs from both on 5: worse on q03, q11, q16 and q24, better on q30.
+`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 8 of 30, all
+on the yes/partly line but one: 20 against 15 "yes" from the same code and index. The baseline
+differs from both on 4: worse on q03, q11 and q24, better on q30.
 
 ### How far the judge can be trusted
 
@@ -126,9 +127,20 @@ would cut the noise.
 
 - **Single-call details (q13, q14, q15, q18)**: whole transcript in context, the answer gives the main
   point and leaves out a required detail; first failed step "answer".
-- **Cross-call patterns (q09 "how do renewals differ from new business?")**: a pattern that shows
-  only across calls is in no single call's notes; evidence recall about a third. `--across map`
-  reaches more turns (README, *Options for questions across calls*) and still misses it.
+- **q09 ("how do renewals differ from new business?")**: evidence recall was about a third. The
+  planner chose one note field ("how the team ran the call") while the uplift and the pricing sit
+  under pricing and decision process, and the renewal calls were seen only as notes. Now the planner
+  takes every field an answer can sit in, and a comparison sends the small kinds of call whole (3
+  renewals and 5 cold calls, ~11.5K words; prospects stay as notes): evidence recall 0.93, core
+  recall 0.2 → 0.4–0.6. Still "partly": the answer stays general and leaves out the 7% uplift and the
+  jointly written pilot criteria. Per-call verdicts made it worse (core 0.0 and 0.27,
+  `results/…-assess-incl-comparisons`), so comparisons do not get them.
+- **q05 ("which capabilities matter most to prospects?")**: 7 of the 14 missed evidence turns had no
+  note at all: customer questions such as "Can we export audit logs to our own SIEM?" or "Version
+  history?" were not recorded as needs. The notes prompt now records a question about a capability as
+  a need (10 of the 14 are noted now) and the planner takes integrations and objections too: evidence
+  recall 0.42 → 0.56, but still "partly" in the saved runs (core recall 0.5–0.67): the answer now
+  misses team-owned exception queues or the change-management test instead.
 - **q10 ("which cold calls produced a follow-up?")**: five whole calls in context, and the answer
   sometimes said all five did, although Trafford's Yvonne said "I won't read it" (3 of 5 replays of
   the same context with low reasoning; 0 of 3 with medium). Fixed after the fresh-clone run: for a
@@ -142,10 +154,10 @@ would cut the noise.
   caveats on the top prospects or put BrightPath on top without its BAA gate ("partly" or "no" in
   every run). Fixed in part: the planner marks questions that rank or classify calls, each candidate
   call (at most 25) gets its own verdict before the answer, and the answer must place every call in
-  a tier with its condition or blocker. q07 "yes" in 3 of 5 runs since; q02 ("which customers
+  a tier with its condition or blocker. q07 "yes" in about half the runs since (5 of 9); q02 ("which customers
   mentioned Salesforce?"), which once listed BrightPath and Greenline, "yes" in all 5; q28 too
-  (`results/…-assess-each-call`, `…-final`). It costs 100–150K prompt tokens on those questions
-  (31K mean per question, was 21K). Comparisons between groups (q09) got worse with it, core recall
+  (`results/…-assess-each-call`, `…-before-notes-v2`, `…-final`). It costs 100–150K prompt tokens on those questions
+  (32K mean per question, was 21K). Comparisons between groups (q09) got worse with it, core recall
   0.27, and are left out (`results/…-assess-incl-comparisons`).
 - **q21 ("how much was Verity paying?")** once took Sarah's rhetorical "costs a hundred thousand a
   year" over the £80K account value, the trap in `GOLD_NOTES.md`; "yes" in the other run.

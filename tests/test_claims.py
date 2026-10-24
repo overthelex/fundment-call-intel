@@ -102,3 +102,16 @@ def test_per_call_verdict_keeps_only_verified_evidence():
     f = judge_call("q", CALLS["CALL-006"], CALLS, VerdictLLM())
     assert f.verdict == "no real next step"
     assert [p.quote for p in f.evidence] == ["SSO's included on all our plans"]
+
+
+def test_comparison_sends_the_small_kinds_of_call_whole():
+    from types import SimpleNamespace
+
+    from callqa.pipeline import Pipeline, Plan
+
+    plan = Plan(call_ids=[], categories=["renewal", "prospect"], scope="across", search_queries=[],
+                entity_notes=[], vendor_consistency=False, product_topics=[], note_fields=[], assess_each_call=False)
+    ids = [c for c in CALLS if CALLS[c].category in ("renewal", "prospect")]
+    whole = Pipeline.whole_groups(SimpleNamespace(calls=CALLS), plan, ids)
+    assert whole == sorted(c for c in ids if CALLS[c].category == "renewal")  # prospects, the largest kind, stay as notes
+    assert Pipeline.whole_groups(SimpleNamespace(calls=CALLS), plan.model_copy(update={"categories": ["prospect"]}), ids) == []

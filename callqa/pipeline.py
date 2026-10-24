@@ -282,12 +282,35 @@ class Pipeline:
             by_call.setdefault(n.call_id, set()).add(n.turn_idx)
             if n.turn_idx > 0 and len(turn.text.split()) < 20:
                 by_call[n.call_id].add(n.turn_idx - 1)
+        whole = self.whole_groups(plan, call_ids)
+        for cid in whole:
+            by_call[cid] = set(range(len(self.calls[cid].turns)))
         text, turns = self.excerpt_text(by_call)
-        empty = [f"{cid} ({self.calls[cid].company})" for cid in call_ids if cid not in noted]
+        empty = [f"{cid} ({self.calls[cid].company})" for cid in call_ids if cid not in noted and cid not in whole]
         if empty:
             fields = "; ".join(plan.note_fields) if plan.note_fields else "any field"
             text += f"\n\nCALLS WITH NO NOTES ON {fields.upper()}: " + ", ".join(empty)
+        if whole:
+            text = ("WHOLE TRANSCRIPTS (shown in full, not as notes): " + ", ".join(whole) + "\n\n" + text)
         return Context("notes", sorted(by_call), turns, text, retrieved.chunks)
+
+    def whole_groups(self, plan: Plan, call_ids: list[str]) -> list[str]:
+        """For a question comparing kinds of call ("renewals versus new business"), the kinds small
+        enough to send whole, smallest first, within the word budget; the rest stay as notes. A small
+        group read in full keeps what notes miss: who opens and runs the call, the standard terms."""
+        if len(plan.categories) < 2:
+            return []
+        groups: dict[str, list[str]] = {}
+        for cid in call_ids:
+            groups.setdefault(self.calls[cid].category, []).append(cid)
+        words = {g: sum(len(t.text.split()) for cid in ids for t in self.calls[cid].turns) for g, ids in groups.items()}
+        whole, used = [], 0
+        for g in sorted(groups, key=words.get)[:-1]:  # the largest kind always stays as notes
+            if used + words[g] > FULL_TEXT_WORD_BUDGET:
+                break
+            whole += groups[g]
+            used += words[g]
+        return sorted(whole)
 
     def claims_context(self, usage: Usage | None = None) -> Context:
         """Every vendor claim grouped by topic, plus the contradictions found by checking each topic on

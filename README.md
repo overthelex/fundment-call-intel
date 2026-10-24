@@ -64,7 +64,8 @@ question
   │                                 candidate calls fit in 12K words? → send whole transcripts
   │                                   (across several calls: + a verdict from reading each call on its own)
   │                                 question across calls? → the turns behind the notes written at ingestion
-  │                                   in those fields (+ retrieved excerpts), and the calls with none
+  │                                   in those fields (+ retrieved excerpts), and the calls with none;
+  │                                   comparing kinds of call: the small kinds whole, within 12K words
   │                                 otherwise → hybrid retrieval (BM25 + embeddings, RRF) with a per-call quota
   │                                 product fact? → plus every vendor statement on that topic, from all calls
   │                                 ranks or classifies calls? → plus a verdict from reading each call (≤25)
@@ -218,21 +219,23 @@ Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/
 
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
-| run | `…-120000-auto-final` | `…-120140-auto-final` | `…-094601-full-fresh-clone` |
-| correct: yes / partly / no | **19 / 9 / 1** | **17 / 12 / 0** | 13 / 14 / 2 |
-| core / atomic fact recall | 0.76 / 0.68 | 0.81 / 0.69 | 0.73 / 0.61 |
-| context recall · evidence recall | 1.00 · 0.87 | 1.00 · 0.87 | 1.00 · 1.00 (by construction) |
+| run | `…-123718-auto-final` | `…-123853-auto-final` | `…-094601-full-fresh-clone` |
+| correct: yes / partly / no | **20 / 9 / 0** | **15 / 13 / 1** | 13 / 14 / 2 |
+| core / atomic fact recall | 0.82 / 0.70 | 0.75 / 0.68 | 0.73 / 0.61 |
+| context recall · evidence recall | 1.00 · 0.90 | 1.00 · 0.91 | 1.00 · 1.00 (by construction) |
 | citation validity | 0.99 | 0.99 | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 2 · 3 · 1 | 2 · 2 · 1 | 4 · 10 · 3 |
+| failed citations: not found · wrong call · wrong speaker | 1 · 2 · 1 | 1 · 2 · 0 | 4 · 10 · 3 |
 | abstention: right on unanswerable · false on answerable | 5/5 · 0 of 24 | 4/5 · 0 of 24 | 5/5 · 0 of 24 |
-| penalties hit | 0 | 0 | 3 |
-| prompt tokens per question | 31K | 31K | 123K |
-| latency mean / p95, 4 questions in parallel | 9.9 / 20.7 s | 11.2 / 31.2 s | 11.3 / 38.5 s |
-| first failed step | retrieval 4, answer 5, attribution 3 | answer 8, attribution 3, retrieval 3, abstention 1 | answer 15, attribution 4 |
+| penalties hit | 0 | 2 | 3 |
+| prompt tokens per question | 32K | 33K | 123K |
+| latency mean / p95, 4 questions in parallel | 10.5 / 21.3 s | 11.2 / 21.6 s | 11.3 / 38.5 s |
+| first failed step | answer 6, retrieval 3, attribution 2 | answer 8, retrieval 4, abstention 1 | answer 15, attribution 4 |
 
-Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 6 of 30, between
-yes and partly except q21. The baseline differs from both on 5: worse on q03, q11, q16 and q24,
-better on q30, where it sees every call.
+Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 8 of 30, all on the
+yes/partly line except q18 (partly / no). That spread, 20 against 15 "yes" from the same code and
+index, is the judge and answer noise this eval measures: compare per question, not the totals. The
+baseline differs from both runs on 4: worse on q03, q11 and q24, better on q30, where it sees every
+call.
 
 What I take from it:
 
@@ -255,10 +258,19 @@ What I take from it:
   said "all five" although Trafford's Yvonne said "I won't read it"; q07 ("which prospects seem most
   likely to purchase?") left Acme out and put BrightPath on top without its BAA gate; q02 listed
   BrightPath and Greenline among the Salesforce customers. A verdict per call, read on its own, makes
-  q10, q02 and q28 "yes" in both runs and q07 "yes" in 3 of 5 (it was "partly" or "no" before).
-- **Known failures**: q09 ("how do renewals differ from new business?") is a pattern across calls
-  that no single call's notes hold; per-call verdicts made it worse, so comparisons do not get them.
-  q21 once took Sarah's rhetorical "costs a hundred thousand a year" over the £80K account value, a
+  q10, q02 and q28 "yes" in both runs and q07 "yes" in about half the runs (5 of 9; it was "partly" or
+  "no" before).
+- **Improved, not fixed**: q09 ("how do renewals differ from new business?") had a third of its
+  evidence in context, because one note field was chosen and the renewal calls were seen only as
+  notes. The planner now takes every field an answer can sit in, and a comparison sends the small
+  kinds of call whole (the 3 renewals and 5 cold calls, ~11.5K words): evidence recall 0.93, core
+  recall 0.2 → 0.4–0.6, still "partly", since the answer stays general (the 7% uplift, the jointly
+  written pilot criteria). q05 ("which capabilities matter most to prospects?") missed customer
+  questions such as "Can we export audit logs to our own SIEM?", which the notes did not record; the
+  notes prompt now records them as needs (10 of the 14 missed turns are noted now, 0 before):
+  evidence recall 0.42 → 0.56, still "partly" (core recall 0.5–0.67).
+- **Known failures**: q18 ("are the lead scores reliable?") once concluded flatly that they are not,
+  from one person's impression. q21 once took Sarah's rhetorical "costs a hundred thousand a year" over the £80K account value, a
   trap noted in `eval/GOLD_NOTES.md`. q30 (bonus) needs a second retrieval hop and is declined.
 
 ### Options for questions across calls
@@ -300,6 +312,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | ingestion of all 20 calls, fresh clone (`callqa index`) | ~2–3 min |
 | across a few whole calls, a verdict per call + answer ("Which cold calls produced a follow-up?") | 13–16 s |
 | a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
+| comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
 | vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
 | the task's 11 example questions (`…-001127-auto-examples-low`): mean / median / slowest | 17.1 / 18.2 / 26.3 s |
 | full eval, 4 in parallel: mean / p50 / p95 | 8.6 / 7.8 / 21.0 s |

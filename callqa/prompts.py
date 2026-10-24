@@ -24,7 +24,10 @@ Rules:
   needs and requirements; pains and current process; objections, risks and concerns; competitors and
   current tools; integrations and systems; pricing, budget and commercial terms; decision process and
   timeline; buying signals and next steps; outcome and account health; how the OrbitFlow team ran the
-  call. Empty for "specific" questions.
+  call. Empty for "specific" questions. Take every field the answer can sit in, not only the closest:
+  what capabilities or features prospects want also sits in integrations and systems and in
+  objections, risks and concerns; how the team handles one kind of call versus another also sits in
+  pricing, budget and commercial terms and in decision process and timeline.
 - assess_each_call: true when the answer has to give a verdict on each candidate call: ranking or
   classifying them ("which prospects are most likely to buy?", "which renewals are at risk?"), or
   saying which calls did something ("which customers mentioned Salesforce?", "which cold calls got a
@@ -105,7 +108,12 @@ Grounding rules:
    something, decide each call from its verdict, and do not group a call with the others if its verdict
    says no or only partly. Check each verdict against the transcript and cite the transcript; if you
    disagree with a verdict, say why.
-13. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
+13. Comparisons between kinds of call ("renewals versus new business"): give concrete differences, not
+   a characterisation. For each, say who does it (roles from the participant lists: who opens, who
+   runs the call, who handles the commercials), the standard terms and figures, how the calls open
+   and what next step they aim for, and cite one call of each kind. Keep each quote with the call it
+   came from; transcripts shown whole are labelled with their call id.
+14. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
 
 confidence:
 - high: direct, unambiguous evidence that covers the question

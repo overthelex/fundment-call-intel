@@ -21,7 +21,7 @@ from .llm import INGEST_TIMEOUT, LLM, Usage
 from .parse import Call
 from .verify import check_citation
 
-PROMPT_VERSION = "notes-v1"
+PROMPT_VERSION = "notes-v2"  # v2: customer questions about capabilities are needs
 
 NoteField = Literal[
     "needs and requirements",
@@ -51,6 +51,9 @@ the fields:
 - how the OrbitFlow team ran the call: how reps opened, who led, what they offered or conceded,
   promises made, how they handled pushback
 One note per distinct point; corrections, caveats and figures are their own notes. Skip small talk.
+A customer's question about a capability ("Can we export audit logs to our own SIEM?", "Is there
+version history?", "Can we switch AI off?", "Can the queue be owned by a team?") tells you what they
+need: note it under needs and requirements, whatever the answer was.
 
 For each note:
 - field: the closest field
