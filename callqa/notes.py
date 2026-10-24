@@ -16,12 +16,15 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from .index import turn_line
+from .index import part_note, turn_line
 from .llm import INGEST_TIMEOUT, LLM, Usage
 from .parse import Call
 from .verify import check_citation
 
-PROMPT_VERSION = "notes-v2"  # v2: customer questions about capabilities are needs
+PROMPT_VERSION = "notes-v3"  # v3: read in parts (store.py); v2: capability questions are needs
+# Notes stay at medium: at low they were more numerous but ranked worse against questions, and the
+# answer for questions across calls got fewer of its evidence turns (0.74 vs 0.79).
+EFFORT = "medium"
 
 NoteField = Literal[
     "needs and requirements",
@@ -86,8 +89,9 @@ class StoredNote(BaseModel):
 def extract(call: Call, calls: dict[str, Call], llm: LLM, usage: Usage | None = None) -> list[StoredNote]:
     """Notes for one call; a note whose quote does not verify against the transcript is dropped."""
     text = "\n".join(turn_line(call, t) for t in call.turns)
-    out = llm.structured(NOTES_SYSTEM, f"{call.call_id} · {call.company} · {call.stage}\n\n{text}", CallNotes,
-                         reasoning_effort="medium", usage=usage, timeout=INGEST_TIMEOUT)
+    out = llm.structured(NOTES_SYSTEM, f"{call.call_id} · {call.company} · {call.stage}{part_note(call, calls)}\n\n{text}",
+                         CallNotes,
+                         reasoning_effort=EFFORT, usage=usage, timeout=INGEST_TIMEOUT)
     in_call = {(call.call_id, t.idx) for t in call.turns}
     kept = []
     for n in out.notes:

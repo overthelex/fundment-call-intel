@@ -8,9 +8,13 @@ Runs of the current code (the README's results table):
 
 | files | what it is | result |
 |---|---|---|
-| `20261024-123718-auto-final`, `20261024-123853-auto-final` | pipeline, twice, on the index committed in `.cache/` | 20 / 9 / 0 and 15 / 13 / 1; 32K tokens |
+| `20261024-154829-auto-parts`, `20261024-154956-auto-parts` | pipeline, twice, on the index committed in `.cache/` (calls read in parts) | 16 / 13 / 0 and 17 / 12 / 0; 34K tokens |
 | `20261024-094601-full-fresh-clone` | baseline: whole dataset in the prompt (`--mode full`) | 13 / 14 / 2; 123K tokens; 17 failed citations |
 | `comparison.md` | per-question verdicts of these three runs (`compare.py`) | which questions are unstable |
+
+The same code before calls were read in parts, on the previous index (whole calls at medium):
+`20261024-123718-auto-final` 20 / 9 / 0 and `20261024-123853-auto-final` 15 / 13 / 1 (32–33K tokens).
+The ingestion benchmark behind the switch is `eval/bench_ingest.py` (README, *Speed*).
 
 Before the notes recorded capability questions and comparisons got the small kinds of call whole
 (previous index): `20261024-120000/120140-auto-before-notes-v2` 19 / 9 / 1 and 17 / 12 / 0. With those

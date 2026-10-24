@@ -22,6 +22,7 @@ import numpy as np
 from . import claims as claims_mod
 from . import notes as notes_mod
 from .claims import StoredClaim
+from .index import call_parts
 from .llm import LLM, Usage
 from .notes import StoredNote
 from .parse import Call
@@ -43,8 +44,9 @@ CREATE INDEX IF NOT EXISTS claims_by_topic ON claims (topic);
 """
 
 
-# Calls read at once; each read is two parallel LLM calls. 20 calls x 2 stay far below the deployment's
-# limits (gpt-5.4-mini: 1M tokens and 1,000 requests per minute); 429s are retried by the client.
+# Calls read at once; each call is 1-3 parts, and each part gets three parallel LLM calls (two claims
+# passes, notes): at most ~180 requests, far below the deployment's limits (gpt-5.4-mini: 1M tokens and
+# 1,000 requests per minute); 429s are retried by the client.
 INGEST_WORKERS = int(os.environ.get("INGEST_WORKERS", "20"))
 
 
@@ -62,6 +64,16 @@ def merge_claims(*passes: list[StoredClaim]) -> list[StoredClaim]:
             seen.add((c.turn_idx, c.topic))
             out.append(c)
     return sorted(out, key=lambda c: c.turn_idx)
+
+
+def merge_notes(*parts: list[StoredNote]) -> list[StoredNote]:
+    """Notes of a call read in parts: a turn repeated in the overlap keeps the notes of its first part."""
+    seen, out = set(), []
+    for p in parts:
+        keys = {(n.turn_idx, n.field) for n in p}
+        out += [n for n in p if (n.turn_idx, n.field) not in seen]
+        seen |= keys
+    return sorted(out, key=lambda n: n.turn_idx)
 
 
 class Store:
@@ -85,20 +97,25 @@ class Store:
     def read(self, call: Call, usage: Usage | None = None) -> tuple[list[StoredClaim], list[StoredNote], np.ndarray]:
         """The LLM work for one call; no database access, so calls can be read in parallel.
 
-        Vendor claims are extracted twice, in parallel, and merged: one pass can miss a single short
-        reply ("That's fine, it's completely no-code" was missing from one index), and a missed claim
-        is a missed contradiction for every question about the vendor's consistency. An empty result
-        is retried once: on a fresh index the extraction occasionally came back empty for a whole call."""
+        The call is read in parts of ~1,700 words (`index.call_parts`), all in parallel: one request
+        over a whole call generated up to 30K tokens and took 1-3 minutes, with occasional hangs at the
+        provider, and the slowest call bounded the whole ingestion. Vendor claims are extracted twice per
+        part and merged: one pass can miss a single short reply ("That's fine, it's completely no-code"
+        was missing from one index), and a missed claim is a missed contradiction. An empty result is
+        retried once."""
+        parts = call_parts(call)
+
         def claims() -> list[StoredClaim]:
-            return claims_mod.extract(call, self.calls, self.llm, usage)
+            with ThreadPoolExecutor(2 * len(parts)) as pool:
+                return merge_claims(*pool.map(lambda p: claims_mod.extract(p, self.calls, self.llm, usage), parts * 2))
 
         def notes() -> list[StoredNote]:
-            return notes_mod.extract(call, self.calls, self.llm, usage) or notes_mod.extract(call, self.calls, self.llm, usage)
+            with ThreadPoolExecutor(len(parts)) as pool:
+                return merge_notes(*pool.map(lambda p: notes_mod.extract(p, self.calls, self.llm, usage), parts))
 
-        with ThreadPoolExecutor(3) as pool:  # independent reads of the same call
-            cl_a, cl_b, ns_f = pool.submit(claims), pool.submit(claims), pool.submit(notes)
-            cl = merge_claims(cl_a.result(), cl_b.result()) or claims()
-            ns = ns_f.result()
+        with ThreadPoolExecutor(2) as pool:  # independent reads of the same call
+            cl_f, ns_f = pool.submit(claims), pool.submit(notes)
+            cl, ns = cl_f.result() or claims(), ns_f.result() or notes()
         if not cl or not ns:
             print(f"warning: {call.call_id} has {len(cl)} vendor claims and {len(ns)} notes after a retry",
                   file=sys.stderr, flush=True)

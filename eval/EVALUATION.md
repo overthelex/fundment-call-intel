@@ -75,23 +75,23 @@ The current code, 29 headline questions (q30 excluded), `gpt-5.4-mini` answering
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
 | context recall | 1.00 | 1.00 | 1.00 (by construction) |
-| evidence recall | 0.90 | 0.91 | 1.00 (by construction) |
-| cited recall | 0.97 | 1.00 | 0.93 |
-| citation validity | **0.99** | **0.99** | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 1 · 2 · 1 | 1 · 2 · 0 | 4 · 10 · 3 |
-| answer correct: yes / partly / no | **20 / 9 / 0** | **15 / 13 / 1** | 13 / 14 / 2 |
-| core fact recall | 0.82 | 0.75 | 0.73 |
-| atomic fact recall | 0.70 | 0.68 | 0.61 |
-| compound fact recall (strictest) | 0.62 | 0.61 | 0.55 |
-| core facts contradicted · penalties hit | 0 · 0 | 1 · 2 | 1 · 3 |
-| correct abstention on unanswerable | 5 / 5 | 4 / 5 | 5 / 5 |
+| evidence recall | 0.89 | 0.90 | 1.00 (by construction) |
+| cited recall | 0.98 | 1.00 | 0.93 |
+| citation validity | **1.00** | **0.99** | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 0 · 1 · 1 | 0 · 4 · 0 | 4 · 10 · 3 |
+| answer correct: yes / partly / no | **16 / 13 / 0** | **17 / 12 / 0** | 13 / 14 / 2 |
+| core fact recall | 0.77 | 0.79 | 0.73 |
+| atomic fact recall | 0.66 | 0.67 | 0.61 |
+| compound fact recall (strictest) | 0.60 | 0.63 | 0.55 |
+| core facts contradicted · penalties hit | 1 · 1 | 1 · 0 | 1 · 3 |
+| correct abstention on unanswerable | 5 / 5 | 5 / 5 | 5 / 5 |
 | false abstention on answerable | 0 / 24 | 0 / 24 | 0 / 24 |
-| prompt tokens / question | **32K** | 33K | 123K |
-| latency mean / p95, 4 in parallel | 10.5 / 21.3 s | 11.2 / 21.6 s | 11.3 / 38.5 s |
+| prompt tokens / question | **34K** | 34K | 123K |
+| latency mean / p95, 4 in parallel | 9.9 / 23.7 s | 10.2 / 22.6 s | 11.3 / 38.5 s |
 
-`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 8 of 30, all
-on the yes/partly line but one: 20 against 15 "yes" from the same code and index. The baseline
-differs from both on 4: worse on q03, q11 and q24, better on q30.
+`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 7 of 30, all
+on the yes/partly line; two runs on the previous index gave 20 and 15 "yes" from the same code. The
+baseline is worse than both runs on q07 and q11 and better on q30.
 
 ### How far the judge can be trusted
 
@@ -108,12 +108,12 @@ would cut the noise.
 
 - **Routing is not the bottleneck; for cross-call questions retrieval is.** Every gold call reaches
   the model, but the turn that answers does not always: evidence recall is ~1.0 when whole calls are
-  sent and lower for questions across calls, which use the notes written at ingestion (q09 about a
-  third, q05 about a half). The answer cannot list what it never saw.
+  sent and lower for questions across calls, which use the notes written at ingestion (0.75–0.77 on
+  the 7 such questions; q05 about 0.4). The answer cannot list what it never saw.
 - **The pipeline is at least as good as the baseline at about 1/4 of the input tokens.** The gap in
-  "yes" (17–19 vs 13) is within the judge noise, so the claim is "no worse"; q24 and q11 are clear
+  "yes" (16–17 vs 13) is within the judge noise, so the claim is "no worse"; q24 and q11 are clear
   per-question differences (examples 1 and 2).
-- **Quotes are more reliable with less context**: 5–6 failed citations for the pipeline vs 17 for
+- **Quotes are more reliable with less context**: 2–4 failed citations for the pipeline vs 17 for
   the baseline, mostly *wrong call*: real quotes attached to the wrong customer (example 3). Wrong
   call and not found are reported separately because they are different failures (attribution vs
   invention); both count as errors.
@@ -154,10 +154,10 @@ would cut the noise.
   caveats on the top prospects or put BrightPath on top without its BAA gate ("partly" or "no" in
   every run). Fixed in part: the planner marks questions that rank or classify calls, each candidate
   call (at most 25) gets its own verdict before the answer, and the answer must place every call in
-  a tier with its condition or blocker. q07 "yes" in about half the runs since (5 of 9); q02 ("which customers
-  mentioned Salesforce?"), which once listed BrightPath and Greenline, "yes" in all 5; q28 too
-  (`results/…-assess-each-call`, `…-before-notes-v2`, `…-final`). It costs 100–150K prompt tokens on those questions
-  (32K mean per question, was 21K). Comparisons between groups (q09) got worse with it, core recall
+  a tier with its condition or blocker. q07 "yes" in 6 of the 13 runs since; q02 ("which customers
+  mentioned Salesforce?"), which once listed BrightPath and Greenline, "yes" in all 11 runs since; q28 too
+  (`results/…-assess-each-call`, `…-before-notes-v2`, `…-final`, `…-parts`). It costs 100–150K prompt tokens on those questions
+  (32–34K mean per question, was 21K). Comparisons between groups (q09) got worse with it, core recall
   0.27, and are left out (`results/…-assess-incl-comparisons`).
 - **q21 ("how much was Verity paying?")** once took Sarah's rhetorical "costs a hundred thousand a
   year" over the £80K account value, the trap in `GOLD_NOTES.md`; "yes" in the other run.

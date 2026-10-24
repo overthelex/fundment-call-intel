@@ -8,6 +8,7 @@ Each chunk carries a short call header so the embedding knows whose call it is.
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import re
 from collections import defaultdict
@@ -46,6 +47,36 @@ def turn_line(call: Call, t: Turn) -> str:
     p = call.speaker(t.speaker)
     who = f"{t.speaker} ({p.role}, {p.company})" if p else t.speaker
     return f"[{t.ts}] {who}: {t.text}"
+
+
+# Ingestion reads a call in parts of about this many words. One request over a whole ~5K-word call
+# generated up to 30K tokens and took 1-3 minutes, with occasional hangs; parts read in parallel with
+# low reasoning finish in 5-30 s (eval/bench_ingest.py).
+PART_WORDS = 1700
+PART_OVERLAP = 2  # turns repeated at the start of a part, so a question keeps its answer
+
+
+def call_parts(call: Call, words: int = PART_WORDS, overlap: int = PART_OVERLAP) -> list[Call]:
+    total = sum(len(t.text.split()) for t in call.turns)
+    k = max(1, round(total / words))
+    if k == 1:
+        return [call]
+    target, bounds, acc, start = total / k, [], 0, 0
+    for i, t in enumerate(call.turns):
+        acc += len(t.text.split())
+        if acc >= target and len(bounds) < k - 1:
+            bounds.append((start, i + 1))
+            start, acc = i + 1, 0
+    bounds.append((start, len(call.turns)))
+    return [dataclasses.replace(call, turns=call.turns[max(0, a - overlap):b]) for a, b in bounds]
+
+
+def part_note(part: Call, calls: dict[str, Call]) -> str:
+    """Header line telling the extractor it sees part of a call, not all of it."""
+    whole = calls.get(part.call_id)
+    if whole is None or len(part.turns) == len(whole.turns):
+        return ""
+    return f" · part of the call: [{part.turns[0].ts}] to [{part.turns[-1].ts}] of [{whole.turns[-1].ts}]"
 
 
 def chunk_call(call: Call) -> list[Chunk]:

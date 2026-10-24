@@ -77,3 +77,15 @@ def test_two_claim_passes_are_merged():
     a = [c(82, "SSO, SCIM and identity", "SSO's included on all our plans")]
     b = [c(82, "SSO, SCIM and identity", "included on all our plans"), c(110, "no-code vs code, technical skills needed", "it's completely no-code")]
     assert [(m.turn_idx, m.quote) for m in merge_claims(a, b)] == [(82, "SSO's included on all our plans"), (110, "it's completely no-code")]
+
+
+def test_notes_on_an_overlap_turn_come_from_the_first_part():
+    from callqa.notes import StoredNote
+    from callqa.store import merge_notes
+
+    def n(idx, field, point):
+        return StoredNote(call_id="CALL-004", turn_idx=idx, field=field, point=point, speaker="x", quote="q")
+
+    first = [n(10, "needs and requirements", "a"), n(11, "needs and requirements", "b")]
+    second = [n(11, "needs and requirements", "b again"), n(11, "pains and current process", "c"), n(12, "needs and requirements", "d")]
+    assert [(m.turn_idx, m.point) for m in merge_notes(first, second)] == [(10, "a"), (11, "b"), (11, "c"), (12, "d")]

@@ -62,3 +62,15 @@ def test_ambiguous_first_name_lists_speakers_and_mentions():
     assert ambiguous_names("What did Priya Shah say?", calls) == []
     assert ambiguous_names("What did Maya promise?", calls) == []  # vendor staff: one person across calls
     assert "Marcus Chen" in ambiguous_names("What did Marcus say?", calls)[0]
+
+
+def test_long_calls_are_read_in_parts_that_cover_every_turn(calls):
+    from callqa.index import PART_OVERLAP, call_parts
+
+    for call in calls:
+        parts = call_parts(call)
+        words = sum(len(t.text.split()) for t in call.turns)
+        assert len(parts) == max(1, round(words / 1700))
+        assert sorted({t.idx for p in parts for t in p.turns}) == [t.idx for t in call.turns]
+        for a, b in zip(parts, parts[1:]):  # each part repeats the last turns of the one before
+            assert [t.idx for t in a.turns[-PART_OVERLAP:]] == [t.idx for t in b.turns[:PART_OVERLAP]]

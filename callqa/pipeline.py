@@ -35,7 +35,7 @@ Across = Literal["notes", "map", "retrieval"]
 MAX_MAP_CALLS = 25
 # Reasoning effort of the answer step; it is most of the answer's output tokens, hence of its latency.
 ANSWER_EFFORT = os.environ.get("ANSWER_EFFORT", "low")
-# At most this many notes go to the answer step, best first by similarity to the question.
+# At most this many noted turns go to the answer step, best first by similarity of their notes to the question.
 NOTE_BUDGET = 250
 
 # If the candidate calls fit in this many words, send them whole instead of
@@ -265,14 +265,21 @@ class Pipeline:
         self, question: str, plan: Plan, call_ids: list[str], usage: Usage | None = None
     ) -> Context:
         """Retrieved excerpts plus the turns behind the ingestion notes in the question's fields, best
-        first by similarity, up to NOTE_BUDGET; a short reply also brings the turn before it."""
+        first by similarity, up to NOTE_BUDGET turns; a short reply also brings the turn before it."""
         self.store.ensure(usage)
         retrieved = self.excerpt_context(question, plan, call_ids, usage)
         notes, vecs = self.store.notes(call_ids, plan.note_fields or None)
         noted = {n.call_id for n in notes}  # before the budget cut: a call cut for space did have notes
-        if len(notes) > NOTE_BUDGET:
+        if len({(n.call_id, n.turn_idx) for n in notes}) > NOTE_BUDGET:
+            # the budget counts turns, not notes: a turn with notes in three fields is shown once
             qv = np.asarray(self.llm.embed([question], usage=usage)[0], dtype=np.float32)
-            keep = np.argsort(-(vecs @ (qv / np.linalg.norm(qv))))[:NOTE_BUDGET]
+            keep, seen = [], set()
+            for i in np.argsort(-(vecs @ (qv / np.linalg.norm(qv)))):
+                key = (notes[i].call_id, notes[i].turn_idx)
+                if key not in seen and len(seen) == NOTE_BUDGET:
+                    break
+                seen.add(key)
+                keep.append(i)
             notes = [notes[i] for i in sorted(keep)]
         by_call: dict[str, set[int]] = {}
         for t in retrieved.turns:

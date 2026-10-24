@@ -50,9 +50,9 @@ class Usage:
 # A call made while someone waits for an answer finishes in well under a minute; one that hangs at the
 # provider is cut off and retried instead of holding the answer (or the whole eval) for minutes.
 QUESTION_TIMEOUT = 120
-# An extraction at ingestion generates 10-26K tokens and can take over 3 minutes under load; cutting it
-# off restarts it from zero (that made ingestion ~6 min with a 180 s timeout).
-INGEST_TIMEOUT = 600
+# Ingestion reads each call in parts of ~1,700 words (store.py): a part finishes in 5-60 s, so a request
+# that hangs at the provider is cut off and retried after 3 minutes, not 10.
+INGEST_TIMEOUT = 180
 
 
 class LLM:

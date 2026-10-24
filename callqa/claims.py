@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
 
-from .index import turn_line
+from .index import part_note, turn_line
 from .llm import INGEST_TIMEOUT, LLM, Usage
 from .parse import Call, Turn
 from .verify import check_citation
@@ -25,7 +25,11 @@ from .verify import check_citation
 if TYPE_CHECKING:
     from .store import Store
 
-PROMPT_VERSION = "claims-v3"  # v3: two passes merged at ingestion (store.py)
+PROMPT_VERSION = "claims-v4"  # v4: read in parts with low reasoning, two passes merged (store.py)
+# Vendor claims are short factual statements: low reasoning over a part of a call finds as many as
+# medium over the whole call (15 of the 15 statements behind the gold contradictions) at a fraction of
+# the time (eval/bench_ingest.py).
+EFFORT = "low"
 
 Topic = Literal[
     "plans and what each tier includes",
@@ -84,8 +88,8 @@ class StoredClaim(BaseModel):
 
 def extract(call: Call, calls: dict[str, Call], llm: LLM, usage: Usage | None = None) -> list[StoredClaim]:
     text = "\n".join(turn_line(call, t) for t in call.turns)
-    out = llm.structured(CLAIMS_SYSTEM, f"{call.call_id} · {call.company}\n\n{text}", CallClaims,
-                         reasoning_effort="medium", usage=usage, timeout=INGEST_TIMEOUT)
+    out = llm.structured(CLAIMS_SYSTEM, f"{call.call_id} · {call.company}{part_note(call, calls)}\n\n{text}", CallClaims,
+                         reasoning_effort=EFFORT, usage=usage, timeout=INGEST_TIMEOUT)
     in_call = {(call.call_id, t.idx) for t in call.turns}
     kept = []
     for c in out.claims:
