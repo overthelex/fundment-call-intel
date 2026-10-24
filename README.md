@@ -35,12 +35,13 @@ uv run callqa index         # checks the index, which is committed (.cache/callq
                             # per-call notes; .cache/embeddings-*.npy: chunk vectors): seconds; it
                             # re-reads only new or changed calls, or all of them if CHAT_MODEL or
                             # EMBED_MODEL differ from gpt-5.4-mini / text-embedding-3-small
-rm -rf .cache && uv run callqa index   # optional: ingest everything from scratch (~2–4 min)
+rm -rf .cache && uv run callqa index   # optional: ingest everything from scratch (~2–3 min)
 uv run callqa ask "Which competitors were mentioned, and in what context?"
 uv run callqa ask "..." --mode full     # baseline: whole dataset in the prompt
 uv run callqa ask "..." --json          # raw result, including the plan and every citation check
 uv run callqa                           # interactive prompt
-uv run pytest                           # offline unit tests (parser, chunking, citation checker, store, eval)
+uv run pytest                           # offline unit tests (parser, chunking, citation checker, store,
+                                        # claims, topic and per-call checks, eval)
 ```
 
 The client speaks the OpenAI API. With a plain OpenAI key, set only `LLM_API_KEY`. For Azure AI Foundry
@@ -93,9 +94,10 @@ question
 - **Ingestion** (`callqa/store.py`): each call is read once when it is ingested, and the results go
   into one SQLite file. The handler is idempotent by call id and a digest of content, model and prompt
   versions, so an unchanged call costs nothing and a changed one is replaced in one transaction. Two
-  passes per call, every quote checked by the citation checker:
+  kinds of read per call, every quote checked by the citation checker:
   - **vendor claims** (`callqa/claims.py`): what OrbitFlow staff assert about the product under 12
-    topics, kept only if said by vendor staff (about 530, one per turn and topic, merged from two passes; see *Known limitations*). Used whole for consistency questions, by
+    topics, kept only if said by vendor staff (549 in the committed index, one per turn and topic, merged
+    from two extraction passes; see *Known limitations*). Used whole for consistency questions, by
     topic for product-fact questions ("Is SSO on Growth?");
   - **notes** (`callqa/notes.py`): the call's points under 10 fields (needs, pains, objections,
     competitors, integrations, pricing, decision process, buying signals, outcome, how the team ran
@@ -136,7 +138,7 @@ question
    the question, so similarity search cannot find it. Putting
    every vendor statement on a topic side by side makes a contradiction visible: "SSO is on all plans"
    (one AE) next to statements in nine other calls that SAML SSO is Enterprise. The planner switches to this
-   context only for questions about the vendor's consistency. Comparing ~600 statements in one pass
+   context only for questions about the vendor's consistency. Comparing ~550 statements in one pass
    was not reliable with low reasoning (the "completely no-code" contradiction was found in 3 of 5
    replays on the same context), so each of the 12 topics is first checked for contradictions by its
    own small call, in parallel (`callqa/conflicts.py`, ~5 s), and the answer step weighs what they
@@ -248,9 +250,9 @@ What I take from it:
   in `eval/EVALUATION.md`).
 - **Two different bottlenecks.** Questions about one or a few calls get whole transcripts, evidence
   recall is ~1.0, and the misses are in the answer step (details left out: q13–q15, q18). Questions
-  across all calls get the notes written at ingestion, and there the gaps are retrieval: q09 ("how do
-  renewals differ from new business?") reaches about a third of its evidence turns, and a pattern that only
-  shows across calls is not in any one call's notes.
+  across all calls get the notes written at ingestion, which reach 0.78 of the evidence turns on the 7
+  such questions (from 0.45 on q01 to 1.0 on q02), and a pattern that only shows across calls is not in
+  any one call's notes.
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
 - **Fixed by splitting one pass into small parallel checks.** One pass of the answer step over many
   calls or statements dropped a call or a case. q11 (vendor contradictions) found only some of them;
@@ -268,7 +270,8 @@ What I take from it:
   written pilot criteria). q05 ("which capabilities matter most to prospects?") missed customer
   questions such as "Can we export audit logs to our own SIEM?", which the notes did not record; the
   notes prompt now records them as needs (10 of the 14 missed turns are noted now, 0 before):
-  evidence recall 0.42 → 0.56, still "partly" (core recall 0.5–0.67).
+  evidence recall 0.42 → 0.56; "partly" in both full runs (core recall 0.5–0.67), "yes" in both
+  runs of the 11 example questions (core 0.83).
 - **Known failures**: q18 ("are the lead scores reliable?") once concluded flatly that they are not,
   from one person's impression. q21 once took Sarah's rhetorical "costs a hundred thousand a year" over the £80K account value, a
   trap noted in `eval/GOLD_NOTES.md`. q30 (bonus) needs a second retrieval hop and is declined.
@@ -314,21 +317,24 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
 | comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
 | vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
-| the task's 11 example questions (`…-001127-auto-examples-low`): mean / median / slowest | 17.1 / 18.2 / 26.3 s |
-| full eval, 4 in parallel: mean / p50 / p95 | 8.6 / 7.8 / 21.0 s |
+| the task's 11 example questions, one at a time (`…-143451-auto-examples-low`): mean / median / slowest | 16.7 / 15.6 / 22.4 s |
+| full eval, 4 in parallel (`…-123718/123853-auto-final`): mean / p50 / p95 | 10.5–11.2 / 7.5–10.3 / ~21 s |
 
 What keeps it there:
 
 - **Low reasoning in the answer step** (`ANSWER_EFFORT`, default `low`). The inventory of relevant
   turns, written before the answer, does the work extra reasoning would do. `ANSWER_EFFORT=medium`
-  is 3–4× slower (72.9 s mean on the 11 examples, `…-002657-auto-examples-medium`) with verdicts
-  within the judge noise (8 / 3 / 0 vs 6 / 4 / 1 there; 16 vs 18–19 "yes" on the full eval).
+  is ~4× slower (63.8 s mean on the 11 examples, slowest 197 s, `…-144652-auto-examples-medium`)
+  with no better verdicts: 7 / 4 / 0 against 8 / 3 / 0 at `low`. q07, q08 and q09 are "partly" at
+  both, so what they miss is not fixed by more reasoning.
 - **The inventory is call and timestamp only**: every token in it is generated before the answer.
 - **Calls are read at ingestion**, so a question across calls selects notes instead of reading calls.
-- **Ingestion in parallel**: all 20 calls at once, claims and notes of a call side by side, well
-  under the deployment's limits (1M tokens and 1,000 requests a minute). It is bounded by the slowest
-  extraction, which generates 10–26K tokens (mostly reasoning) and takes up to ~2 min; a 180 s client
-  timeout used to cut those off and restart them, which made ingestion ~6 min.
+- **Ingestion in parallel**: all 20 calls at once (`INGEST_WORKERS`), and for each call the two
+  claims passes and the notes pass side by side, well under the deployment's limits (1M tokens and
+  1,000 requests a minute). It is bounded by the slowest extraction, which generates 10–26K tokens
+  (mostly reasoning) and takes up to ~2 min, so ingestion calls get a 600 s timeout and question-time
+  calls 120 s (`callqa/llm.py`): a hung request fails a question fast without cutting off a long
+  extraction.
 - **Progress on screen**: the CLI prints each step as it starts (`planning` → `plan: across question
   over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first
   output arrives in well under 2 s even when the answer takes 15 s.
@@ -364,13 +370,13 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
   extraction pass caught them; "who else said X" and two-step questions like q30 still rely on
   retrieval, which finds passages similar to the question, not passages that relate to each other.
 - **Exhaustive lists**: "which customers mentioned X" uses the notes written at ingestion, which
-  reach about two thirds of the supporting turns on the cross-call questions (evidence recall); a call
-  that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
+  reach 0.78 of the supporting turns on the cross-call questions (evidence recall, q01 lowest at
+  ~0.5); a call that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
   notes in the relevant fields, but "this list is complete" is still only as good as the notes.
   `--across map` reads every candidate call for the question and reaches ~0.9, at ~5× the tokens.
-- **Judgement questions** ("most likely to buy") are only as good as one model's read of the notes;
-  the answer cites signals but there is no scoring rubric behind it, and q07 moves between "partly"
-  and "no" across runs.
+- **Judgement questions** ("most likely to buy") get a verdict per call, each call read whole on its
+  own, but there is no scoring rubric behind the ranking: it is one model's read of the signals, and
+  q07 is "yes" in about half the runs (5 of 9) and "partly" in the rest.
 - **The checker verifies that the quote exists and that the cited person said it, not that it supports
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
 - **Header vs body disagreements** are only surfaced when the question touches them.
@@ -393,7 +399,7 @@ With another day:
 1. **A product-fact table at ingestion**: vendor claims clustered by topic and subject with counts
    (people, calls, last date, hedged), and conflicts recorded when a call arrives. q11 and q24 then
    read a table instead of putting every claim on a topic into the prompt (see the scaling table).
-2. **A full-context control for the map step**: the same 8 cross-call questions with all transcripts in
+2. **A full-context control for the map step**: the same 7 cross-call questions with all transcripts in
    the prompt (same token cost at 20 calls), to show whether reading call by call beats one big prompt
    on completeness and misattribution, not only on evidence recall.
 3. **A second retrieval hop**: let the answer step request more context ("need: the call where an
@@ -414,7 +420,7 @@ cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per qu
 | map step (read each candidate call) | ~139K tokens per cross-call question | ~6K tokens × every call: millions of tokens, minutes | **done**: notes at ingestion (default, ~26K tokens per cross-call question, most of the map step's gain); map kept as `--across map`, capped at 25 calls |
 | verdict per call, for questions that rank or classify calls (q02, q07, q28) | 100–150K tokens per such question at 10–20 calls | linear in the number of candidate calls | capped at 25 candidates; at scale, shortlist calls by their notes first and read only those |
 | notes at ingestion | ~1,100 notes, top 250 by field and similarity | grows with calls; the answer still gets ≤250 | add metadata filters and a shortlist of calls before ranking notes |
-| all vendor claims in one prompt (q11) | ~600 claims | tens of thousands, does not fit | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
+| all vendor claims, checked topic by topic in 12 parallel calls (q11) | ~550 claims, ~45 per topic on average | tens of thousands, a topic no longer fits one call | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
 | every vendor statement on a topic (q24) | 9 calls on SSO | hundreds per topic | the same table: "SAML SSO: Enterprise, 9 calls / 3 reps; all plans, 1 call, later hedged"; weighing becomes counting |
 | catalogue in the planner prompt | 20 lines | does not fit | metadata filters plus fuzzy search over companies and people |
 | per-call excerpt quota | 20 calls | thousands of excerpts | quota after filtering, on the top-N calls |
