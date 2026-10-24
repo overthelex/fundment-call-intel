@@ -20,7 +20,8 @@ Evidence
        data/calls/call-001_acme_logistics.txt:31
   ...
 
-[full: 1 calls, 4,999 words in context · 2 API calls · 9,266 in / 1,156 out tokens · 7.3s]
+[full: 1 calls, 5,009 words in context · 2 API calls · 10,881 in / 1,900 out tokens · 9.7s]
+[plan 2.0s (176 out) · context 0.0s · answer 7.7s (1,724 out) · check 0.0s]
 ```
 
 ## Setup and run
@@ -30,13 +31,14 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 ```bash
 uv sync
 cp .env.example .env        # then set LLM_API_KEY (an OpenAI key works as is)
-uv run callqa index         # once: ingests the calls (embeddings, vendor claims, per-call notes; ~5 min,
-                            # stored in .cache/callqa.db; re-running reads only new or changed calls)
+uv run callqa index         # once: ingests the calls (~6 min): vendor claims and per-call notes go to
+                            # .cache/callqa.db, chunk embeddings to .cache/embeddings-*.npy; re-running
+                            # reads only new or changed calls
 uv run callqa ask "Which competitors were mentioned, and in what context?"
 uv run callqa ask "..." --mode full     # baseline: whole dataset in the prompt
 uv run callqa ask "..." --json          # raw result, including the plan and every citation check
 uv run callqa                           # interactive prompt
-uv run pytest                           # offline unit tests (parser, chunking, citation checker)
+uv run pytest                           # offline unit tests (parser, chunking, citation checker, store, eval)
 ```
 
 The client speaks the OpenAI API. With a plain OpenAI key, set only `LLM_API_KEY`. For Azure AI Foundry
@@ -86,11 +88,11 @@ question
   versions, so an unchanged call costs nothing and a changed one is replaced in one transaction. Two
   passes per call, every quote checked by the citation checker:
   - **vendor claims** (`callqa/claims.py`): what OrbitFlow staff assert about the product under 12
-    topics, kept only if said by vendor staff (628 claims). Used whole for consistency questions, by
+    topics, kept only if said by vendor staff (about 520–650 claims, see *Known limitations*). Used whole for consistency questions, by
     topic for product-fact questions ("Is SSO on Growth?");
   - **notes** (`callqa/notes.py`): the call's points under 10 fields (needs, pains, objections,
     competitors, integrations, pricing, decision process, buying signals, outcome, how the team ran
-    the call), each tied to a turn and embedded (1,083 notes). Questions across calls select notes by
+    the call), each tied to a turn and embedded (about 1,000–1,200 notes). Questions across calls select notes by
     field and similarity instead of reading the calls.
 - **Answering** (`callqa/prompts.py`): the model sees whose side each speaker is on. It is told that a
   vendor's product statement is a claim, not a fact. It is told to report contradictions instead of
@@ -124,7 +126,7 @@ question
    place in quality, cost and latency. It is not assumed to help.
 6. **Contradictions get their own context, not better retrieval.** "Has the vendor given inconsistent
    answers?" is about a relationship between two turns in different calls, and neither turn looks like
-   the question, so similarity search cannot find it (the first version failed it in every run). Putting
+   the question, so similarity search cannot find it. Putting
    every vendor statement on a topic side by side makes a contradiction visible: "SSO is on all plans"
    (one AE) next to statements in nine other calls that SAML SSO is Enterprise. The planner switches to this
    context only for questions about the vendor's consistency.
@@ -136,7 +138,7 @@ question
    at most medium.
 7. **Read calls when they arrive, not when a question is asked.** Questions across calls need turns
    from every call, and retrieval reached about half of them. Reading every candidate call per
-   question (a map step, still available as `--across map`) fixed that but cost ~139K tokens per such
+   question (a map step, available as `--across map`) does that too, but costs ~139K tokens per such
    question at 20 calls and grows with every call. Notes written at ingestion keep most of the gain
    for ~26K tokens, and the cost per question does not grow with the corpus.
 8. **One OpenAI-compatible client.** It runs on OpenAI or Azure by changing env vars; no framework.
@@ -196,104 +198,66 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 
 ### Results
 
-29 headline questions, `gpt-5.4-mini` answering, pipeline run 3 times, baseline once. These runs
-(17.10) predate the vendor-claims context, conflict weighing and name checks; the runs of the
-current code are the paragraphs after the table.
+The current code, 29 headline questions (q30 is a bonus), `gpt-5.4-mini` answering, Claude Opus
+judging. The first and third columns ran on 24.10 from a fresh clone of this repo, following the
+steps above; the second is another run of the same code on another index.
 Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/README.md).
 
-| | pipeline (`auto`) | whole dataset in prompt (`full`) |
-|---|---|---|
-| context recall | 1.00 in every run | 1.00 (by construction) |
-| citation validity | 1.00 / 1.00 / 0.96 | 0.94 (6 quotes attached to the wrong call) |
-| correct: yes / partly / no | 14 / 14 / 1 in every run | 8 / 20 / 1 |
-| core fact recall | 0.62–0.65 | 0.58 |
-| abstention: right on unanswerable / false on answerable | 5/5 · 0–1 of 24 | 5/5 · 0 of 24 |
-| prompt tokens per question | ~13K | 122K |
-
-A fourth run from a fresh clone of this repo on 23.10, following this README
-(`eval/results/20261023-120606-auto-fresh-clone.md`, 3 min): yes / partly / no 12 / 16 / 1, context
-recall 1.00, one citation attached to the wrong call (caught by the checker), abstention 5/5 with no
-false abstentions, ~13K prompt tokens, and the same failures (q11, q30).
-
-**After adding the vendor-claims context (23.10)**, q11 is answered correctly: both contradictions
-(SSO on all plans vs Enterprise-only, "completely no-code" vs "we don't claim every workflow is
-no-code"), in 4 of 4 manual runs and in the eval run (`eval/results/20261023-122047-auto-vendor-claims.md`:
-13 / 15 / 1 overall, citation validity 1.00, abstention 5/5). Only q11 is routed to the new context;
-the one "no" in that run is q05, a long list that stopped early, which was "partly" before.
-
-**After weighing conflicts (23.10)**, q24 ("Is SSO on Growth?") is answered correctly for the first
-time: it reports the conflict, then says Enterprise-only is better supported because nine calls and
-three reps say so, while the single "all plans" came from one AE who later said he was only "fairly
-sure". Run `eval/results/20261023-204145-auto-weighing.md`: yes / partly / no **15 / 14 / 0**, citation
-validity 1.00 with no failed citations, abstention 5/5 with no false abstentions, ~14.5K prompt tokens.
-Within the judge noise band, but q11 and q24 are now both "yes".
-
-**After the name checks (23.10)**, q06 ("Acme Corp") is "yes" for the first time: the answer opens
-with "Taking Acme Corp to mean Acme Logistics", and the note sits under the answer, where the judge
-now sees it too. For q16 ("Priya") the required mention of the other Priyas is now met by the note,
-from code; the answer still leaves out that her figures were from memory, so it stays "partly". Run
-`eval/results/20261023-210435-auto-names.md`: 14 / 14 / 1. The changes do not touch q05, q11 and
-q29, which moved anyway: q05 is the long list that stops early, q11 found only the SSO contradiction
-this time (both in the previous runs), and q29 was judged as not declining although it says
-"no Enterprise list price, custom priced". That is the noise this eval measures: compare per question,
-not the totals.
-
-**With turn-level evidence recall (23.10)**, run `eval/results/20261023-214420-auto-diagnostics.md`:
-14 / 15 / 0, abstention 5/5, citation validity 1.00. Context recall is 1.00 but evidence recall is
-**0.82**, and it splits by context mode: **0.96** when whole calls are sent (15 questions) and **0.54**
-when excerpts are retrieved (8 cross-call questions; q05 0.08, q01 0.32, q09 0.36, q04 0.41). First
-failed step: answer 7, retrieval 6, attribution 1.
-
-**Three ways to answer questions across calls (23.10)**, same code otherwise (all with the turn
-inventory except the first):
-
-| | retrieval only | map step at question time | notes at ingestion (default) |
+| | pipeline (`auto`), fresh clone | pipeline, 2nd run | whole dataset in prompt (`full`) |
 |---|---|---|---|
-| run | `…-214420-auto-diagnostics` | `…-224354-auto-map` | `…-231007-auto-notes` |
-| yes / partly / no (29) | 14 / 15 / 0 | 20 / 9 / 0 | 16 / 13 / 0 |
-| the 7 cross-call questions that use it: "yes" | 3 | 4 | 5 |
-| evidence recall: all / the 7 | 0.82 / 0.48 | 0.94 / 0.89 | 0.86 / 0.65 |
-| core fact recall: all / the 7 | 0.70 / 0.66 | 0.81 / 0.84 | 0.78 / 0.75 |
-| atomic fact recall, all | 0.57 | 0.66 | 0.68 |
-| prompt tokens per question: mean / the 7 | 14.5K / 18K | 47K / 139K | 17K / 26K |
-| failed citations (all flagged) | 1 | 6 | 4 |
+| run | `…-094317-auto-fresh-clone` | `…-235835-auto-effort-low` | `…-094601-full-fresh-clone` |
+| correct: yes / partly / no | **19 / 9 / 1** | 18 / 10 / 1 | 13 / 14 / 2 |
+| core / atomic fact recall | 0.79 / 0.67 | 0.80 / 0.67 | 0.73 / 0.61 |
+| context recall · evidence recall | 1.00 · 0.87 | 1.00 · 0.87 | 1.00 · 1.00 (by construction) |
+| citation validity | 0.99 | 0.99 | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 1 · 3 · 1 | 2 · 2 · 0 | 4 · 10 · 3 |
+| abstention: right on unanswerable · false on answerable | 5/5 · 0 of 24 | 4/5 · 0 of 24 | 5/5 · 0 of 24 |
+| penalties hit | 2 | 1 | 3 |
+| prompt tokens per question | 17K | 17K | 123K |
+| latency mean / p95, 4 questions in parallel | 8.6 / 21.0 s | 9.9 / 21.7 s | 11.3 / 38.5 s |
+| first failed step | answer 5, retrieval 4, attribution 2 | answer 6, retrieval 4, attribution 2, abstention 1 | answer 15, attribution 4 |
 
-On the cross-call questions the notes default sits between the other two on evidence and core recall
-(notes are written without knowing the question), at about a fifth of the map step's tokens; its 5
-"yes" against the map step's 4 is within the judge noise. One cost the table hides: indexing takes
-~5 min instead of ~4, once. The full-run totals differ within the judge noise
-(±6 on yes/partly). These three runs used medium reasoning in the answer step; latency is in *Speed*.
-
-**With the map step and the turn inventory (23.10)**, run `eval/results/20261023-224354-auto-map.md`:
-**20 / 9 / 0**, the first result clearly outside the judge noise band (14–15 "yes" before). Evidence
-recall 0.94 (cross-call questions 0.89, was 0.54), core fact recall 0.81 (was 0.70), abstention 5/5.
-The costs are real: mean prompt tokens 47K per question (was 14.5K; a mapped question reads every
-candidate call, ~139K tokens, about the same as the whole-dataset baseline at 20 calls), mean latency
-42 s under the eval's 4 parallel questions (mapped ones ~90 s), and 6 failed citations instead of 1
-(three quotes from Ember's Noah Williams attached to other calls in mapped answers, three in whole-call
-answers), all caught and marked ✗ by the checker. The inventory alone, replayed on the 7 questions that
-failed in the answer step, raised core recall 0.64 → 0.69 and atomic 0.48 → 0.56 (two replays each),
-without changing verdicts: the facts it still misses are context around a correct direct answer.
-The map step is capped at 25 candidate calls; why it does not scale and what replaces it is in
-*Scaling to thousands of calls*.
+Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 6 questions, and the
+baseline differs from both pipeline runs on 5, on each of which the two pipeline runs agree: it is
+worse on q03, q08, q16 and q24, and better on q30, where it sees every call.
 
 What I take from it:
 
-- **Two different bottlenecks.** Questions about one or a few calls get whole transcripts, so
-  everything reaches the model and the misses are in the answer step (details left out). Questions
-  across all calls get retrieved excerpts, and there retrieval is the bottleneck: about half the
-  supporting turns never reach the model. Earlier versions of this README said "retrieval is not the
-  bottleneck", based on call-level recall only; turn-level recall showed that was wrong for
-  cross-call questions. The map step closes most of that gap (0.54 → 0.89), at query-time cost.
-- **The pipeline is no worse than the brute-force baseline at ~1/9 of the tokens, and its quotes are
-  more reliable.** Not "better": re-judging the same answers with the same judge moved 6 of 30
-  verdicts between yes and partly. The deterministic metrics and the yes-vs-no line are stable; the yes/partly split is not.
-- **Unanswerable and near-miss questions work** in all runs (Kestrel's ERP, ISO 27001, Enterprise price).
-- **Known failures**: q11 ("has the vendor given inconsistent answers?") was wrong in every run of the
-  first version: the two sides of each contradiction sit in different calls and similarity search
-  does not find disagreement. It is fixed by the vendor-claims context (above). q24 found both sides
-  of the SSO question but would not weigh them; fixed by weighing (above). q30 (bonus) needs a second
-  retrieval hop.
+- **The pipeline is ahead of the brute-force baseline at about 1/7 of the tokens.** The yes/partly
+  gap (19 and 18 vs 13) is about the size of the judge's own noise (re-judging the same answers moved
+  6 of 30 verdicts), so the safe claim is "at least as good". Two differences are not noise: the
+  baseline attaches 3–4× more quotes to the wrong call or speaker (17 failed citations vs 4–5), and
+  on q24 ("Is SSO on Growth?") it concluded "yes, all plans" from one AE against nine calls that say
+  Enterprise, the error the vendor-statement table and the weighing rules exist to prevent (example 1
+  in `eval/EVALUATION.md`).
+- **Two different bottlenecks.** Questions about one or a few calls get whole transcripts, evidence
+  recall is ~1.0, and the misses are in the answer step (details left out: q13–q15, q18). Questions
+  across all calls get the notes written at ingestion, and there the gaps are retrieval: q09 ("how do
+  renewals differ from new business?") reaches about a third of its evidence turns, and a pattern that only
+  shows across calls is not in any one call's notes.
+- **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
+- **Unstable questions**: q11 (vendor contradictions) found both contradictions in one run and only
+  the SSO one in the other, although both sides of the no-code one were in the context; q07 ("who
+  is most likely to buy?") is a judgement call and was "no" once, for ranking BrightPath on top
+  without its blocker. q30 (bonus) needs a second retrieval hop and is declined.
+
+### Options for questions across calls
+
+`--across` picks how a question across calls is answered; measured on the same eval, with
+`ANSWER_EFFORT=medium` (the retrieval run was also without the turn inventory):
+
+| | `retrieval` | `map` (read each call per question) | `notes` (default, read at ingestion) |
+|---|---|---|---|
+| run | `…-214420-auto-diagnostics` | `…-224354-auto-map` | `…-231007-auto-notes` |
+| yes / partly / no (29) | 14 / 15 / 0 | 20 / 9 / 0 | 16 / 13 / 0 |
+| the 7 cross-call questions: "yes" | 3 | 4 | 5 |
+| evidence recall: all / the 7 | 0.82 / 0.48 | 0.94 / 0.89 | 0.86 / 0.65 |
+| core fact recall: all / the 7 | 0.70 / 0.66 | 0.81 / 0.84 | 0.78 / 0.75 |
+| prompt tokens per question: mean / the 7 | 14.5K / 18K | 47K / 139K | 17K / 26K |
+
+The map step reaches the most evidence but reads every candidate call on every question, so it is
+capped at 25 calls (*Scaling to thousands of calls*). Notes keep most of the gain at a fifth of the
+tokens, and their cost does not grow with the corpus.
 
 The gold set was drafted by an LLM, every citation checked against the source, and the 19 disputed
 points decided by a human (`eval/review/`).
@@ -305,45 +269,25 @@ a question about one call in ≤ 8 s, a question across calls in ≤ 20 s, p95 �
 
 Latency follows the tokens the model *generates* in the answer step, at roughly 180 tokens/s;
 context size, retrieval, note selection and citation checks are each under a second. The breakdown
-is printed under every answer (`[plan 1.3s · context 0.5s · answer 8.4s (1,298 out) · check 0.0s]`),
-is in `--json` → `steps`, and the eval reports p50/p95 and the answer step's output tokens.
+is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7.7s (1,724 out) · check
+0.0s]`), is in `--json` → `steps`, and the eval reports p50/p95 and the answer step's output tokens.
 
-| one question at a time | before (medium reasoning) | now (low reasoning) |
-|---|---|---|
-| one call, whole transcript ("What was Verity paying?") | 7.7 s | 5.5 s |
-| product fact, excerpts + vendor statements ("SSO on Growth?") | 30 s | 10.2 s |
-| across calls, ingestion notes ("Why do prospects hesitate?") | 85 s | 18.9 s |
+| one question at a time | latency |
+|---|---|
+| one call, whole transcript ("What was Verity paying?") | 5.5 s |
+| product fact, excerpts + vendor statements ("SSO on Growth?") | 10.2 s |
+| across calls, ingestion notes ("Why do prospects hesitate?") | 18.9 s |
+| the task's 11 example questions (`…-001127-auto-examples-low`): mean / median / slowest | 17.1 / 18.2 / 26.3 s |
+| full eval, 4 in parallel: mean / p50 / p95 | 8.6 / 7.8 / 21.0 s |
 
-| full eval, 4 questions in parallel | medium | low (`…-235835-auto-effort-low`) |
-|---|---|---|
-| mean / p50 / p95 latency | 36 / 33 / 129 s | 9.9 / 8.1 / 21.7 s |
-| answer step output tokens, mean | 6.3K | 1.3K |
-| yes / partly / no · core · atomic | 16 / 13 / 0 · 0.79 · 0.67 | 18 / 10 / 1 · 0.80 · 0.67 |
+What keeps it there:
 
-The 11 example questions from the task, run one at a time (`--only q01,…,q11 --workers 1`):
-
-| | medium (`…-002657-auto-examples-medium`) | low (`…-001127-auto-examples-low`) |
-|---|---|---|
-| mean / median / slowest | 72.9 / 61.3 / 175.5 s | **17.1 / 18.2 / 26.3 s** (4.3× faster) |
-| all 11 in a row | 13.4 min | 3.2 min |
-| yes / partly / no · core recall | 8 / 3 / 0 · 0.82 | 6 / 4 / 1 · 0.84 |
-
-On these 11, completeness is the same but three verdicts moved down (q02 and q05 to "partly", q10 to
-"no", the recurring "all five cold calls got a follow-up") and one up (q08); on the full 29 the
-direction was the opposite (18 vs 16 "yes"). Both are within the judge noise, so the honest summary
-is: 3–4× faster, same completeness, verdicts within noise and slightly lower on the task's examples.
-If that matters more than speed, medium reasoning can be used for cross-call questions only.
-
-What was tried, measured on the full eval:
-
-- **Shorter inventory** (call and timestamp only, no description per turn): no gain. Most output
-  tokens were reasoning, not the inventory (q04: 18.5K tokens out, an inventory of ~50 entries is
-  under 1K), and the model listed more turns once each entry was cheap (32 vs 19 on average). Kept,
-  since quality was the same (`…-235550-auto-compact`).
-- **Low reasoning in the answer step** (`ANSWER_EFFORT`, default now `low`): 4–5× less output and
-  3–4× lower latency with no loss in quality. The inventory written before the answer does the work
-  the extra reasoning was doing. The one "no" (q10, "all five cold calls got a follow-up", Trafford
-  did not) was the same error as in the medium run, there judged "partly".
+- **Low reasoning in the answer step** (`ANSWER_EFFORT`, default `low`). The inventory of relevant
+  turns, written before the answer, does the work extra reasoning would do. `ANSWER_EFFORT=medium`
+  is 3–4× slower (72.9 s mean on the 11 examples, `…-002657-auto-examples-medium`) with verdicts
+  within the judge noise (8 / 3 / 0 vs 6 / 4 / 1 there; 16 vs 18–19 "yes" on the full eval).
+- **The inventory is call and timestamp only**: every token in it is generated before the answer.
+- **Calls are read at ingestion**, so a question across calls selects notes instead of reading calls.
 - **Progress on screen**: the CLI prints each step as it starts (`planning` → `plan: across question
   over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first
   output arrives in well under 2 s even when the answer takes 15 s.
@@ -352,7 +296,7 @@ Not done yet, in order of expected gain: stream the answer text and check each c
 arrives; run the planner on a smaller model and embed the question while it plans (~1–2 s); keep the
 static prompt and the transcripts ahead of the question so the provider's prefix cache applies to
 repeated questions on the same calls; cache answers by normalised question and data version; and
-provisioned throughput, since the spread under load (8 s alone vs up to 22 s p95 with 4 in parallel)
+provisioned throughput, since the spread under load (8 s alone vs up to 21 s p95 with 4 in parallel)
 is the provider's.
 
 ## Diagnosing a bad answer
@@ -378,16 +322,20 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
   handled by the claims table, but only for statements by OrbitFlow staff and only as well as the
   extraction pass caught them; "who else said X" and two-step questions like q30 still rely on
   retrieval, which finds passages similar to the question, not passages that relate to each other.
-- **Exhaustive lists**: "which customers mentioned X" can miss a call that mentions X once in passing
-  if that excerpt ranks low, or if the answer stops early. The answer cannot say "this list is complete".
-- **Judgement questions** ("most likely to buy") are only as good as one model's read of excerpts; the
-  answer cites signals but there is no scoring rubric behind it.
+- **Exhaustive lists**: "which customers mentioned X" uses the notes written at ingestion, which
+  reach about two thirds of the supporting turns on the cross-call questions (evidence recall); a call
+  that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
+  notes in the relevant fields, but "this list is complete" is still only as good as the notes.
+  `--across map` reads every candidate call for the question and reaches ~0.9, at ~5× the tokens.
+- **Judgement questions** ("most likely to buy") are only as good as one model's read of the notes;
+  the answer cites signals but there is no scoring rubric behind it, and q07 moves between "partly"
+  and "no" across runs.
 - **The checker verifies that the quote exists and that the cited person said it, not that it supports
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
 - **Header vs body disagreements** are only surfaced when the question touches them.
-- **Ingestion is not deterministic.** Four fresh indexes of the same 20 calls gave 522–628 vendor
-  claims and 973–1,185 notes, and one gave three calls no claims at all (now retried, with a
-  warning). Answers that depend on a single statement (q11 needs Alastair's "all plans" in CALL-006)
+- **Ingestion is not deterministic.** Five fresh indexes of the same 20 calls gave 522–647 vendor
+  claims and 973–1,185 notes, and one gave three calls no claims at all (an empty extraction is
+  retried once, then reported by `callqa index`). Answers that depend on a single statement (q11 needs Alastair's "all plans" in CALL-006)
   can differ between two people's indexes; the claims and notes are inspectable in `.cache/callqa.db`.
 - **The gold set is small (30) and LLM-drafted** (see `eval/EVALUATION.md`). The judge is
   from a different vendor than the answering model, but it is still an LLM and it is noisy on the
@@ -420,8 +368,8 @@ cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per qu
 | part | now | at thousands of calls | what to do instead |
 |---|---|---|---|
 | map step (read each candidate call) | ~139K tokens per cross-call question | ~6K tokens × every call: millions of tokens, minutes | **done**: notes at ingestion (default, ~26K tokens per cross-call question, most of the map step's gain); map kept as `--across map`, capped at 25 calls |
-| notes at ingestion | 1,083 notes, top 250 by field and similarity | grows with calls; the answer still gets ≤250 | add metadata filters and a shortlist of calls before ranking notes |
-| all vendor claims in one prompt (q11) | 628 claims | tens of thousands, does not fit | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
+| notes at ingestion | ~1,100 notes, top 250 by field and similarity | grows with calls; the answer still gets ≤250 | add metadata filters and a shortlist of calls before ranking notes |
+| all vendor claims in one prompt (q11) | ~600 claims | tens of thousands, does not fit | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
 | every vendor statement on a topic (q24) | 9 calls on SSO | hundreds per topic | the same table: "SAML SSO: Enterprise, 9 calls / 3 reps; all plans, 1 call, later hedged"; weighing becomes counting |
 | catalogue in the planner prompt | 20 lines | does not fit | metadata filters plus fuzzy search over companies and people |
 | per-call excerpt quota | 20 calls | thousands of excerpts | quota after filtering, on the top-N calls |
@@ -431,10 +379,10 @@ cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per qu
 
 ### Production
 
-- **Ingestion**: new calls arrive as events; parse → chunk → embed → extract notes per call,
-  idempotent by call id + content hash (the embedding cache already works this way). A proper store
-  (Postgres + pgvector or a vector DB) replaces in-memory numpy/BM25, with metadata filters (date,
-  segment, rep, stage) in the query.
+- **Ingestion**: new calls arrive as events and trigger `Store.ingest`, which is already idempotent
+  by call id + content hash and writes each call in one transaction. At scale the SQLite file becomes
+  Postgres + pgvector (same tables), the chunk embeddings (now an `.npy` cache) and BM25 (now
+  rebuilt in memory at start-up) move into it, and queries get metadata filters (date, segment, rep, stage).
 - **Security and privacy**: transcripts hold customer PII and commercial terms. That means
   tenant/role-based access applied as a retrieval filter (a rep sees their own accounts, a manager
   their team's), a region-pinned LLM endpoint with no training on data and zero/limited retention,
