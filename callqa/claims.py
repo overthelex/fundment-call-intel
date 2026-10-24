@@ -25,7 +25,7 @@ from .verify import check_citation
 if TYPE_CHECKING:
     from .store import Store
 
-PROMPT_VERSION = "claims-v2"
+PROMPT_VERSION = "claims-v3"  # v3: two passes merged at ingestion (store.py)
 
 Topic = Literal[
     "plans and what each tier includes",

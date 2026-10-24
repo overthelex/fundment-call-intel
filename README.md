@@ -31,9 +31,11 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 ```bash
 uv sync
 cp .env.example .env        # then set LLM_API_KEY (an OpenAI key works as is)
-uv run callqa index         # once: ingests the calls (~2–3 min): vendor claims and per-call notes go to
-                            # .cache/callqa.db, chunk embeddings to .cache/embeddings-*.npy; re-running
-                            # reads only new or changed calls
+uv run callqa index         # checks the index, which is committed (.cache/callqa.db: vendor claims and
+                            # per-call notes; .cache/embeddings-*.npy: chunk vectors): seconds; it
+                            # re-reads only new or changed calls, or all of them if CHAT_MODEL or
+                            # EMBED_MODEL differ from gpt-5.4-mini / text-embedding-3-small
+rm -rf .cache && uv run callqa index   # optional: ingest everything from scratch (~2–4 min)
 uv run callqa ask "Which competitors were mentioned, and in what context?"
 uv run callqa ask "..." --mode full     # baseline: whole dataset in the prompt
 uv run callqa ask "..." --json          # raw result, including the plan and every citation check
@@ -90,7 +92,7 @@ question
   versions, so an unchanged call costs nothing and a changed one is replaced in one transaction. Two
   passes per call, every quote checked by the citation checker:
   - **vendor claims** (`callqa/claims.py`): what OrbitFlow staff assert about the product under 12
-    topics, kept only if said by vendor staff (about 520–650 claims, see *Known limitations*). Used whole for consistency questions, by
+    topics, kept only if said by vendor staff (about 530, one per turn and topic, merged from two passes; see *Known limitations*). Used whole for consistency questions, by
     topic for product-fact questions ("Is SSO on Growth?");
   - **notes** (`callqa/notes.py`): the call's points under 10 fields (needs, pains, objections,
     competitors, integrations, pricing, decision process, buying signals, outcome, how the team ran
@@ -208,38 +210,35 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 ### Results
 
 The current code, 29 headline questions (q30 is a bonus), `gpt-5.4-mini` answering, Claude Opus
-judging. The first and third columns ran on 24.10 from a fresh clone of this repo, following the
-steps above; the second is another run of the same code on another index.
+judging, 24.10. Both pipeline runs used the index committed to the repo, so
+`uv run python eval/run_eval.py` on a fresh clone starts from the same claims and notes.
 Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/README.md).
 
-| | pipeline (`auto`), fresh clone | pipeline, 2nd run | whole dataset in prompt (`full`) |
+| | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
-| run | `…-094317-auto-fresh-clone` | `…-235835-auto-effort-low` | `…-094601-full-fresh-clone` |
-| correct: yes / partly / no | **19 / 9 / 1** | 18 / 10 / 1 | 13 / 14 / 2 |
-| core / atomic fact recall | 0.79 / 0.67 | 0.80 / 0.67 | 0.73 / 0.61 |
-| context recall · evidence recall | 1.00 · 0.87 | 1.00 · 0.87 | 1.00 · 1.00 (by construction) |
-| citation validity | 0.99 | 0.99 | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 1 · 3 · 1 | 2 · 2 · 0 | 4 · 10 · 3 |
-| abstention: right on unanswerable · false on answerable | 5/5 · 0 of 24 | 4/5 · 0 of 24 | 5/5 · 0 of 24 |
-| penalties hit | 2 | 1 | 3 |
-| prompt tokens per question | 17K | 17K | 123K |
-| latency mean / p95, 4 questions in parallel | 8.6 / 21.0 s | 9.9 / 21.7 s | 11.3 / 38.5 s |
-| first failed step | answer 5, retrieval 4, attribution 2 | answer 6, retrieval 4, attribution 2, abstention 1 | answer 15, attribution 4 |
+| run | `…-113617-auto-committed-index` | `…-113750-auto-committed-index` | `…-094601-full-fresh-clone` |
+| correct: yes / partly / no | **17 / 11 / 1** | **17 / 12 / 0** | 13 / 14 / 2 |
+| core / atomic fact recall | 0.74 / 0.65 | 0.76 / 0.66 | 0.73 / 0.61 |
+| context recall · evidence recall | 1.00 · 0.88 | 1.00 · 0.88 | 1.00 · 1.00 (by construction) |
+| citation validity | 1.00 | 1.00 | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 0 · 4 · 0 | 0 · 0 · 1 | 4 · 10 · 3 |
+| abstention: right on unanswerable · false on answerable | 4/5 · 0 of 24 | 4/5 · 0 of 24 | 5/5 · 0 of 24 |
+| penalties hit | 2 | 0 | 3 |
+| prompt tokens per question | 21K | 21K | 123K |
+| latency mean / p95, 4 questions in parallel | 10.1 / 22.1 s | 9.3 / 18.6 s | 11.3 / 38.5 s |
+| first failed step | answer 8, retrieval 4, attribution 2, abstention 1 | answer 7, retrieval 4, attribution 1, abstention 1 | answer 15, attribution 4 |
 
-Two later fresh-clone runs of the current code, after the q10 and q11 fixes below, gave 17 / 11 / 1
-(`…-104212-auto-fresh-clone-2`) and 16 / 12 / 1 (`…-105919-auto-fresh-clone-3`), q10 and q11 "yes" in
-both: within the judge noise of the table.
-
-Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 6 questions, and the
-baseline differs from both pipeline runs on 5, on each of which the two pipeline runs agree: it is
-worse on q03, q08, q16 and q24, and better on q30, where it sees every call.
+Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 4 of 30 (q02, q08,
+q16, q26). The baseline differs from both on 5: worse on q03, q07, q11 and q24, better on q30, where
+it sees every call. Runs of the same code on indexes built with a single claims pass gave 16–18
+"yes" and once 13 (`eval/results/README.md`); that spread is why claims are now extracted twice.
 
 What I take from it:
 
-- **The pipeline is ahead of the brute-force baseline at about 1/7 of the tokens.** The yes/partly
-  gap (19 and 18 vs 13) is about the size of the judge's own noise (re-judging the same answers moved
+- **The pipeline is ahead of the brute-force baseline at about 1/6 of the tokens.** The yes/partly
+  gap (17 vs 13) is about the size of the judge's own noise (re-judging the same answers moved
   6 of 30 verdicts), so the safe claim is "at least as good". Two differences are not noise: the
-  baseline attaches 3–4× more quotes to the wrong call or speaker (17 failed citations vs 4–5), and
+  baseline attaches far more quotes to the wrong call or speaker (17 failed citations vs 1–4), and
   on q24 ("Is SSO on Growth?") it concluded "yes, all plans" from one AE against nine calls that say
   Enterprise, the error the vendor-statement table and the weighing rules exist to prevent (example 1
   in `eval/EVALUATION.md`).
@@ -249,14 +248,16 @@ What I take from it:
   renewals differ from new business?") reaches about a third of its evidence turns, and a pattern that only
   shows across calls is not in any one call's notes.
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
-- **Unstable questions**: q07 ("who is most likely to buy?") is a judgement call and was "no" once,
-  for ranking BrightPath on top without its blocker; two questions were fixed after the fresh-clone
-  run, each by splitting one pass over everything into small parallel checks: q11 (vendor
-  contradictions, "partly" there) by a check per claim topic, "yes" in 3 of 3 runs
-  (`…-q11-topic-check`); q10 ("which cold calls produced a follow-up?", which said "all five" in 3 of
-  5 replays although Trafford's Yvonne said "I won't read it") by a verdict per call, "yes" in 4 of 4
-  (`…-per-call-check`). q30 (bonus)
-  needs a second retrieval hop and is declined.
+- **Known failures**: q07 ("which prospects seem most likely to purchase?") is "partly" in both runs
+  (and "no" on earlier indexes): a judgement call, graded on tiers, and the answer leaves Acme out
+  or drops the caveats on the top prospects. q02 ("which customers mentioned Salesforce
+  integrations?") was "no" once, for listing BrightPath and Greenline. q30 (bonus) needs a second
+  retrieval hop and is declined.
+- **Fixed by splitting one pass into small parallel checks**: q11 (vendor contradictions) found only
+  some of the contradictions with one pass over ~600 statements; a check per claim topic makes it
+  "yes" in both runs. q10 ("which cold calls produced a follow-up?") said "all five" in 3 of 5
+  replays although Trafford's Yvonne said "I won't read it"; a verdict per call makes it "yes" in both
+  runs.
 
 ### Options for questions across calls
 
@@ -357,10 +358,13 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
 - **The checker verifies that the quote exists and that the cited person said it, not that it supports
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
 - **Header vs body disagreements** are only surfaced when the question touches them.
-- **Ingestion is not deterministic.** Five fresh indexes of the same 20 calls gave 522–647 vendor
-  claims and 973–1,185 notes, and one gave three calls no claims at all (an empty extraction is
-  retried once, then reported by `callqa index`). Answers that depend on a single statement (q11 needs Alastair's "all plans" in CALL-006)
-  can differ between two people's indexes; the claims and notes are inspectable in `.cache/callqa.db`.
+- **Ingestion is not deterministic.** Fresh indexes of the same 20 calls differ: the notes ranged
+  from 973 to 1,194, and one single claims pass left out "That's fine, it's completely no-code", so
+  q11 could not find that contradiction on that index. Claims are now extracted twice and merged
+  (14 of the 15 vendor statements behind the contradictions in `eval/GOLD_NOTES.md` are in the
+  committed index, against 13 with one pass; the miss is Leo offering enablement free), an empty
+  extraction is retried, and the index behind the headline runs is committed, so a fresh clone
+  answers from the same claims and notes (inspectable in `.cache/callqa.db`).
 - **The gold set is small (30) and LLM-drafted** (see `eval/EVALUATION.md`). The judge is
   from a different vendor than the answering model, but it is still an LLM and it is noisy on the
   yes/partly boundary.

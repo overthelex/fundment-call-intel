@@ -54,6 +54,16 @@ def digest(call: Call, llm: LLM) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 
+def merge_claims(*passes: list[StoredClaim]) -> list[StoredClaim]:
+    """Union of several extraction passes over one call, one claim per turn and topic."""
+    seen, out = set(), []
+    for c in (c for p in passes for c in p):
+        if (c.turn_idx, c.topic) not in seen:
+            seen.add((c.turn_idx, c.topic))
+            out.append(c)
+    return sorted(out, key=lambda c: c.turn_idx)
+
+
 class Store:
     def __init__(self, calls: list[Call], llm: LLM, path: Path = Path(".cache/callqa.db")) -> None:
         self.calls = {c.call_id: c for c in calls}
@@ -75,18 +85,20 @@ class Store:
     def read(self, call: Call, usage: Usage | None = None) -> tuple[list[StoredClaim], list[StoredNote], np.ndarray]:
         """The LLM work for one call; no database access, so calls can be read in parallel.
 
-        An empty result is retried once: on a fresh index the extraction occasionally came back empty
-        for a whole call (3 of 20 calls without claims in one run, none in the next), and a call with
-        no claims silently removes one side of every contradiction it holds."""
+        Vendor claims are extracted twice, in parallel, and merged: one pass can miss a single short
+        reply ("That's fine, it's completely no-code" was missing from one index), and a missed claim
+        is a missed contradiction for every question about the vendor's consistency. An empty result
+        is retried once: on a fresh index the extraction occasionally came back empty for a whole call."""
         def claims() -> list[StoredClaim]:
-            return claims_mod.extract(call, self.calls, self.llm, usage) or claims_mod.extract(call, self.calls, self.llm, usage)
+            return claims_mod.extract(call, self.calls, self.llm, usage)
 
         def notes() -> list[StoredNote]:
             return notes_mod.extract(call, self.calls, self.llm, usage) or notes_mod.extract(call, self.calls, self.llm, usage)
 
-        with ThreadPoolExecutor(2) as pool:  # two independent reads of the same call
-            cl_f, ns_f = pool.submit(claims), pool.submit(notes)
-            cl, ns = cl_f.result(), ns_f.result()
+        with ThreadPoolExecutor(3) as pool:  # independent reads of the same call
+            cl_a, cl_b, ns_f = pool.submit(claims), pool.submit(claims), pool.submit(notes)
+            cl = merge_claims(cl_a.result(), cl_b.result()) or claims()
+            ns = ns_f.result()
         if not cl or not ns:
             print(f"warning: {call.call_id} has {len(cl)} vendor claims and {len(ns)} notes after a retry",
                   file=sys.stderr, flush=True)

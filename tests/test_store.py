@@ -36,7 +36,7 @@ def test_ingest_is_idempotent_and_keeps_verified_notes(tmp_path):
     llm = FakeLLM()
     store = Store(CALLS, llm, path=tmp_path / "db.sqlite")
     assert store.ingest() == 1
-    assert store.ingest() == 0 and llm.reads == 1  # unchanged call: not read again
+    assert store.ingest() == 0 and llm.reads == 2  # two claim passes; unchanged call: not read again
     assert store.counts() == {"calls": 1, "claims": 1, "notes": 1}  # the invented quote was dropped
     notes, vecs = store.notes(["CALL-006"], ["pricing, budget and commercial terms"])
     assert [n.turn_idx for n in notes] and vecs.shape == (1, 3)
@@ -64,4 +64,16 @@ def test_first_question_from_several_threads_ingests_once(tmp_path):
     store = Store(CALLS, llm, path=tmp_path / "db.sqlite")
     with ThreadPoolExecutor(4) as pool:
         list(pool.map(lambda _: store.ensure(), range(4)))
-    assert llm.reads == 1 and store.counts()["claims"] == 1
+    assert llm.reads == 2 and store.counts()["claims"] == 1
+
+
+def test_two_claim_passes_are_merged():
+    from callqa.claims import StoredClaim
+    from callqa.store import merge_claims
+
+    def c(idx, topic, quote):
+        return StoredClaim(call_id="CALL-006", turn_idx=idx, topic=topic, statement="s", speaker="x", quote=quote)
+
+    a = [c(82, "SSO, SCIM and identity", "SSO's included on all our plans")]
+    b = [c(82, "SSO, SCIM and identity", "included on all our plans"), c(110, "no-code vs code, technical skills needed", "it's completely no-code")]
+    assert [(m.turn_idx, m.quote) for m in merge_claims(a, b)] == [(82, "SSO's included on all our plans"), (110, "it's completely no-code")]

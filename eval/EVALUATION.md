@@ -69,30 +69,28 @@ you count:
 
 ## Results
 
-The current code, 29 headline questions (q30 excluded), `gpt-5.4-mini` answering, Claude Opus judging.
-The pipeline and the baseline ran on 24.10 from a fresh clone, following the README; the second
-pipeline run is the same code on another index. Files: `results/README.md`.
+The current code, 29 headline questions (q30 excluded), `gpt-5.4-mini` answering, Claude Opus judging,
+24.10. Both pipeline runs used the index committed to the repo (`.cache/`). Files: `results/README.md`.
 
-| | pipeline (`auto`), fresh clone | pipeline, 2nd run | whole dataset in prompt (`full`) |
+| | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
 | context recall | 1.00 | 1.00 | 1.00 (by construction) |
-| evidence recall | 0.87 | 0.87 | 1.00 (by construction) |
-| cited recall | 0.97 | 0.98 | 0.93 |
-| citation validity | **0.99** | **0.99** | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 1 · 3 · 1 | 2 · 2 · 0 | 4 · 10 · 3 |
-| answer correct: yes / partly / no | **19 / 9 / 1** | 18 / 10 / 1 | 13 / 14 / 2 |
-| core fact recall | 0.79 | 0.80 | 0.73 |
-| atomic fact recall | 0.67 | 0.67 | 0.61 |
-| compound fact recall (strictest) | 0.63 | 0.65 | 0.55 |
-| core facts contradicted · penalties hit | 0 · 2 | 2 · 1 | 1 · 3 |
-| correct abstention on unanswerable | 5 / 5 | 4 / 5 | 5 / 5 |
+| evidence recall | 0.88 | 0.88 | 1.00 (by construction) |
+| cited recall | 0.96 | 0.98 | 0.93 |
+| citation validity | **1.00** | **1.00** | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 0 · 4 · 0 | 0 · 0 · 1 | 4 · 10 · 3 |
+| answer correct: yes / partly / no | **17 / 11 / 1** | **17 / 12 / 0** | 13 / 14 / 2 |
+| core fact recall | 0.74 | 0.76 | 0.73 |
+| atomic fact recall | 0.65 | 0.66 | 0.61 |
+| compound fact recall (strictest) | 0.56 | 0.57 | 0.55 |
+| core facts contradicted · penalties hit | 0 · 2 | 0 · 0 | 1 · 3 |
+| correct abstention on unanswerable | 4 / 5 | 4 / 5 | 5 / 5 |
 | false abstention on answerable | 0 / 24 | 0 / 24 | 0 / 24 |
-| prompt tokens / question | **17K** | 17K | 123K |
-| latency mean / p95, 4 in parallel | 8.6 / 21.0 s | 9.9 / 21.7 s | 11.3 / 38.5 s |
+| prompt tokens / question | **21K** | 21K | 123K |
+| latency mean / p95, 4 in parallel | 10.1 / 22.1 s | 9.3 / 18.6 s | 11.3 / 38.5 s |
 
-`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 6 of 30
-(q05, q07, q10, q11, q12, q15). The baseline differs from both pipeline runs on 5 questions where the
-two agree: worse on q03, q08, q16 and q24, better on q30.
+`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 4 of 30. The
+baseline differs from both on 5: worse on q03, q07, q11 and q24, better on q30.
 
 ### How far the judge can be trusted
 
@@ -111,17 +109,18 @@ would cut the noise.
   the model, but the turn that answers does not always: evidence recall is ~1.0 when whole calls are
   sent and lower for questions across calls, which use the notes written at ingestion (q09 about a
   third, q05 about a half). The answer cannot list what it never saw.
-- **The pipeline is at least as good as the baseline at about 1/7 of the input tokens.** The gap in
-  "yes" (18–19 vs 13) is within the judge noise, so the claim is "no worse"; the per-question
-  differences are not on unstable questions, and q24 is a clear one (example 1).
-- **Quotes are more reliable with less context**: 4–5 failed citations for the pipeline vs 17 for
+- **The pipeline is at least as good as the baseline at about 1/6 of the input tokens.** The gap in
+  "yes" (17 vs 13) is within the judge noise, so the claim is "no worse"; q24 and q11 are clear
+  per-question differences (examples 1 and 2).
+- **Quotes are more reliable with less context**: 1–4 failed citations for the pipeline vs 17 for
   the baseline, mostly *wrong call*: real quotes attached to the wrong customer (example 3). Wrong
   call and not found are reported separately because they are different failures (attribution vs
   invention); both count as errors.
 - **Unanswerable and near-miss questions work**: "Which ERP does Kestrel use?" (they decline to
-  say), ISO 27001 (only SOC 2 is mentioned), an Enterprise price (always "custom"). The one miss
-  (q29, second run) gave the price as custom but was judged as not declining.
-- **Completeness depends on how you count**: about 0.63 compound, 0.67 atomic, 0.8 core. The answers
+  say), ISO 27001 (only SOC 2 is mentioned), an Enterprise price (always "custom"). The misses
+  (q29 in run 1, q26 in run 2) do say the data has no answer (Enterprise is "custom priced",
+  Kestrel never named its ERP) but were judged as not declining.
+- **Completeness depends on how you count**: about 0.6 compound, 0.65 atomic, 0.75–0.8 core. The answers
   usually get the points and drop supporting detail.
 
 ### Where it fails
@@ -136,11 +135,13 @@ would cut the noise.
   the same context with low reasoning; 0 of 3 with medium). Fixed after the fresh-clone run: for a
   question across a few whole calls, each call is first read on its own for the question and gives a
   verdict with verified quotes (`callqa/mapper.py`, in parallel), and the answer is built call by call
-  from them. q10 "yes" in 4 of 4 runs; q08, q19 and q20, which take the same path, judged as before
+  from them. q10 "yes" in 4 of 4 runs and in both current runs; q08, q19 and q20, which take the same path, judged as before
   (`results/…-per-call-check`).
-- **q11 (vendor contradictions)** was "partly" in the fresh-clone run; fixed after it (example 2).
-- **Judgement: q07 ("who is most likely to buy?")** was "no" in one run for putting BrightPath in the
-  top tier without its security blocker, "partly" in the other.
+- **q11 (vendor contradictions)** was "partly" before the per-topic check; "yes" in both current runs
+  (example 2).
+- **Judgement: q07 ("which prospects seem most likely to purchase?")** is "partly" in both runs
+  ("no" on earlier indexes): graded on tiers, and the answer leaves Acme out or drops the caveats on
+  the top prospects.
 - **q30 (bonus, two-step: "which prospect did Maya mean?")**: needs the Verity call to set up the
   question and the Juniper call to answer it. The planner routes to Verity only, so the pipeline
   declines; the baseline, which sees every call, answers it.

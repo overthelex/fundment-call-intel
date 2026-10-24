@@ -1,5 +1,9 @@
 .env
 .venv/
-.cache/
+# the ingestion index is committed, so a fresh clone does not have to ingest the calls;
+# everything else under .cache stays local
+.cache/*
+!.cache/callqa.db
+!.cache/embeddings-*.npy
 __pycache__/
 *.pyc
