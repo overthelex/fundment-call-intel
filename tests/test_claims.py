@@ -64,8 +64,27 @@ def test_map_step_keeps_only_verified_turns():
                 MapPoint(timestamp="07:23", speaker="Alastair McCrae", quote="SSO is free forever", point="p"),
             ])
 
-    turns = read_call("Is SSO on all plans?", CALLS["CALL-006"], CALLS, MapLLM())
-    assert [t.ts for t in turns] == ["07:23"]
+    found = read_call("Is SSO on all plans?", CALLS["CALL-006"], CALLS, MapLLM())
+    assert [(t.ts, point) for t, point in found] == [("07:23", "p")]
+
+
+def test_tally_counts_calls_and_drops_unknown_refs():
+    from callqa.mapper import Tally, TallyItem, TallyRef, render_tally, tally
+
+    t6, t1 = CALLS["CALL-006"].turns[5], CALLS["CALL-001"].turns[5]
+
+    class TallyLLM:
+        def structured(self, system, user, schema, **kw):
+            return Tally(items=[
+                TallyItem(item="rare", refs=[TallyRef(call_id="CALL-006", timestamp=t6.ts)]),
+                TallyItem(item="common", refs=[TallyRef(call_id="CALL-006", timestamp=t6.ts),
+                                               TallyRef(call_id="CALL-001", timestamp=t1.ts),
+                                               TallyRef(call_id="CALL-009", timestamp="00:00")]),  # not a point
+            ])
+
+    items = tally("q", {"CALL-006": [(t6, "a")], "CALL-001": [(t1, "b")]}, TallyLLM())
+    assert [(i, len(r)) for i, r in items] == [("common", 2), ("rare", 1)]
+    assert "common: 2 of 2 calls" in render_tally(items, 2)
 
 
 def test_topic_conflict_check_drops_a_side_with_no_verified_quote():

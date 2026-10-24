@@ -39,6 +39,7 @@ rm -rf .cache && uv run callqa index   # optional: ingest everything from scratc
 uv run callqa ask "Which competitors were mentioned, and in what context?"
 uv run callqa ask "..." --mode full     # baseline: whole dataset in the prompt
 uv run callqa ask "..." --json          # raw result, including the plan and every citation check
+uv run callqa ask "..." --across map    # questions across calls: read each call and count (slower)
 uv run callqa                           # interactive prompt
 uv run pytest                           # offline unit tests (parser, chunking, citation checker, store,
                                         # claims, topic and per-call checks, eval)
@@ -278,7 +279,10 @@ What I take from it:
   question. Ranking notes by the planner's search queries too, with a budget of 350 turns, raised its
   evidence recall on saved plans (0.43 → 0.72) but not in live runs (0.33–0.50), because the
   planner's queries differ from run to run, and q07 fell to "no" twice (`…-query-rank`); not kept.
-  A bonus for points that recur across calls did not help either.
+  A bonus for points that recur across calls did not help either. What does work is reading each
+  call for the question and counting across calls (`--across map`, below): evidence recall 1.0 and
+  core recall 0.50–0.83 on q05, "yes" in 1 of 3 runs, but ~45 s and ~150K tokens against 15–18 s and
+  ~25K, so it is an option, not the default (`…-q05-map-tally`).
 - **Known failures**: q18 ("are the lead scores reliable?") once concluded flatly that they are not,
   from one person's impression. q21 once took Sarah's rhetorical "costs a hundred thousand a year" over the £80K account value, a
   trap noted in `eval/GOLD_NOTES.md`. q30 (bonus) needs a second retrieval hop and is declined.
@@ -296,6 +300,13 @@ What I take from it:
 | evidence recall: all / the 7 | 0.82 / 0.48 | 0.94 / 0.89 | 0.86 / 0.65 |
 | core fact recall: all / the 7 | 0.70 / 0.66 | 0.81 / 0.84 | 0.78 / 0.75 |
 | prompt tokens per question: mean / the 7 | 14.5K / 18K | 47K / 139K | 17K / 26K |
+
+For questions about what matters most or comes up most across calls (the planner's
+`pooled_across_calls`), `map` also counts: one small call groups the points found in each call into
+items with the calls behind them, and the answer gets them ordered by the number of calls ("raised in
+5 of 10 calls"), counted in code. The calls are read in parts, all at once (~35 s for 10 calls). The
+grouping is still coarser than asked ("security, compliance and access controls" rather than "export
+audit logs to our own SIEM"), which is what q05 loses on when it is "partly".
 
 The map step reaches the most evidence but reads every candidate call on every question, so it is
 capped at 25 calls (*Scaling to thousands of calls*). Notes keep most of the gain at a fifth of the

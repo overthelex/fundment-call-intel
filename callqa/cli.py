@@ -118,10 +118,13 @@ def main(argv: list[str] | None = None) -> None:
     ask.add_argument("--mode", choices=["auto", "full"], default="auto",
                      help="auto = plan + whole calls or retrieved excerpts; full = entire dataset in context")
     ask.add_argument("--json", action="store_true", help="print the raw result as JSON")
+    ask.add_argument("--across", choices=["notes", "map", "retrieval"], default="notes",
+                     help="questions across calls: notes written at ingestion (default), or read each call "
+                          "for the question and count points across calls (map; slower, more complete)")
     sub.add_parser("index", help="ingest the calls: embeddings, vendor claims and per-call notes (all cached)")
     args = ap.parse_args(argv)
 
-    pipe = Pipeline(args.data)
+    pipe = Pipeline(args.data, across=getattr(args, "across", "notes"))
     if args.cmd == "index":
         print(f"indexed {len(pipe.index.chunks)} chunks from {len(pipe.calls)} calls")
         n = pipe.store.ingest()

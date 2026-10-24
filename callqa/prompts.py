@@ -34,6 +34,11 @@ Rules:
   follow-up?"). False for comparisons between groups of calls ("how do renewals differ from new
   business?"), themes and reasons pooled across calls ("what concerns came up?"), single facts, and
   product questions.
+- pooled_across_calls: true when the answer is what many calls have in common: the most common or most
+  important needs, capabilities, themes, objections or reasons across the calls ("what capabilities
+  matter most to prospects?", "what are the most common objections?", "why do prospects hesitate?").
+  False for which-calls questions, comparisons between groups of calls, single facts and product
+  questions.
 - search_queries: 2-4 short queries phrased the way people actually talk on calls (paraphrases,
   synonyms, product/competitor names). Do not answer the question."""
 
@@ -113,7 +118,12 @@ Grounding rules:
    runs the call, who handles the commercials), the standard terms and figures, how the calls open
    and what next step they aim for, and cite one call of each kind. Keep each quote with the call it
    came from; transcripts shown whole are labelled with their call id.
-14. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
+14. ITEMS COUNTED ACROSS CALLS lists, for a question about what matters most or comes up most, each
+   item with the calls that raise it, most calls first. Answer from it in that order: one claim per
+   item that two or more calls raise, saying the count ("raised in 5 of the 10 calls") and citing the
+   transcript turns listed for it; items raised in one call go briefly under "also mentioned". Do not
+   replace specific items with general themes. If an item looks wrong against the transcript, say so.
+15. Be concise. summary = 1-4 sentences that directly answer the question. Each claim = one point.
 
 confidence:
 - high: direct, unambiguous evidence that covers the question

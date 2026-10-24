@@ -15,7 +15,7 @@ from .claims import ClaimStore, Topic
 from .conflicts import find_conflicts, render as render_conflicts
 from .index import Chunk, Index, turn_line
 from .llm import LLM, Usage
-from .mapper import call_findings, map_calls, render_findings
+from .mapper import call_findings, map_calls, render_findings, render_tally, tally
 from .notes import NoteField
 from .store import Store
 from .names import ambiguous_names
@@ -64,6 +64,11 @@ class Plan(BaseModel):
     assess_each_call: bool = Field(
         description="True when the answer needs a verdict on each candidate call: ranking or classifying "
                     "calls, saying which calls did something, or comparing groups of calls"
+    )
+    pooled_across_calls: bool = Field(
+        default=False,
+        description="True when the answer is what many calls share: the most common or most important "
+                    "needs, themes, objections or reasons across the calls",
     )
 
 
@@ -251,11 +256,14 @@ class Pipeline:
         by_call: dict[str, set[int]] = {}
         for t in retrieved.turns:
             by_call.setdefault(t.call_id, set()).add(t.idx)
-        for cid, turns in found.items():
+        for cid, pts in found.items():
             n = len(self.calls[cid].turns)
-            for t in turns:
+            for t, _ in pts:
                 by_call.setdefault(cid, set()).update(i for i in (t.idx - 1, t.idx, t.idx + 1) if 0 <= i < n)
         text, turns = self.excerpt_text(by_call)
+        text = (f"CALLS READ IN FULL FOR THIS QUESTION ({len(found)}): " + ", ".join(found) + "\n\n" + text)
+        if plan.pooled_across_calls:
+            text = render_tally(tally(question, found, self.llm, usage), len(found)) + "\n\n" + text
         empty = [f"{cid} ({self.calls[cid].company})" for cid, ts in found.items() if not ts]
         if empty:
             text += "\n\nCALLS READ IN FULL WITH NOTHING ON THIS QUESTION: " + ", ".join(empty)
@@ -401,6 +409,11 @@ class Pipeline:
             elif plan.scope == "across" and self.across == "notes":
                 context = self.notes_context(question, plan, ids, usage)
             elif plan.scope == "across" and self.across == "map" and len(ids) <= MAX_MAP_CALLS:
+                # Each call read for the question; for "what matters most" (pooled_across_calls) the
+                # points are also counted across calls. Not the default: on q05 it reached every
+                # evidence turn (1.0 vs 0.33-0.50) and core recall 0.50-0.83 (vs 0.33-0.67), at ~45 s
+                # and ~150K tokens against 15-18 s and ~25K.
+                say(f"reading each of {len(ids)} calls for the question")
                 context = self.mapped_context(question, plan, ids, usage)
             else:
                 context = self.excerpt_context(question, plan, ids, usage)

@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from pydantic import BaseModel
 
-from .index import turn_line
+from .index import call_parts, turn_line
 from .llm import LLM, Usage
 from .parse import Call, Turn
 from .verify import check_citation
@@ -45,26 +45,94 @@ class CallNotes(BaseModel):
 
 
 def read_call(question: str, call: Call, calls: dict[str, Call], llm: LLM,
-              usage: Usage | None = None) -> list[Turn]:
-    """The turns of one call that bear on the question, as verified by the citation checker."""
+              usage: Usage | None = None) -> list[tuple[Turn, str]]:
+    """The turns of one call (or part of a call) that bear on the question, each with what it
+    contributes, as verified by the citation checker."""
     text = "\n".join(turn_line(call, t) for t in call.turns)
     user = f"QUESTION\n{question}\n\n{call.call_id} · {call.company} · {call.stage}\n\n{text}"
     notes = llm.structured(MAP_SYSTEM, user, CallNotes, reasoning_effort="low", usage=usage)
     in_call = {(call.call_id, t.idx) for t in call.turns}
-    found: dict[int, Turn] = {}
+    found: dict[int, tuple[Turn, str]] = {}
     for p in notes.points:
         chk = check_citation(calls, call.call_id, p.timestamp, p.speaker, p.quote, in_call)
-        if chk.ok and chk.turn is not None:
-            found[chk.turn.idx] = chk.turn
+        if chk.ok and chk.turn is not None and chk.turn.idx not in found:
+            found[chk.turn.idx] = (chk.turn, p.point)
     return [found[i] for i in sorted(found)]
 
 
 def map_calls(question: str, call_ids: list[str], calls: dict[str, Call], llm: LLM,
-              usage: Usage | None = None, workers: int = 8) -> dict[str, list[Turn]]:
-    """call id -> relevant turns (empty list = read in full, nothing on the question)."""
-    with ThreadPoolExecutor(workers) as pool:
-        found = pool.map(lambda cid: read_call(question, calls[cid], calls, llm, usage), call_ids)
-        return dict(zip(call_ids, found))
+              usage: Usage | None = None) -> dict[str, list[tuple[Turn, str]]]:
+    """call id -> relevant turns with their points (empty = read in full, nothing on the question).
+    Each call is read in parts (`index.call_parts`), all parts of all calls at once: the slowest
+    whole-call read took ~35 s, a part ~10 s."""
+    jobs = [(cid, part) for cid in call_ids for part in call_parts(calls[cid])]
+    with ThreadPoolExecutor(len(jobs) or 1) as pool:
+        res = list(pool.map(lambda j: read_call(question, j[1], calls, llm, usage), jobs))
+    out: dict[str, dict[int, tuple[Turn, str]]] = {cid: {} for cid in call_ids}
+    for (cid, _), found in zip(jobs, res):
+        for t, point in found:
+            out[cid].setdefault(t.idx, (t, point))
+    return {cid: [v[i] for i in sorted(v)] for cid, v in out.items()}
+
+
+# -- counting across calls ----------------------------------------------------
+#
+# "What matters most to prospects?" is a count over calls. The answer step, given every relevant turn
+# of ten calls at once, described the themes in general terms and left out a request raised in five
+# of them ("Can the queue be owned by a team?"). Here one small call groups the points found in each
+# call into items and lists the calls behind each; the count is then done in code.
+
+TALLY_SYSTEM = """You get short points found in several sales calls, one per line as
+"CALL-ID [MM:SS] point", all bearing on one question. Group them into items: one item per distinct,
+specific ask, capability or reason, the way a product manager would log it ("exception queue owned by a
+team, not a named person"; "export audit logs to our own SIEM"; "change-management scenario in the
+evaluation"), never a category ("security and governance", "exception handling"). If a group would
+hold two different asks, split it; an item usually has 2-6 points. Each point goes under one item.
+Keep items raised only once, too. For each item: a short label, and the refs (call id and timestamp,
+exactly as given) of its points."""
+
+
+class TallyRef(BaseModel):
+    call_id: str
+    timestamp: str
+
+
+class TallyItem(BaseModel):
+    item: str
+    refs: list[TallyRef]
+
+
+class Tally(BaseModel):
+    items: list[TallyItem]
+
+
+def tally(question: str, found: dict[str, list[tuple[Turn, str]]], llm: LLM,
+          usage: Usage | None = None) -> list[tuple[str, list[TallyRef]]]:
+    """Items with the calls that raise them, most calls first; refs not among the points are dropped."""
+    known = {(cid, t.ts) for cid, ps in found.items() for t, _ in ps}
+    lines = [f"{cid} [{t.ts}] {point or t.text[:120]}" for cid, ps in found.items() for t, point in ps]
+    if not lines:
+        return []
+    out = llm.structured(TALLY_SYSTEM, f"QUESTION\n{question}\n\nPOINTS\n" + "\n".join(lines), Tally,
+                         reasoning_effort="low", usage=usage)
+    items = []
+    for it in out.items:
+        refs = [r for r in it.refs if (r.call_id, r.timestamp) in known]
+        if refs:
+            items.append((it.item, refs))
+    return sorted(items, key=lambda x: -len({r.call_id for r in x[1]}))
+
+
+def render_tally(items: list[tuple[str, list[TallyRef]]], n_calls: int) -> str:
+    if not items:
+        return ""
+    lines = [f"ITEMS COUNTED ACROSS CALLS (each of the {n_calls} calls read in full for this question; "
+             "the count is of calls, done in code)"]
+    for i, (item, refs) in enumerate(items, 1):
+        ids = sorted({r.call_id for r in refs})
+        where = ", ".join(f"{r.call_id} [{r.timestamp}]" for r in refs)
+        lines.append(f"{i}. {item}: {len(ids)} of {n_calls} calls ({where})")
+    return "\n".join(lines)
 
 
 # -- per-call verdicts --------------------------------------------------------
