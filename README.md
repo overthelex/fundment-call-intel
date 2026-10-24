@@ -78,6 +78,7 @@ question
   └─ 4. verify (code)               each quote looked up in the parsed transcript → exact / shifted / fuzzy
                                     / wrong speaker / wrong call / not found
                                     unverifiable claims flagged; if none verify, confidence is lowered
+                                    a call its own verdict counts but the answer drops → answered once more
 ```
 
 - **Parsing** (`callqa/parse.py`): header + `[MM:SS] Speaker: text` turns; each turn keeps its file
@@ -263,7 +264,12 @@ What I take from it:
   likely to purchase?") left Acme out and put BrightPath on top without its BAA gate; q02 listed
   BrightPath and Greenline among the Salesforce customers. A verdict per call, read on its own, makes
   q10, q02 and q28 "yes" in both runs and q07 "yes" in 6 of the 13 runs since (it was "partly" or
-  "no" before).
+  "no" before). Once, with all five verdicts in its context, the answer to q10 still wrote "three of
+  the four cold calls" and dropped Kestrel. So each verdict also says whether the call counts toward
+  the answer, and code checks that the answer cites or names every call that does; if one is
+  missing, the answer step runs once more, told which calls it left out, and a warning is shown if it
+  still does. Checked by replaying that answer (flagged, re-answered with all four follow-ups); in
+  8 live answers to q02, q07, q10 and q28 it never had to fire (`…-coverage-check`).
 - **Improved, not fixed**: q09 ("how do renewals differ from new business?") had a third of its
   evidence in context, because one note field was chosen and the renewal calls were seen only as
   notes. The planner now takes every field an answer can sit in, and a comparison sends the small

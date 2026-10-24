@@ -15,7 +15,7 @@ from .claims import ClaimStore, Topic
 from .conflicts import find_conflicts, render as render_conflicts
 from .index import Chunk, Index, turn_line
 from .llm import LLM, QUESTION_HEDGE_AFTER, Usage
-from .mapper import call_findings, map_calls, render_findings, render_tally, tally
+from .mapper import call_findings, map_calls, render_findings, render_tally, tally, uncovered
 from .notes import NoteField
 from .store import Store
 from .names import ambiguous_names
@@ -184,6 +184,14 @@ def catalogue(calls: list[Call]) -> str:
     )
 
 
+def answer_texts(answer: "Answer") -> list[str]:
+    return ([answer.summary] + [c.statement for c in answer.claims] + [c.description for c in answer.conflicts])
+
+
+def cited_call_ids(answer: "Answer") -> set[str]:
+    return {x.call_id for c in list(answer.claims) + list(answer.conflicts) for x in c.citations}
+
+
 class Pipeline:
     def __init__(self, data_dir: Path = Path("data"), llm: LLM | None = None, across: Across = "notes") -> None:
         self.llm = llm or LLM()
@@ -350,7 +358,8 @@ class Pipeline:
         return Context(context.mode, sorted(set(context.call_ids) | {t.call_id for t in turns}),
                        context.turns + new, context.text + "\n\n" + block, context.chunks, topics)
 
-    def answer(self, question: str, context: Context, plan: Plan | None, usage: Usage | None = None) -> Answer:
+    def answer(self, question: str, context: Context, plan: Plan | None, usage: Usage | None = None,
+               extra: str = "") -> Answer:
         notes = ""
         if plan and plan.entity_notes:
             notes = "NOTES FROM QUERY PLANNING\n" + "\n".join(f"- {n}" for n in plan.entity_notes) + "\n\n"
@@ -364,7 +373,7 @@ class Pipeline:
         scope = f"CONTEXT MODE: {context.mode} ({len(context.call_ids)} of {len(self.calls)} calls shown, {shown})"
         if context.claim_topics:
             scope += "\nPlus every OrbitFlow statement on: " + "; ".join(context.claim_topics)
-        user = f"{scope}\n\nTRANSCRIPTS\n{context.text}\n\n{notes}QUESTION\n{question}"
+        user = f"{scope}\n\nTRANSCRIPTS\n{context.text}\n\n{notes}{extra}QUESTION\n{question}"
         # at medium reasoning an answer takes 60 s or more, so a duplicate would be sent for every one
         hedge = QUESTION_HEDGE_AFTER if ANSWER_EFFORT == "low" else None
         return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort=ANSWER_EFFORT, usage=usage,
@@ -396,6 +405,7 @@ class Pipeline:
 
         say = on_step or (lambda _: None)
         plan: Plan | None = None
+        findings: list = []
         if mode == "full":
             context = self.full_context(list(self.calls))
         else:
@@ -429,8 +439,8 @@ class Pipeline:
             if (plan.scope == "across" and len(ids) > 1 and context.mode in ("full", "notes", "excerpts")
                     and (context.mode == "full" or (plan.assess_each_call and len(ids) <= MAX_MAP_CALLS))):
                 say(f"reading each of {len(ids)} calls on its own")
-                found = call_findings(question, ids, self.calls, self.llm, usage)
-                context.text = render_findings(found) + "\n\n" + context.text
+                findings = call_findings(question, ids, self.calls, self.llm, usage)
+                context.text = render_findings(findings) + "\n\n" + context.text
             if (plan.product_topics and len(plan.product_topics) <= MAX_PRODUCT_TOPICS
                     and plan.scope == "specific" and context.mode != "claims" and not plan.call_ids):
                 context = self.with_vendor_statements(context, plan.product_topics, usage)
@@ -438,10 +448,21 @@ class Pipeline:
         say(f"context: {context.mode}, {len(context.call_ids)} calls, {context.words:,} words; writing the answer")
 
         answer = self.answer(question, context, plan, usage)
+        missing = uncovered(findings, answer_texts(answer), cited_call_ids(answer))
+        if missing:  # one more pass, told which calls it left out
+            say("answer left out " + ", ".join(f.call_id for f in missing) + "; answering again")
+            note = ("COVERAGE CHECK: a previous answer left out these calls, which their per-call findings "
+                    "count toward the answer; cover each of them:\n"
+                    + "\n".join(f"- {f.call_id} ({f.company}): {f.verdict}" for f in missing) + "\n\n")
+            answer = self.answer(question, context, plan, usage, extra=note)
+            missing = uncovered(findings, answer_texts(answer), cited_call_ids(answer))
         done("answer")
         claim_checks = [self.check(c.citations, context) for c in answer.claims]
         conflict_checks = [self.check(c.citations, context) for c in answer.conflicts]
         confidence, warnings = assess(answer, claim_checks, conflict_checks)
+        if missing:
+            warnings.append("the answer does not cover " + ", ".join(f"{f.call_id} ({f.company})" for f in missing)
+                            + ", which the per-call findings count toward it")
         done("check")
 
         return Result(

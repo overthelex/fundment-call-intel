@@ -21,6 +21,9 @@ The ingestion benchmark behind the switch is `eval/bench_ingest.py` (README, *Sp
 Prompts with the transcript before the question (prefix cache) and duplicates for lost question-time
 requests: `20261024-180924-auto-prompt-cache` 17 / 12 / 0, 40% of prompt tokens from the cache.
 
+The coverage check (a call the per-call verdicts count but the answer drops is answered again):
+`20261024-184120/184202-auto-coverage-check`, q02, q07, q10, q28 twice: yes, partly, yes, yes both times.
+
 The default path after that change (new planner field and answer rule): `20261024-175127-auto-after-map-option`
 16 / 13 / 0, 34K tokens, the same as the headline runs but for q26 (yes instead of partly).
 
@@ -51,6 +54,7 @@ Runs that show one change, referenced from the README and `EVALUATION.md`:
 | `20261023-235835-auto-effort-low` | the same code on another index | 18 / 10 / 1 |
 | `20261024-1022*-auto-q11-topic-check` | q11 three times, after adding the per-topic contradiction check | yes, yes, yes |
 | `20261024-1031*-auto-per-call-check` | q08, q10, q19, q20 four times, after adding per-call verdicts | q10 yes ×4, q08 3 yes 1 partly, q19 partly, q20 yes |
+| `20261024-182756-auto-examples-low` | the same after the prompt-cache change; q10 dropped Kestrel (fixed by the coverage check) | 6 / 5 / 0; 19.8 s mean (q07 64 s, a lost request) |
 | `20261024-172455-auto-examples-low` | the task's 11 example questions, one at a time, current index | 9 / 2 / 0; 15.0 s mean |
 | `20261024-143451-auto-examples-low` | the same on the previous index | 8 / 3 / 0; 16.7 s mean |
 | `20261024-144652-auto-examples-medium` | the same with `ANSWER_EFFORT=medium`, previous index | 7 / 4 / 0; 63.8 s mean |

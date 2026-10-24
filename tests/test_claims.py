@@ -113,13 +113,13 @@ def test_per_call_verdict_keeps_only_verified_evidence():
 
     class VerdictLLM:
         def structured(self, system, user, schema, **kw):
-            return CallVerdict(verdict="no real next step", evidence=[
+            return CallVerdict(verdict="no real next step", counts="no", evidence=[
                 MapPoint(timestamp="07:23", speaker="Alastair McCrae", quote="SSO's included on all our plans"),
                 MapPoint(timestamp="07:23", speaker="Alastair McCrae", quote="We'll book the pilot today"),
             ])
 
     f = judge_call("q", CALLS["CALL-006"], CALLS, VerdictLLM())
-    assert f.verdict == "no real next step"
+    assert f.verdict == "no real next step" and f.counts == "no"
     assert [p.quote for p in f.evidence] == ["SSO's included on all our plans"]
 
 
@@ -134,3 +134,16 @@ def test_comparison_sends_the_small_kinds_of_call_whole():
     whole = Pipeline.whole_groups(SimpleNamespace(calls=CALLS), plan, ids)
     assert whole == sorted(c for c in ids if CALLS[c].category == "renewal")  # prospects, the largest kind, stay as notes
     assert Pipeline.whole_groups(SimpleNamespace(calls=CALLS), plan.model_copy(update={"categories": ["prospect"]}), ids) == []
+
+
+def test_a_call_the_findings_count_but_the_answer_drops_is_reported():
+    from callqa.mapper import Finding, uncovered
+
+    def f(cid, company, counts):
+        return Finding(call_id=cid, company=company, verdict="v", counts=counts, evidence=[])
+
+    findings = [f("CALL-016", "Quarry Ridge Foods", "yes"), f("CALL-019", "Trafford Dental Group", "no"),
+                f("CALL-020", "Kestrel Robotics", "partly"), f("CALL-018", "Beacon Housing Trust", "yes")]
+    texts = ["Three of the four cold calls produced a follow-up; Beacon Housing Trust agreed to a meeting."]
+    missing = uncovered(findings, texts, cited={"CALL-016"})
+    assert [m.call_id for m in missing] == ["CALL-020"]  # a "no" may go unmentioned; named or cited is covered

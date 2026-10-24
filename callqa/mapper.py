@@ -13,6 +13,7 @@ Every listed quote goes through the citation checker; ones that fail are dropped
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -152,6 +153,9 @@ A question is being asked across several calls; answer it for THIS call only.
   how firmly. If the question asks whether something happened (a follow-up, a concern, a metric), say
   plainly yes, no, or only partly, and why. A polite "send it over" followed by "I won't read it" is
   not a real next step; a condition ("only if X") is part of the verdict.
+- counts: does this call count toward the answer? "yes", "partly" (conditionally, or only in part) or
+  "no" (it did not do or say what the question asks about). For a question that ranks or classifies
+  every call, "yes".
 - evidence: the turns that support the verdict, including anything that weakens it; for each,
   timestamp and speaker exactly as shown and a VERBATIM contiguous span (max ~25 words) as quote.
 If nothing in this call bears on the question, say so in the verdict and leave evidence empty."""
@@ -159,6 +163,7 @@ If nothing in this call bears on the question, say so in the verdict and leave e
 
 class CallVerdict(BaseModel):
     verdict: str
+    counts: Literal["yes", "partly", "no"]
     evidence: list[MapPoint]
 
 
@@ -166,6 +171,7 @@ class Finding(BaseModel):
     call_id: str
     company: str
     verdict: str
+    counts: str = "yes"
     evidence: list[MapPoint]  # verified only
 
 
@@ -183,13 +189,24 @@ def judge_call(question: str, call: Call, calls: dict[str, Call], llm: LLM,
         chk = check_citation(calls, call.call_id, p.timestamp, p.speaker, p.quote, in_call)
         if chk.ok and chk.turn is not None:
             kept.append(MapPoint(timestamp=chk.turn.ts, speaker=chk.turn.speaker, quote=p.quote, point=p.point))
-    return Finding(call_id=call.call_id, company=call.company, verdict=out.verdict, evidence=kept)
+    return Finding(call_id=call.call_id, company=call.company, verdict=out.verdict, counts=out.counts,
+                   evidence=kept)
 
 
 def call_findings(question: str, call_ids: list[str], calls: dict[str, Call], llm: LLM,
                   usage: Usage | None = None, workers: int = 8) -> list[Finding]:
     with ThreadPoolExecutor(workers) as pool:
         return list(pool.map(lambda cid: judge_call(question, calls[cid], calls, llm, usage), call_ids))
+
+
+def uncovered(findings: list[Finding], texts: list[str], cited: set[str]) -> list[Finding]:
+    """Calls whose own verdict counts them toward the answer but that the answer neither cites nor names.
+    With every verdict in its context, the answer once wrote "three of the four cold calls" and dropped
+    the fifth (Kestrel, a follow-up on condition); a drop like that is caught here, not left to the
+    reader."""
+    blob = "\n".join(texts).lower()
+    return [f for f in findings if f.counts != "no" and f.call_id not in cited
+            and f.call_id.lower() not in blob and f.company.lower() not in blob]
 
 
 def render_findings(findings: list[Finding]) -> str:
