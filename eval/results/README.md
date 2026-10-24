@@ -18,6 +18,8 @@ The ingestion benchmark behind the switch is `eval/bench_ingest.py` (README, *Sp
 
 `--across map` with counting across calls, q05 three times: `20261024-1746*-auto-q05-map-tally`
 (yes, partly, partly; evidence recall 1.0; ~45 s, ~150K tokens).
+The default path after that change (new planner field and answer rule): `20261024-175127-auto-after-map-option`
+16 / 13 / 0, 34K tokens, the same as the headline runs but for q26 (yes instead of partly).
 
 Tried and not kept (README, q05): notes ranked by the question and the planner's search queries,
 budget 350 turns: `20261024-173307/173429-auto-query-rank` 16 / 12 / 1 and 14 / 14 / 1, and the 11
