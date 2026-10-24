@@ -407,7 +407,7 @@ With another day:
 
 1. **A product-fact table at ingestion**: vendor claims clustered by topic and subject with counts
    (people, calls, last date, hedged), and conflicts recorded when a call arrives. q11 and q24 then
-   read a table instead of putting every claim on a topic into the prompt (see the scaling table).
+   read a table instead of putting every claim on a topic into the prompt (design sketch below).
 2. **A full-context control for the map step**: the same 7 cross-call questions with all transcripts in
    the prompt (same token cost at 20 calls), to show whether reading call by call beats one big prompt
    on completeness and misattribution, not only on evidence recall.
@@ -418,6 +418,29 @@ With another day:
 5. **Better eval**: a majority of 3 judge passes per answer (the judge alone moves ~6 of 30 verdicts),
    3–5 repeats of the baseline too, and a blind human-graded subset (about 10 answers, stratified by
    verdict and question type) to measure how often the judge agrees with a person.
+
+### Design sketch: the product-fact table
+
+Not built: at 20 calls q11 and q24 are already "yes" in nearly every run, and the table pays off when
+the vendor's statements no longer fit one check per topic. How it would work:
+
+- **Rows.** A fact is (topic, subject, value): ("SSO, SCIM and identity", "SAML SSO", "Enterprise
+  only"). Each fact keeps its statements (call, turn, speaker, quote, date), so its counts are derived:
+  calls, distinct vendor staff, last date, and whether a later statement by the same person hedged or
+  corrected it.
+- **Update when a call is ingested.** Each new vendor claim is matched against the facts on its
+  topic: same subject and value adds a statement; same subject, different value adds a fact and
+  records a conflict between the two; a new subject adds a fact. Matching is an embedding shortlist
+  plus one small LLM call per claim ("same subject? same value?"), so the work per call is constant
+  however many calls came before. The quotes go through the citation checker, as now.
+- **Reads.** q11 reads the recorded conflicts instead of checking every statement on every topic:
+  "SAML SSO: Enterprise only, 9 calls / 3 staff; all plans, 1 call (Alastair, later 'fairly sure, I'll
+  confirm')". q24 reads the facts on one subject, and weighing becomes counting. Both stay cited,
+  since every count points at its statements.
+- **Risks.** Two facts merged that are not the same (SSO vs SAML SSO), or one fact split in two so a
+  conflict is never recorded; matching is non-deterministic, as the per-topic checks were (7 of 10
+  for one check). Guard: rebuild the table from the stored claims and compare, and keep the per-topic
+  check as an audit that runs nightly, not per question.
 
 ### Scaling to thousands of calls
 
@@ -454,3 +477,14 @@ cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per qu
   citation validity and abstention rate as live quality signals.
 - **Cost/latency**: see *Speed*; in production also per-tenant rate limits and a latency budget per
   step, alerting on p95.
+- **A service, not a CLI**: an HTTP API with the answer streamed and each claim's citation check sent
+  as it lands, behind the company's SSO; a UI where every quote opens the call recording at that
+  second, since a checkable quote is the product.
+- **Transcript quality at the door**: real transcripts come from speech recognition, with misheard
+  words and swapped speakers. The side of a speaker (vendor or customer) decides whether a sentence
+  is a vendor claim, so ingestion should flag calls whose speaker labels look wrong (a vendor name on
+  the customer side, one speaker for most of the call) before they feed the claims and notes.
+- **A second provider and pinned models**: a fallback model or provider when the first fails or
+  stops answering (here ~4% of requests went unanswered), a pinned model version, and a model upgrade
+  only after the eval passes; a prompt change re-reads the calls in the background, which the digest
+  of prompt versions in `Store` already triggers.
