@@ -30,6 +30,7 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import sys
 import time
 from collections import Counter
@@ -312,12 +313,21 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
     return row | {"failure": failure(row)}
 
 
-def evaluate(pipe: Pipeline, item: dict, mode: str, use_judge: bool = True) -> dict:
+def evaluate(pipe: Pipeline, item: dict, mode: str, use_judge: bool = True, judges: ThreadPoolExecutor | None = None):
+    """Answer one question, then grade it; with `judges`, the grading (a slow `claude -p`) is handed to
+    that pool and a future is returned, so the answering threads move on to the next question and the
+    latency they measure stays that of `workers` questions in parallel."""
     t0 = time.time()
     try:
         r = pipe.ask(item["question"], mode=mode)
     except Exception as e:  # keep the run going; report the failure
         return {"id": item["id"], "kind": item["kind"], "error": repr(e), "seconds": time.time() - t0}
+    if judges is not None:
+        return judges.submit(finish, pipe, item, r, use_judge)
+    return finish(pipe, item, r, use_judge)
+
+
+def finish(pipe: Pipeline, item: dict, r: Result, use_judge: bool) -> dict:
     return {
         **grade(pipe, item, r, use_judge),
         "prompt_tokens": r.usage["prompt_tokens"],
@@ -476,6 +486,8 @@ def run_all(fn, items: list[dict], workers: int) -> list[dict]:
     def one(it: dict) -> dict:
         nonlocal done
         r = fn(it)
+        if hasattr(r, "result"):  # grading handed to the judge pool
+            r = r.result()
         done += 1
         status = f"ERROR {r['error'][:60]}" if "error" in r else f"correct={r['correct'] or '-'}"
         print(f"[{done}/{len(items)}] {it['id']} {status}", file=sys.stderr, flush=True)
@@ -489,7 +501,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=["auto", "full"], default="auto")
     ap.add_argument("--only", help="comma-separated question ids")
-    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--workers", type=int, default=4, help="questions answered in parallel (latency is measured under this load)")
+    ap.add_argument("--judge-workers", type=int, default=8, help="judge calls (claude -p) in parallel")
     ap.add_argument("--questions", type=Path, default=ROOT / "eval" / "questions.yaml")
     ap.add_argument("--regrade", type=Path, metavar="RESULTS_JSON",
                     help="re-check citations and re-judge the answers saved in a results file, without generating")
@@ -517,17 +530,31 @@ def main() -> None:
         saved = {r["id"]: r for r in json.loads(src.read_text())}
         mode = "full" if "-full" in src.stem else "auto"
         items = [i for i in items if i["id"] in saved]
-        rows = run_all(lambda it: fn(pipe, it, saved[it["id"]], use_judge), items, args.workers)
+        rows = run_all(lambda it: fn(pipe, it, saved[it["id"]], use_judge), items,
+                       args.judge_workers if fn is regrade else args.workers)
         label = f"{src.stem}-{args.suffix or suffix}"
     else:
         mode = args.mode
-        rows = run_all(lambda it: evaluate(pipe, it, mode, use_judge), items, args.workers)
+        with ThreadPoolExecutor(args.judge_workers) as judges:
+            # the answer pool hands each answer to the judges and takes the next question; waiting on the
+            # verdicts happens in run_all's own threads, so more of them than answer workers
+            answering = threading.BoundedSemaphore(args.workers)
+
+            def answer_then_judge(it: dict):
+                with answering:
+                    out = evaluate(pipe, it, mode, use_judge, judges)
+                return out
+
+            rows = run_all(answer_then_judge, items, args.workers + args.judge_workers)
         label = f"{time.strftime('%Y%m%d-%H%M%S')}-{mode}" + ("" if args.across == "notes" else f"-{args.across}")
     if not use_judge:
         label += "-nojudge"
 
     out_dir = ROOT / "eval" / "results"
     out_dir.mkdir(exist_ok=True)
+    base, n = label, 2
+    while (out_dir / f"{label}.json").exists():  # two runs started in the same second
+        label, n = f"{base}-{n}", n + 1
     (out_dir / f"{label}.json").write_text(json.dumps(rows, indent=2, ensure_ascii=False))
     report = summarise(rows, mode, judge_name(), args.workers)
     (out_dir / f"{label}.md").write_text(report + "\n")

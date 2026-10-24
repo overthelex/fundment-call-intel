@@ -31,7 +31,7 @@ Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 ```bash
 uv sync
 cp .env.example .env        # then set LLM_API_KEY (an OpenAI key works as is)
-uv run callqa index         # once: ingests the calls (~6 min): vendor claims and per-call notes go to
+uv run callqa index         # once: ingests the calls (~2–3 min): vendor claims and per-call notes go to
                             # .cache/callqa.db, chunk embeddings to .cache/embeddings-*.npy; re-running
                             # reads only new or changed calls
 uv run callqa ask "Which competitors were mentioned, and in what context?"
@@ -163,7 +163,7 @@ Details, the full results table and three worked examples: [`eval/EVALUATION.md`
 ### Run it
 
 ```bash
-uv run python eval/run_eval.py                    # pipeline, all 30 questions
+uv run python eval/run_eval.py                    # pipeline, all 30 questions (~2 min)
 uv run python eval/run_eval.py --mode full        # baseline: whole dataset in the prompt
 uv run python eval/run_eval.py --only q11,q24     # a subset
 uv run python eval/run_eval.py --regrade eval/results/<run>.json   # re-check and re-judge saved answers, no generation
@@ -171,6 +171,9 @@ uv run python eval/run_eval.py --no-judge         # deterministic metrics only, 
 uv run python eval/run_eval.py --replay eval/results/<run>.json --only q05   # new answer on the saved context
 uv run python eval/compare.py --auto A1.json A2.json A3.json --full F.json   # per-question comparison
 ```
+
+Questions are answered 4 at a time (`--workers`; the latency reported is under that load) and judged
+8 at a time in a separate pool (`--judge-workers`), so answering does not wait for the judge.
 
 Each run writes `eval/results/<timestamp>-<mode>.json` (every answer, plan, the exact context the
 answer step saw, citation checks and verdicts) and a `.md` summary that names the judge and labels
@@ -222,6 +225,10 @@ Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/
 | prompt tokens per question | 17K | 17K | 123K |
 | latency mean / p95, 4 questions in parallel | 8.6 / 21.0 s | 9.9 / 21.7 s | 11.3 / 38.5 s |
 | first failed step | answer 5, retrieval 4, attribution 2 | answer 6, retrieval 4, attribution 2, abstention 1 | answer 15, attribution 4 |
+
+Two later fresh-clone runs of the current code, after the q10 and q11 fixes below, gave 17 / 11 / 1
+(`…-104212-auto-fresh-clone-2`) and 16 / 12 / 1 (`…-105919-auto-fresh-clone-3`), q10 and q11 "yes" in
+both: within the judge noise of the table.
 
 Per question (`eval/results/comparison.md`): the two pipeline runs disagree on 6 questions, and the
 baseline differs from both pipeline runs on 5, on each of which the two pipeline runs agree: it is
@@ -287,6 +294,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | one call, whole transcript ("What was Verity paying?") | 5.5 s |
 | product fact, excerpts + vendor statements ("SSO on Growth?") | 10.2 s |
 | across calls, ingestion notes ("Why do prospects hesitate?") | 18.9 s |
+| ingestion of all 20 calls, fresh clone (`callqa index`) | ~2–3 min |
 | across a few whole calls, a verdict per call + answer ("Which cold calls produced a follow-up?") | 13–16 s |
 | vendor contradictions, 12 topic checks + answer ("Has the vendor given inconsistent answers?") | 15–23 s |
 | the task's 11 example questions (`…-001127-auto-examples-low`): mean / median / slowest | 17.1 / 18.2 / 26.3 s |
@@ -300,6 +308,10 @@ What keeps it there:
   within the judge noise (8 / 3 / 0 vs 6 / 4 / 1 there; 16 vs 18–19 "yes" on the full eval).
 - **The inventory is call and timestamp only**: every token in it is generated before the answer.
 - **Calls are read at ingestion**, so a question across calls selects notes instead of reading calls.
+- **Ingestion in parallel**: all 20 calls at once, claims and notes of a call side by side, well
+  under the deployment's limits (1M tokens and 1,000 requests a minute). It is bounded by the slowest
+  extraction, which generates 10–26K tokens (mostly reasoning) and takes up to ~2 min; a 180 s client
+  timeout used to cut those off and restart them, which made ingestion ~6 min.
 - **Progress on screen**: the CLI prints each step as it starts (`planning` → `plan: across question
   over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first
   output arrives in well under 2 s even when the answer takes 15 s.

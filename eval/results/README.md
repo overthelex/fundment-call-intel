@@ -10,6 +10,7 @@ Runs of the current code:
 |---|---|---|
 | `20261024-094317-auto-fresh-clone` | pipeline, all 30 questions, from a fresh clone following the README | 19 / 9 / 1; 17K tokens; latency 8.6 s mean, 21.0 s p95 |
 | `20261024-094601-full-fresh-clone` | baseline: whole dataset in the prompt (`--mode full`), same clone | 13 / 14 / 2; 123K tokens; 17 failed citations |
+| `20261024-104212-auto-fresh-clone-2`, `20261024-105919-auto-fresh-clone-3` | pipeline from two later fresh clones, with the q10 and q11 fixes (and, in -3, parallel ingestion and judging) | 17 / 11 / 1 and 16 / 12 / 1 |
 | `20261023-235835-auto-effort-low` | pipeline, a second run of the same code | 18 / 10 / 1; latency 9.9 s mean, 21.7 s p95 |
 | `20261024-001127-auto-examples-low` | the task's 11 example questions, one at a time | 17.1 s mean |
 | `20261024-002657-auto-examples-medium` | the same with `ANSWER_EFFORT=medium` | 72.9 s mean |

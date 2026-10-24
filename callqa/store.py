@@ -10,6 +10,7 @@ The same tables map onto Postgres + pgvector unchanged when one file is no longe
 from __future__ import annotations
 
 import hashlib
+import os
 import sqlite3
 import sys
 import threading
@@ -42,6 +43,11 @@ CREATE INDEX IF NOT EXISTS claims_by_topic ON claims (topic);
 """
 
 
+# Calls read at once; each read is two parallel LLM calls. 20 calls x 2 stay far below the deployment's
+# limits (gpt-5.4-mini: 1M tokens and 1,000 requests per minute); 429s are retried by the client.
+INGEST_WORKERS = int(os.environ.get("INGEST_WORKERS", "20"))
+
+
 def digest(call: Call, llm: LLM) -> str:
     raw = "\x00".join(t.text for t in call.turns) + llm.chat_model + llm.embed_model
     raw += claims_mod.PROMPT_VERSION + notes_mod.PROMPT_VERSION
@@ -72,8 +78,15 @@ class Store:
         An empty result is retried once: on a fresh index the extraction occasionally came back empty
         for a whole call (3 of 20 calls without claims in one run, none in the next), and a call with
         no claims silently removes one side of every contradiction it holds."""
-        cl = claims_mod.extract(call, self.calls, self.llm, usage) or claims_mod.extract(call, self.calls, self.llm, usage)
-        ns = notes_mod.extract(call, self.calls, self.llm, usage) or notes_mod.extract(call, self.calls, self.llm, usage)
+        def claims() -> list[StoredClaim]:
+            return claims_mod.extract(call, self.calls, self.llm, usage) or claims_mod.extract(call, self.calls, self.llm, usage)
+
+        def notes() -> list[StoredNote]:
+            return notes_mod.extract(call, self.calls, self.llm, usage) or notes_mod.extract(call, self.calls, self.llm, usage)
+
+        with ThreadPoolExecutor(2) as pool:  # two independent reads of the same call
+            cl_f, ns_f = pool.submit(claims), pool.submit(notes)
+            cl, ns = cl_f.result(), ns_f.result()
         if not cl or not ns:
             print(f"warning: {call.call_id} has {len(cl)} vendor claims and {len(ns)} notes after a retry",
                   file=sys.stderr, flush=True)
@@ -97,12 +110,12 @@ class Store:
                 "INSERT OR REPLACE INTO calls VALUES (?, ?, ?, ?, ?, ?)",
                 (call.call_id, digest(call, self.llm), call.company, call.category, call.stage, call.date))
 
-    def ingest(self, usage: Usage | None = None, workers: int = 8) -> int:
+    def ingest(self, usage: Usage | None = None, workers: int = INGEST_WORKERS) -> int:
         """Read every new or changed call; returns how many were (re)read."""
         with self._lock:
             todo = self.stale()
             if todo:
-                print(f"ingesting {len(todo)} new or changed calls (once; about 15 s per call, in parallel)",
+                print(f"ingesting {len(todo)} new or changed calls (once, {workers} at a time)",
                       file=sys.stderr, flush=True)
             with ThreadPoolExecutor(workers) as pool:
                 for call, (cl, ns, vecs) in zip(todo, pool.map(lambda c: self.read(c, usage), todo)):

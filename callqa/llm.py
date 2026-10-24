@@ -53,7 +53,7 @@ class LLM:
         if not api_key:
             raise SystemExit("Set LLM_API_KEY (or OPENAI_API_KEY); see README.")
         self.client = OpenAI(
-            api_key=api_key, base_url=os.environ.get("LLM_BASE_URL") or None, max_retries=8, timeout=180
+            api_key=api_key, base_url=os.environ.get("LLM_BASE_URL") or None, max_retries=8, timeout=600
         )
         self.chat_model = os.environ.get("CHAT_MODEL", "gpt-5.4-mini")
         self.embed_model = os.environ.get("EMBED_MODEL", "text-embedding-3-small")
