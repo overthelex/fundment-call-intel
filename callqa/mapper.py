@@ -17,7 +17,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pydantic import BaseModel
 
 from .index import call_parts, turn_line
-from .llm import LLM, Usage
+from .llm import LLM, QUESTION_HEDGE_AFTER, Usage
 from .parse import Call, Turn
 from .verify import check_citation
 
@@ -49,8 +49,11 @@ def read_call(question: str, call: Call, calls: dict[str, Call], llm: LLM,
     """The turns of one call (or part of a call) that bear on the question, each with what it
     contributes, as verified by the citation checker."""
     text = "\n".join(turn_line(call, t) for t in call.turns)
-    user = f"QUESTION\n{question}\n\n{call.call_id} · {call.company} · {call.stage}\n\n{text}"
-    notes = llm.structured(MAP_SYSTEM, user, CallNotes, reasoning_effort="low", usage=usage)
+    # transcript first, question last: the provider caches the shared prefix, so a call read for
+    # several questions is billed once at full price
+    user = f"{call.call_id} · {call.company} · {call.stage}\n\n{text}\n\nQUESTION\n{question}"
+    notes = llm.structured(MAP_SYSTEM, user, CallNotes, reasoning_effort="low", usage=usage,
+                           hedge_after=QUESTION_HEDGE_AFTER)
     in_call = {(call.call_id, t.idx) for t in call.turns}
     found: dict[int, tuple[Turn, str]] = {}
     for p in notes.points:
@@ -114,7 +117,7 @@ def tally(question: str, found: dict[str, list[tuple[Turn, str]]], llm: LLM,
     if not lines:
         return []
     out = llm.structured(TALLY_SYSTEM, f"QUESTION\n{question}\n\nPOINTS\n" + "\n".join(lines), Tally,
-                         reasoning_effort="low", usage=usage)
+                         reasoning_effort="low", usage=usage, hedge_after=QUESTION_HEDGE_AFTER)
     items = []
     for it in out.items:
         refs = [r for r in it.refs if (r.call_id, r.timestamp) in known]
@@ -169,8 +172,11 @@ class Finding(BaseModel):
 def judge_call(question: str, call: Call, calls: dict[str, Call], llm: LLM,
                usage: Usage | None = None) -> Finding:
     text = "\n".join(turn_line(call, t) for t in call.turns)
-    user = f"QUESTION\n{question}\n\n{call.call_id} · {call.company} · {call.stage}\n\n{text}"
-    out = llm.structured(VERDICT_SYSTEM, user, CallVerdict, reasoning_effort="low", usage=usage)
+    # transcript first, question last: the provider caches the shared prefix, so a call read for
+    # several questions is billed once at full price
+    user = f"{call.call_id} · {call.company} · {call.stage}\n\n{text}\n\nQUESTION\n{question}"
+    out = llm.structured(VERDICT_SYSTEM, user, CallVerdict, reasoning_effort="low", usage=usage,
+                         hedge_after=QUESTION_HEDGE_AFTER)
     in_call = {(call.call_id, t.idx) for t in call.turns}
     kept = []
     for p in out.evidence:

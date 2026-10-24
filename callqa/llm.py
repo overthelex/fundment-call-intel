@@ -33,14 +33,16 @@ class Usage:
     prompt_tokens: int = 0
     completion_tokens: int = 0
     embed_tokens: int = 0
+    cached_tokens: int = 0  # prompt tokens served from the provider's prefix cache (billed at a discount)
     _lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
-    def add(self, prompt: int = 0, completion: int = 0, embed: int = 0) -> None:
+    def add(self, prompt: int = 0, completion: int = 0, embed: int = 0, cached: int = 0) -> None:
         with self._lock:
             self.calls += 1
             self.prompt_tokens += prompt
             self.completion_tokens += completion
             self.embed_tokens += embed
+            self.cached_tokens += cached
 
     def snapshot(self) -> dict:
         return {
@@ -48,6 +50,7 @@ class Usage:
             "prompt_tokens": self.prompt_tokens,
             "completion_tokens": self.completion_tokens,
             "embed_tokens": self.embed_tokens,
+            "cached_tokens": self.cached_tokens,
         }
 
 
@@ -65,6 +68,9 @@ INGEST_TIMEOUT = 180
 # the full question timeout (120 s), so it gets a short one and is retried.
 EMBED_TIMEOUT = 20
 INGEST_HEDGE_AFTER = 60  # p90 of ingestion requests 42 s, p99 86 s
+# Question-time calls at low reasoning: the answer step's p99 is 21 s and its maximum 28 s (101 answers);
+# a lost request otherwise holds the question for the full 120 s timeout (one took 135 s instead of 12).
+QUESTION_HEDGE_AFTER = 45
 _hedges = ThreadPoolExecutor(512, thread_name_prefix="hedge")
 
 
@@ -131,7 +137,9 @@ class LLM:
         if resp.usage:
             for u in (self.usage, usage):
                 if u is not None:
-                    u.add(resp.usage.prompt_tokens, resp.usage.completion_tokens)
+                    details = getattr(resp.usage, "prompt_tokens_details", None)
+                    u.add(resp.usage.prompt_tokens, resp.usage.completion_tokens,
+                          cached=getattr(details, "cached_tokens", 0) or 0)
         msg = resp.choices[0].message
         if msg.parsed is None:
             raise RuntimeError(f"model returned no parseable output (refusal={msg.refusal!r})")

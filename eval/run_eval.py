@@ -331,6 +331,7 @@ def finish(pipe: Pipeline, item: dict, r: Result, use_judge: bool) -> dict:
     return {
         **grade(pipe, item, r, use_judge),
         "prompt_tokens": r.usage["prompt_tokens"],
+        "cached_tokens": r.usage.get("cached_tokens", 0),
         "completion_tokens": r.usage["completion_tokens"],
         "seconds": round(r.seconds, 1),
         "result": to_dict(r),
@@ -392,6 +393,7 @@ def replay(pipe: Pipeline, item: dict, saved: dict, use_judge: bool = True) -> d
     return {
         **grade(pipe, item, r, use_judge),
         "prompt_tokens": r.usage["prompt_tokens"],
+        "cached_tokens": r.usage.get("cached_tokens", 0),
         "completion_tokens": r.usage["completion_tokens"],
         "seconds": round(r.seconds, 1),
         "result": to_dict(r),
@@ -457,6 +459,7 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "", workers: int =
         f"| correct abstention on unanswerable | {j(abst_ok)} |",
         f"| false abstention on answerable | {j(abst_false)} |",
         f"| mean prompt tokens / question | {mean([r['prompt_tokens'] for r in ok]) or 0:,.0f} |",
+        f"| of which from the provider's prompt cache | {sum(r.get('cached_tokens', 0) for r in ok) / max(1, sum(r['prompt_tokens'] for r in ok)):.0%} |",
         f"| mean latency (s) | {fmt(mean([r['seconds'] for r in ok]))} |",
         f"| latency p50 / p95 (s), {workers} questions in parallel | {pct(lat, 50)} / {pct(lat, 95)} |",
         f"| answer step: mean output tokens (what latency follows) | "

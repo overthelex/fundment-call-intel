@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from .claims import ClaimStore, Topic
 from .conflicts import find_conflicts, render as render_conflicts
 from .index import Chunk, Index, turn_line
-from .llm import LLM, Usage
+from .llm import LLM, QUESTION_HEDGE_AFTER, Usage
 from .mapper import call_findings, map_calls, render_findings, render_tally, tally
 from .notes import NoteField
 from .store import Store
@@ -198,7 +198,8 @@ class Pipeline:
 
     def plan(self, question: str, usage: Usage | None = None) -> Plan:
         user = f"CALL CATALOGUE\n{catalogue(self.calls_list)}\n\nQUESTION\n{question}"
-        plan = self.llm.structured(PLANNER_SYSTEM, user, Plan, reasoning_effort="low", usage=usage)
+        plan = self.llm.structured(PLANNER_SYSTEM, user, Plan, reasoning_effort="low", usage=usage,
+                                   hedge_after=QUESTION_HEDGE_AFTER)
         plan.call_ids = [c for c in (x.strip().upper() for x in plan.call_ids) if c in self.calls]
         plan.entity_notes += ambiguous_names(question, self.calls_list)
         return plan
@@ -364,7 +365,10 @@ class Pipeline:
         if context.claim_topics:
             scope += "\nPlus every OrbitFlow statement on: " + "; ".join(context.claim_topics)
         user = f"{scope}\n\nTRANSCRIPTS\n{context.text}\n\n{notes}QUESTION\n{question}"
-        return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort=ANSWER_EFFORT, usage=usage)
+        # at medium reasoning an answer takes 60 s or more, so a duplicate would be sent for every one
+        hedge = QUESTION_HEDGE_AFTER if ANSWER_EFFORT == "low" else None
+        return self.llm.structured(ANSWER_SYSTEM, user, Answer, reasoning_effort=ANSWER_EFFORT, usage=usage,
+                                   hedge_after=hedge)
 
     def check(self, citations: list[Citation], context: Context) -> list[CitationCheck]:
         in_ctx = {(t.call_id, t.idx) for t in context.turns} | {(cid, -1) for cid in context.call_ids}
@@ -386,7 +390,8 @@ class Pipeline:
             now, u = time.time(), usage.snapshot()
             steps[step] = {"seconds": round(now - mark["t"], 2),
                            "prompt_tokens": u["prompt_tokens"] - mark["u"]["prompt_tokens"],
-                           "completion_tokens": u["completion_tokens"] - mark["u"]["completion_tokens"]}
+                           "completion_tokens": u["completion_tokens"] - mark["u"]["completion_tokens"],
+                           "cached_tokens": u["cached_tokens"] - mark["u"]["cached_tokens"]}
             mark.update(t=now, u=u)
 
         say = on_step or (lambda _: None)

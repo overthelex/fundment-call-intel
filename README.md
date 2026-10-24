@@ -348,6 +348,16 @@ What keeps it there:
   both, so what they miss is not fixed by more reasoning.
 - **The inventory is call and timestamp only**: every token in it is generated before the answer.
 - **Calls are read at ingestion**, so a question across calls selects notes instead of reading calls.
+- **Static text first, the question last**, in every prompt (system prompt, then the catalogue, the
+  transcript or the topic's statements, then the question), so the provider's prefix cache serves the
+  shared part: 40% of all prompt tokens in a full eval came from the cache
+  (`…-180924-auto-prompt-cache`), billed at a discount. A call read for several questions (per-call
+  verdicts on the same 10 prospect calls for q02, q07, q28) is paid in full once.
+- **A duplicate for a lost request at question time**: a planner, verdict, topic-check or answer call
+  with no answer after 45 s (answer step p99 21 s, maximum 28 s over 101 answers) is sent again and
+  the first answer wins, so a request the provider never answers does not hold the question for the
+  120 s timeout (one question took 135 s instead of 12). Off for `ANSWER_EFFORT=medium`, whose
+  answers take a minute.
 - **Ingestion in parts, in parallel**: every call is split into parts of ~1,700 words and every
   part of every call is read at once (two claims passes and a notes pass each, ≤180 requests, well
   under the deployment's 1M tokens and 1,000 requests a minute). Ingestion waits for its slowest
@@ -387,11 +397,12 @@ What keeps it there:
   over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first
   output arrives in well under 2 s even when the answer takes 15 s.
 
-Not done yet, in order of expected gain: a duplicate for a question-time request with no answer
-after ~45 s (the lost requests above; one question took 135 s instead of 12); stream the answer text
-and check each citation as it arrives; run the planner on a smaller model and embed the question while it plans (~1–2 s); keep the
-static prompt and the transcripts ahead of the question so the provider's prefix cache applies to
-repeated questions on the same calls; cache answers by normalised question and data version; and
+Not done yet, in order of expected gain: stream the answer text and check each citation as it
+arrives (the first claim on screen in 2–3 s instead of ~13 s on questions across calls; the total
+does not change: the answer's own output tokens set it, reasoning at `low` is 20–30 tokens); run the
+planner on a smaller model (~1 s per question; no smaller model is deployed on the Azure resource
+used here) and embed the question while it plans; cache answers by normalised question and data
+version; and
 provisioned throughput, since the spread under load (8 s alone vs up to 21 s p95 with 4 in parallel)
 is the provider's.
 
