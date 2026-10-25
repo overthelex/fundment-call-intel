@@ -21,6 +21,9 @@ def _cite_line(pipe: Pipeline, c: CitationCheck) -> str:
         p = call.speaker(c.turn.speaker)
         who = f"{c.turn.speaker}" + (f" ({p.role}, {p.company})" if p else "")
         where = f"{call.path}:{c.turn.line}"
+        if c.status == "wrong_call":  # lead with what the answer cited, then where the words really are
+            return (f'    {mark} {c.call_id} [{c.timestamp}] {c.speaker}: "{c.quote}"  [wrong call]\n'
+                    f'       → said in {c.turn.call_id} [{c.turn.ts}] by {who}, {where}')
         note = "" if c.status == "exact" else f"  [{c.status}: cited {c.timestamp} {c.speaker}]"
         return f'    {mark} {c.turn.call_id} [{c.turn.ts}] {who}: "{c.quote}"\n       {where}{note}'
     return f'    {mark} {c.call_id} [{c.timestamp}] {c.speaker}: "{c.quote}"  (quote not found in transcript)'

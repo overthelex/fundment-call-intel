@@ -90,3 +90,15 @@ def test_quote_from_another_call_is_rejected_but_located(calls):
     # Leo Grant's SSO line is in CALL-012, not CALL-015
     r = check_citation(calls, "CALL-015", "08:09", "Leo Grant", "SAML SSO is Enterprise.", set())
     assert r.status == "wrong_call" and not r.ok and r.turn.call_id == "CALL-012"
+
+
+def test_wrong_call_shows_the_cited_call_and_where_the_words_are(calls):
+    from types import SimpleNamespace
+
+    from callqa.cli import _cite_line
+
+    r = check_citation(calls, "CALL-003", "03:23", "Imogen Price", "And we've got Zapier already.", set())
+    line = _cite_line(SimpleNamespace(calls=calls), r)
+    assert line.splitlines()[0].startswith("    ✗ CALL-003 [03:23] Imogen Price")
+    assert "→ said in CALL-006 [03:23] by Imogen Price (COO, Fable Media)" in line
+    assert "call-006_fable_media.txt:46" in line
