@@ -112,6 +112,45 @@ question
   how specific each is, whether its speaker later hedged or corrected it, who said it, and recency. When it only saw excerpts, it must say "not found in the retrieved excerpts", not
   "never said".
 
+## Data model
+
+What is stored, and what passes between the steps (pydantic models and dataclasses in `callqa/`):
+
+```
+transcript  Call (header metadata, participants, kind) → Turn (call_id, idx, ts, speaker, side, text, file line)
+index       Chunk: ~180 words of consecutive turns of one call, 343 of them · BM25, in memory
+            chunk vectors: .cache/embeddings-<digest>.npy, 343 × 1536
+store       .cache/callqa.db (SQLite)
+              calls  (call_id, digest, company, category, stage, date)              20 rows
+              claims (call_id, turn_idx, topic, statement, speaker, quote)          749 rows, 12 topics
+              notes  (call_id, turn_idx, field, point, speaker, quote, vector)    1,441 rows, 10 fields
+question    Plan → Context → Answer → CitationCheck for each quote → Result
+eval        questions.yaml (gold calls, facts as core + details, evidence turns) → Judgement per fact
+```
+
+- **The turn is the unit of evidence.** Every stored record points at `(call_id, turn_idx)`, and the
+  turn's file line gives the `file:line` link. Header metadata are turns too, so a company size can be
+  cited and checked like speech.
+- **What the model writes is not what is stored.** Every reader returns timestamp, speaker and a
+  verbatim quote; the citation checker resolves them to a turn, and the record is kept with its
+  `turn_idx` only if the quote is in that turn: notes (`CallNote` → `StoredNote`), vendor claims
+  (`VendorClaim` → `StoredClaim`), per-call verdicts (`CallVerdict` → `Finding`) and contradictions
+  (`TopicConflict` → `FoundConflict`, dropped if either side is left without a verified quote).
+- **`digest`** hashes the call's text, both model names and the prompt versions, so re-indexing reads
+  only what changed, and each call's rows are replaced in one transaction.
+- **Notes choose turns; the answer sees turns.** Questions across calls filter notes by the planner's
+  fields and rank them by similarity (each note embedded as `"field: point"`), up to 250 distinct
+  turns. The answer step gets those turns from the transcript, not the notes, so what it quotes is
+  what was said.
+- **`Plan`**: call ids, call kinds, specific or across, search queries, notes on names, and the
+  routing flags (vendor consistency, product topics, note fields, a verdict per call, counting across
+  calls). **`Context`**: the mode and every turn the answer saw; the eval saves it, which is what
+  evidence recall and `--replay` use.
+- **`Answer`**: `relevant_turns` (call and timestamp only, written first), `summary`, `claims` with
+  citations, `conflicts` with the better-supported side and why, `not_found`, `confidence`.
+  **`CitationCheck`**: exact, shifted, fuzzy, wrong_speaker, wrong_call, not_found or unknown_call.
+  **`Result`** adds the plan, context, warnings, and seconds and tokens per step (`--json`).
+
 ## Key decisions
 
 1. **Whole calls when they fit, retrieval when they don't.** One call is at most ~5K words, and all 20
@@ -141,10 +180,10 @@ question
    the question, so similarity search cannot find it. Putting
    every vendor statement on a topic side by side makes a contradiction visible: "SSO is on all plans"
    (one AE) next to statements in nine other calls that SAML SSO is Enterprise. The planner switches to this
-   context only for questions about the vendor's consistency. One pass over ~550 statements missed
-   cases with low reasoning, so each of the 12 topics is checked by its own small call, twice in
-   parallel, and the pairs are merged (`callqa/conflicts.py`; one check of the "no-code" topic found
-   that contradiction 7 times in 10); the answer step weighs what they found.
+   context only for questions about the vendor's consistency. One pass over all ~550 statements stops
+   after the clearest contradictions, so each of the 12 topics is checked by its own small call, twice
+   in parallel (one check finds a given contradiction about 7 times in 10), and the pairs are merged
+   (`callqa/conflicts.py`); the answer step weighs what they found.
    The same table answers product-fact questions: retrieval gives the passages most similar to the
    question, so a fact stated in nine calls and contradicted in one can reach the model as one statement
    against one, and it cannot weigh what it does not see. For a question on one to three product topics
@@ -256,12 +295,11 @@ What I take from it:
   ~1.0, and the misses are details the answer leaves out (q13–q15, q18). Questions across all calls
   get the notes written at ingestion, which reach about three quarters of the evidence turns (q05
   lowest, ~0.4), and a pattern that only shows across calls is not in any one call's notes.
-- **One pass over many calls or statements drops one; small parallel checks do not.** The answer step
-  over five cold calls said "all five" produced a follow-up (q10), left Acme out of the likely buyers
-  (q07), listed two calls that never mentioned Salesforce (q02), and found only some of the vendor's
-  contradictions (q11). Each call is now read on its own for the question (a verdict per call), each
-  claim topic is checked on its own, and code checks that the answer covers every call its verdict
-  counts, answering once more if not. q02, q10, q11 and q28 are now "yes" in nearly every run.
+- **One pass over many calls or statements drops one; small parallel checks do not.** A single answer
+  step over five cold calls said "all five" produced a follow-up (q10), left Acme out of the likely
+  buyers (q07), listed calls that never mentioned Salesforce (q02), and found only some of the vendor's
+  contradictions (q11). Hence a verdict per call, a check per claim topic, and a coverage check in
+  code; q02, q10, q11 and q28 are "yes" in nearly every run.
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
 - **Open**: q05 ("which capabilities matter most?") is a count over calls that note similarity
   ranks poorly; `--across map` closes it (evidence recall 1.0) at ~45 s and ~150K tokens, so it is
@@ -337,11 +375,10 @@ What keeps it there:
 - **Ingestion in parts, in parallel**: every call is split into parts of ~1,700 words, and every
   part of every call is read at once (claims at low reasoning, notes at medium). One request over a
   whole ~5K-word call took 1.5–3 min; parts take 20–100 s, and a fresh ingestion of all 20 calls
-  80–130 s (`eval/bench_ingest.py`). Ingestion also used to hang for up to 13 min; a request log and
-  thread dumps showed two causes: the HTTP client's default SSL context (`truststore`) shook hands one
-  connection at a time under one lock, and the provider never answers ~4% of requests. The client now
-  uses a plain `ssl` context, and a request with no answer after 60 s gets a duplicate. The
-  benchmark and the investigation: `eval/EVALUATION.md`, *Engineering notes*.
+  80–130 s (`eval/bench_ingest.py`). The client uses a plain `ssl` context, because the default one
+  (`truststore`) shakes hands one connection at a time under one lock, and an extraction with no
+  answer after 60 s gets a duplicate. The benchmark, and how both were found: `eval/EVALUATION.md`,
+  *Engineering notes*.
 - **Progress on screen**: the CLI prints each step as it starts (`planning` → `plan: across question
   over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first
   output arrives in well under 2 s even when the answer takes 15 s.
@@ -391,10 +428,10 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
 - **The checker verifies that the quote exists and that the cited person said it, not that it supports
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
 - **Header vs body disagreements** are only surfaced when the question touches them.
-- **Ingestion is not deterministic.** Fresh indexes of the same 20 calls differ; one single claims
-  pass once left out "That's fine, it's completely no-code". Claims are extracted twice and merged
-  (14 or 15 of the 15 vendor statements behind the gold contradictions in every fresh index), an empty
-  extraction is retried, and the index behind the headline runs is committed, so a fresh clone
+- **Ingestion is not deterministic.** Fresh indexes of the same 20 calls differ, and a single claims
+  pass can miss a statement ("That's fine, it's completely no-code"). Claims are extracted twice and
+  merged (14 or 15 of the 15 vendor statements behind the gold contradictions in every fresh index), an
+  empty extraction is retried, and the index behind the headline runs is committed, so a fresh clone
   answers from the same claims and notes (inspectable in `.cache/callqa.db`).
 - **The gold set is small (30) and LLM-drafted** (see `eval/EVALUATION.md`). The judge is
   from a different vendor than the answering model, but it is still an LLM and it is noisy on the
