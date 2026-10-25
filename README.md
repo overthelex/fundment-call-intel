@@ -35,7 +35,7 @@ uv run callqa index         # checks the index, which is committed (.cache/callq
                             # per-call notes; .cache/embeddings-*.npy: chunk vectors): seconds; it
                             # re-reads only new or changed calls, or all of them if CHAT_MODEL or
                             # EMBED_MODEL differ from gpt-5.4-mini / text-embedding-3-small
-rm -rf .cache && uv run callqa index   # optional: ingest everything from scratch (~2 min)
+rm -rf .cache && uv run callqa index   # optional: ingest everything from scratch (2–4 min)
 uv run callqa ask "Which competitors were mentioned, and in what context?"
 uv run callqa ask "..." --mode full     # baseline: whole dataset in the prompt
 uv run callqa ask "..." --json          # raw result, including the plan and every citation check
@@ -351,7 +351,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | one call, whole transcript ("What was Verity paying?") | 5.5 s |
 | product fact, excerpts + vendor statements ("SSO on Growth?") | 10.2 s |
 | across calls, ingestion notes ("Why do prospects hesitate?") | 18.9 s |
-| ingestion of all 20 calls from scratch (`rm -rf .cache && callqa index`) | 80–130 s |
+| ingestion of all 20 calls from scratch (`rm -rf .cache && callqa index`) | 80–260 s |
 | across a few whole calls, a verdict per call + answer ("Which cold calls produced a follow-up?") | 13–16 s |
 | a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
 | comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
@@ -375,9 +375,9 @@ What keeps it there:
 - **Ingestion in parts, in parallel**: every call is split into parts of ~1,700 words, and every
   part of every call is read at once (claims at low reasoning, notes at medium). One request over a
   whole ~5K-word call took 1.5–3 min; parts take 20–100 s, and a fresh ingestion of all 20 calls
-  80–130 s (`eval/bench_ingest.py`). The client uses a plain `ssl` context, because the default one
-  (`truststore`) shakes hands one connection at a time under one lock, and an extraction with no
-  answer after 60 s gets a duplicate. The benchmark, and how both were found: `eval/EVALUATION.md`,
+  80–260 s (`eval/bench_ingest.py`; 80–130 s on 24.10 and 190–260 s on 25.10, with the same code).
+  The client uses a plain `ssl` context, because the default one (`truststore`) shakes hands one
+  connection at a time under one lock, and an extraction with no answer after 60 s gets a duplicate. The benchmark, and how both were found: `eval/EVALUATION.md`,
   *Engineering notes*.
 - **Progress on screen**: the CLI prints each step as it starts (`planning` → `plan: across question
   over all calls; note fields: …` → `context: notes, 10 calls …; writing the answer`), so the first

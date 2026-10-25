@@ -324,7 +324,8 @@ ingestions showed two causes:
   answer wins; embeddings, normally under 2 s, time out after 20 s. At question time the same applies
   after 45 s for the planner and the answer, 20 s for verdicts and topic checks.
 
-Four fresh ingestions with both fixes: 80–129 s.
+Four fresh ingestions with both fixes: 80–129 s (24.10). Two more on a fresh clone the next day,
+with the same code: 188 s and 260 s.
 
 ### Cost and the prompt cache
 
