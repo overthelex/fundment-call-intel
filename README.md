@@ -134,7 +134,9 @@ eval        questions.yaml (gold calls, facts as core + details, evidence turns)
 - **What the model writes is not what is stored.** Every reader returns timestamp, speaker and a
   verbatim quote; the citation checker resolves them to a turn, and the record is kept with its
   `turn_idx` only if the quote is in that turn: notes (`CallNote` → `StoredNote`), vendor claims
-  (`VendorClaim` → `StoredClaim`), per-call verdicts (`CallVerdict` → `Finding`) and contradictions
+  (`VendorClaim` → `StoredClaim`), per-call verdicts (`CallVerdict` → `Finding`), buying signals
+  (`BuyingSignals` → `Finding` with `tier`, `score`, `signals` and `caveats`; a signal without a
+  verified quote counts as absent, and the tier is computed by `tier_of`) and contradictions
   (`TopicConflict` → `FoundConflict`, dropped if either side is left without a verified quote).
 - **`digest`** hashes the call's text, both model names and the prompt versions, so re-indexing reads
   only what changed, and each call's rows are replaced in one transaction.
@@ -260,6 +262,9 @@ The current code, 29 headline questions (q30 is a bonus), `gpt-5.4-mini` answeri
 judging, 24.10. Both pipeline runs used the index committed to the repo, so
 `uv run python eval/run_eval.py` on a fresh clone starts from the same claims and notes.
 Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/README.md).
+These runs predate the buying rubric (26.10), the only change since: q07 was "partly" in both, and
+with the rubric it is "yes" in 5 of 6 runs of q07 alone (`…-q07-rubric`); the full eval was not
+re-run after it.
 
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
@@ -359,7 +364,7 @@ is printed under every answer (`[plan 2.0s (176 out) · context 0.0s · answer 7
 | across calls, ingestion notes ("Why do prospects hesitate?") | 18.9 s |
 | ingestion of all 20 calls from scratch (`rm -rf .cache && callqa index`) | 80–260 s |
 | across a few whole calls, a verdict per call + answer ("Which cold calls produced a follow-up?") | 13–16 s |
-| a verdict on each of 10–20 calls + notes ("Which prospects seem most likely to purchase?") | 10–31 s |
+| buying signals read from each of 10–15 prospect calls, tiers in code + notes ("Which prospects seem most likely to purchase?") | 23–44 s |
 | comparison: small kinds of call whole + notes ("How do renewals differ from new business?") | ~15–20 s |
 | vendor contradictions, 12 topics checked twice + answer ("Has the vendor given inconsistent answers?") | 15–37 s |
 | the task's 11 example questions, one at a time (`…-205327-auto-examples-low`): mean / median / slowest | 15.7 / 14.4 / 22.3 s |
@@ -495,7 +500,7 @@ cost the same at 20 calls as at 20,000. Measured on the current 20 calls, per qu
 | part | now | at thousands of calls | what to do instead |
 |---|---|---|---|
 | map step (read each candidate call) | ~139K tokens per cross-call question | ~6K tokens × every call: millions of tokens, minutes | **done**: notes at ingestion (default, ~26K tokens per cross-call question, most of the map step's gain); map kept as `--across map`, capped at 25 calls |
-| verdict per call, for questions that rank or classify calls (q02, q07, q28) | 100–150K tokens per such question at 10–20 calls | linear in the number of candidate calls | capped at 25 candidates; at scale, shortlist calls by their notes first and read only those |
+| verdict per call, for questions that rank or classify calls (q02, q28), and buying signals per call (q07) | 100–180K tokens per such question at 10–20 calls | linear in the number of candidate calls | capped at 25 candidates; at scale, shortlist calls by their notes first and read only those |
 | notes at ingestion | ~1,400 notes, the 250 best turns by field and similarity | grows with calls; the answer still gets ≤250 turns | add metadata filters and a shortlist of calls before ranking notes |
 | all vendor claims, checked topic by topic in 12 parallel calls (q11) | ~550 claims, ~45 per topic on average | tens of thousands, a topic no longer fits one call | a product-fact table: claims clustered by topic and subject with counts (people, calls, last date, hedged); conflicts recorded when a new call is ingested |
 | every vendor statement on a topic (q24) | 9 calls on SSO | hundreds per topic | the same table: "SAML SSO: Enterprise, 9 calls / 3 reps; all plans, 1 call, later hedged"; weighing becomes counting |
