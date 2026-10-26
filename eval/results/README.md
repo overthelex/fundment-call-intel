@@ -8,10 +8,11 @@ Runs of the current code (the README's results table):
 
 | files | what it is | result |
 |---|---|---|
-| `20261024-211125-auto-final`, `20261024-211257-auto-final` | pipeline, twice, final code, on the index committed in `.cache/` | 19 / 10 / 0 and 19 / 10 / 0; 33–37K tokens, 23–34% from the prompt cache |
+| `20261026-213702-auto-final`, `20261026-213723-auto-final` | pipeline, twice, final code (buying rubric, items counted across calls), on the index committed in `.cache/` | 18 / 11 / 0 and 17 / 11 / 1; 38–40K tokens, 24–31% from the prompt cache |
+| `20261024-211125-auto-final`, `20261024-211257-auto-final` | pipeline, twice, the code before those two changes | 19 / 10 / 0 and 19 / 10 / 0; 33–37K tokens, 23–34% from the prompt cache |
 | `20261024-154829-auto-parts`, `20261024-154956-auto-parts` | the same index before the coverage check, two-pass topic checks, duplicates and the cache-friendly order | 16 / 13 / 0 and 17 / 12 / 0; 34K tokens |
 | `20261024-094601-full-fresh-clone` | baseline: whole dataset in the prompt (`--mode full`) | 13 / 14 / 2; 123K tokens; 17 failed citations |
-| `comparison.md` | per-question verdicts of these three runs (`compare.py`) | which questions are unstable |
+| `comparison.md` | per-question verdicts of the two current runs and the baseline (`compare.py`) | which questions are unstable |
 
 The same code before calls were read in parts, on the previous index (whole calls at medium):
 `20261024-123718-auto-final` 20 / 9 / 0 and `20261024-123853-auto-final` 15 / 13 / 1 (32–33K tokens).
@@ -19,6 +20,10 @@ The ingestion benchmark behind the switch is `eval/bench_ingest.py` (README, *Sp
 
 The buying rubric for "most likely to buy" (tiers computed in code), q07 six times:
 `20261026-2059*/2100*-auto-q07-rubric` (yes in 5, partly in 1: Acme on top once).
+
+Items counted across calls (`themes.py`), their turns added on top of the note budget:
+`20261026-213449/213500-auto-q05-themes*` (q05 three times: yes, yes, yes) and
+`20261026-2133*/213406-auto-q01-q05-themes` (q01 yes ×3, q05 yes, yes, partly).
 
 `--across map` with counting across calls, q05 three times: `20261024-1746*-auto-q05-map-tally`
 (yes, partly, partly; evidence recall 1.0; ~45 s, ~150K tokens).

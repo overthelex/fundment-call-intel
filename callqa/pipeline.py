@@ -15,6 +15,7 @@ from .claims import ClaimStore, Topic
 from .conflicts import find_conflicts, render as render_conflicts
 from .index import Chunk, Index, turn_line
 from .llm import LLM, QUESTION_HEDGE_AFTER, Usage
+from .themes import counted
 from .mapper import call_findings, map_calls, ranking_text, rate_calls, render_findings, render_tally, tally, uncovered
 from .notes import NoteField
 from .store import Store
@@ -37,6 +38,7 @@ MAX_MAP_CALLS = 25
 ANSWER_EFFORT = os.environ.get("ANSWER_EFFORT", "low")
 # At most this many noted turns go to the answer step, best first by similarity of their notes to the question.
 NOTE_BUDGET = 250
+MAX_COUNTED_ITEMS = 25  # items raised in at least two of the candidate calls, most calls first
 
 # If the candidate calls fit in this many words, send them whole instead of
 # retrieving excerpts. The whole dataset is ~51K words, a single call at most ~5K.
@@ -293,17 +295,24 @@ class Pipeline:
         retrieved = self.excerpt_context(question, plan, call_ids, usage)
         notes, vecs = self.store.notes(call_ids, plan.note_fields or None)
         noted = {n.call_id for n in notes}  # before the budget cut: a call cut for space did have notes
+        # "what matters most": the items counted across calls at ingestion (themes.py), for these calls;
+        # their turns are added on top of the budget, so a request raised in many calls is not cut for
+        # ranking low (taking them out of the budget cut what q01 needed instead)
+        items = counted(self.store.themes(plan.note_fields or None), call_ids) if plan.pooled_across_calls else []
+        items = items[:MAX_COUNTED_ITEMS]
+        first = {ref for t, _ in items for ref in t.refs if ref[0] in set(call_ids)}
         if len({(n.call_id, n.turn_idx) for n in notes}) > NOTE_BUDGET:
             # the budget counts turns, not notes: a turn with notes in three fields is shown once
             qv = np.asarray(self.llm.embed([question], usage=usage)[0], dtype=np.float32)
-            keep, seen = [], set()
+            keep = [i for i, n in enumerate(notes) if (n.call_id, n.turn_idx) in first]
+            seen: set = set()
             for i in np.argsort(-(vecs @ (qv / np.linalg.norm(qv)))):
                 key = (notes[i].call_id, notes[i].turn_idx)
                 if key not in seen and len(seen) == NOTE_BUDGET:
                     break
                 seen.add(key)
                 keep.append(i)
-            notes = [notes[i] for i in sorted(keep)]
+            notes = [notes[i] for i in sorted(set(keep))]
         by_call: dict[str, set[int]] = {}
         for t in retrieved.turns:
             by_call.setdefault(t.call_id, set()).add(t.idx)
@@ -322,6 +331,8 @@ class Pipeline:
             text += f"\n\nCALLS WITH NO NOTES ON {fields.upper()}: " + ", ".join(empty)
         if whole:
             text = ("WHOLE TRANSCRIPTS (shown in full, not as notes): " + ", ".join(whole) + "\n\n" + text)
+        if items:
+            text = render_counted(items, call_ids, self.calls) + "\n\n" + text
         return Context("notes", sorted(by_call), turns, text, retrieved.chunks)
 
     def whole_groups(self, plan: Plan, call_ids: list[str]) -> list[str]:
@@ -481,3 +492,12 @@ class Pipeline:
             confidence, warnings, usage.snapshot(), time.time() - t0, steps,
             tiers,
         )
+
+
+def render_counted(items: list, call_ids: list[str], calls: dict) -> str:
+    lines = [f"ITEMS COUNTED ACROSS CALLS (grouped from the notes of all {len(call_ids)} candidate calls at "
+             "ingestion; the number of calls is counted in code, not estimated)"]
+    for i, (t, ids) in enumerate(items, 1):
+        where = ", ".join(f"{cid} [{calls[cid].turns[idx].ts}]" for cid, idx in t.refs if cid in set(call_ids))
+        lines.append(f"{i}. {t.item} ({t.field}): {len(ids)} of {len(call_ids)} calls ({where})")
+    return "\n".join(lines)

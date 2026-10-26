@@ -10,6 +10,7 @@ The same tables map onto Postgres + pgvector unchanged when one file is no longe
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import sqlite3
 import sys
@@ -21,6 +22,7 @@ import numpy as np
 
 from . import claims as claims_mod
 from . import notes as notes_mod
+from . import themes as themes_mod
 from .claims import StoredClaim
 from .index import call_parts
 from .llm import LLM, Usage
@@ -38,6 +40,9 @@ CREATE TABLE IF NOT EXISTS claims (
 CREATE TABLE IF NOT EXISTS notes (
     call_id TEXT NOT NULL, turn_idx INTEGER NOT NULL, field TEXT NOT NULL,
     point TEXT, speaker TEXT, quote TEXT, vector BLOB
+);
+CREATE TABLE IF NOT EXISTS themes (
+    field TEXT NOT NULL, digest TEXT NOT NULL, item TEXT NOT NULL, refs TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS notes_by_call_field ON notes (call_id, field);
 CREATE INDEX IF NOT EXISTS claims_by_topic ON claims (topic);
@@ -149,8 +154,35 @@ class Store:
             with ThreadPoolExecutor(workers) as pool:
                 for call, (cl, ns, vecs) in zip(todo, pool.map(lambda c: self.read(c, usage), todo)):
                     self.write(call, cl, ns, vecs)
+            self.refresh_themes(usage)
             self._ready = True
             return len(todo)
+
+    def _field_notes(self, field: str) -> tuple[list[StoredNote], str]:
+        rows = self.db.execute("SELECT call_id, turn_idx, field, point, speaker, quote FROM notes WHERE field = ? "
+                               "ORDER BY call_id, turn_idx", (field,)).fetchall()
+        ns = [StoredNote(call_id=r[0], turn_idx=r[1], field=r[2], point=r[3], speaker=r[4], quote=r[5]) for r in rows]
+        raw = "\x00".join(f"{n.call_id}:{n.turn_idx}:{n.point}" for n in ns) + self.llm.chat_model + themes_mod.PROMPT_VERSION
+        return ns, hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+    def refresh_themes(self, usage: Usage | None = None) -> None:
+        """Re-group the notes of every field whose notes changed (one call per field, in parallel)."""
+        fields = [f for (f,) in self.db.execute("SELECT DISTINCT field FROM notes ORDER BY field")]
+        stale = []
+        for f in fields:
+            ns, d = self._field_notes(f)
+            if not self.db.execute("SELECT 1 FROM themes WHERE field = ? AND digest = ? LIMIT 1", (f, d)).fetchone():
+                stale.append((f, ns, d))
+        if not stale:
+            return
+        print(f"counting items across calls in {len(stale)} note fields", file=sys.stderr, flush=True)
+        with ThreadPoolExecutor(len(stale)) as pool:
+            built = list(pool.map(lambda x: themes_mod.build(x[0], x[1], self.llm, usage), stale))
+        with self.db:
+            for (f, _, d), ts in zip(stale, built):
+                self.db.execute("DELETE FROM themes WHERE field = ?", (f,))
+                self.db.executemany("INSERT INTO themes VALUES (?, ?, ?, ?)",
+                                    [(f, d, t.item, json.dumps(t.refs)) for t in ts])
 
     def ensure(self, usage: Usage | None = None) -> None:
         if not self._ready:
@@ -180,6 +212,16 @@ class Store:
         vecs = np.stack([np.frombuffer(r[6], dtype=np.float32) for r in rows]) if rows else np.zeros((0, 0))
         return ns, vecs
 
+    def themes(self, fields: list[str] | None = None) -> list[themes_mod.Theme]:
+        q, args = "SELECT field, item, refs FROM themes", []
+        if fields:
+            q += f" WHERE field IN ({','.join('?' * len(fields))})"
+            args = list(fields)
+        with self._lock:
+            rows = self.db.execute(q + " ORDER BY rowid", args).fetchall()
+        return [themes_mod.Theme(r[0], r[1], tuple((c, i) for c, i in json.loads(r[2]))) for r in rows]
+
     def counts(self) -> dict[str, int]:
         with self._lock:
-            return {t: self.db.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in ("calls", "claims", "notes")}
+            return {t: self.db.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                    for t in ("calls", "claims", "notes", "themes")}

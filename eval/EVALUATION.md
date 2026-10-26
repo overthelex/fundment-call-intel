@@ -70,30 +70,31 @@ you count:
 ## Results
 
 The current code, 29 headline questions (q30 excluded), `gpt-5.4-mini` answering, Claude Opus judging,
-24.10. Both pipeline runs used the index committed to the repo (`.cache/`). Files: `results/README.md`.
+26.10. Both pipeline runs used the index committed to the repo (`.cache/`). Files: `results/README.md`.
 
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
 | context recall | 1.00 | 1.00 | 1.00 (by construction) |
 | evidence recall | 0.90 | 0.90 | 1.00 (by construction) |
 | cited recall | 0.98 | 0.97 | 0.93 |
-| citation validity | **0.99** | **1.00** | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 1 · 4 · 2 | 0 · 1 · 1 | 4 · 10 · 3 |
-| answer correct: yes / partly / no | **19 / 10 / 0** | **19 / 10 / 0** | 13 / 14 / 2 |
-| core fact recall | 0.78 | 0.76 | 0.73 |
-| atomic fact recall | 0.68 | 0.66 | 0.61 |
-| compound fact recall (strictest) | 0.63 | 0.57 | 0.55 |
-| core facts contradicted · penalties hit | 0 · 0 | 0 · 0 | 1 · 3 |
-| correct abstention on unanswerable | 4 / 5 | 4 / 5 | 5 / 5 |
+| citation validity | **1.00** | **0.99** | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 0 · 4 · 1 | 0 · 5 · 0 | 4 · 10 · 3 |
+| answer correct: yes / partly / no | **18 / 11 / 0** | **17 / 11 / 1** | 13 / 14 / 2 |
+| core fact recall | 0.80 | 0.80 | 0.73 |
+| atomic fact recall | 0.70 | 0.67 | 0.61 |
+| compound fact recall (strictest) | 0.61 | 0.65 | 0.55 |
+| core facts contradicted · penalties hit | 0 · 0 | 0 · 3 | 1 · 3 |
+| correct abstention on unanswerable | 4 / 5 | 2 / 5 | 5 / 5 |
 | false abstention on answerable | 0 / 24 | 0 / 24 | 0 / 24 |
-| prompt tokens / question (from the prompt cache) | **33K** (23%) | 37K (34%) | 123K |
-| latency mean / p95, 4 in parallel | 10.4 / 23.1 s | 10.7 / 22.9 s | 11.3 / 38.5 s |
+| prompt tokens / question (from the prompt cache) | 40K (31%) | **38K** (24%) | 123K |
+| latency mean / p95, 4 in parallel | 12.7 / 31.5 s | 12.2 / 29.4 s | 11.3 / 38.5 s |
 
-`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 6 of 30, all
-on the yes/partly line; earlier runs of nearly the same code gave 15 to 20 "yes". The baseline is
-worse than both runs on q07, q11, q12, q15 and q19 and better on q17 and q30. The two abstention misses
-(q29, q26) are judged "yes" and do say the data has no answer: the judge's abstention flag and its
-verdict disagree.
+`results/comparison.md` has the verdicts per question. The two pipeline runs disagree on 6 of 30;
+runs of nearly the same code have given 15 to 20 "yes". The baseline is worse than both runs on q03,
+q05, q07 and q16 and better on q30. The abstention misses (q29 in run 1; q26, q27, q29 in run 2) are
+judged "yes" and do say the data has no answer: the judge's abstention flag and its verdict disagree.
+The code before the buying rubric and the counted items scored 19 / 10 / 0 twice (24.10,
+`…-211125/211257-auto-final`); what moved and why is in the README, *Results*.
 
 ### How far the judge can be trusted
 
@@ -111,11 +112,11 @@ would cut the noise.
 - **Routing is not the bottleneck; for cross-call questions retrieval is.** Every gold call reaches
   the model, but the turn that answers does not always: evidence recall is ~1.0 when whole calls are
   sent and lower for questions across calls, which use the notes written at ingestion (about three
-  quarters on the 7 such questions; q05 about 0.4). The answer cannot list what it never saw.
-- **The pipeline is at least as good as the baseline at about 1/4 of the input tokens.** The gap in
-  "yes" (19 vs 13) is about the size of the judge noise, so the claim is "no worse"; q24 and q11 are clear
+  quarters on the 7 such questions). The answer cannot list what it never saw.
+- **The pipeline is at least as good as the baseline at about 1/3 of the input tokens.** The gap in
+  "yes" (17–18 vs 13) is about the size of the judge noise, so the claim is "no worse"; q24 and q11 are clear
   per-question differences (examples 1 and 2).
-- **Quotes are more reliable with less context**: 2–7 failed citations for the pipeline vs 17 for
+- **Quotes are more reliable with less context**: 5 failed citations for the pipeline vs 17 for
   the baseline, mostly *wrong call*: real quotes attached to the wrong customer (example 3). Wrong
   call and not found are reported separately because they are different failures (attribution vs
   invention); both count as errors.
@@ -129,14 +130,20 @@ would cut the noise.
 
 - **Single-call details (q13, q14, q15, q18)**: the whole transcript is in context; the answer gives
   the main point and leaves out a required detail (first failed step "answer").
-- **q05 ("which capabilities matter most to prospects?")**, "partly" in most runs. It is a count over
-  calls, and notes ranked by similarity to an abstract question miss concrete asks: "Can the queue be
-  owned by a team?" is raised in 5 of 10 calls but ranked 389th–479th of 509 noted turns, below the
-  budget. See *Engineering notes* for what was tried; `--across map` closes the evidence gap.
+- **q05 ("which capabilities matter most to prospects?")**: "partly" in most runs until its items
+  were counted. It is a count over calls, and notes ranked by similarity to an abstract question miss
+  concrete asks: "Can the queue be owned by a team?" is raised in 5 of 10 calls but ranked
+  389th–479th of 509 noted turns, below the budget. Now the notes of each field are grouped into
+  items once, after ingestion (`themes.py`), the calls behind each item are counted in code, and the
+  turns of the 25 items raised in most calls are added to the context: "yes" in 7 of 8 runs, the
+  misses now being one of six themes left out (SIEM export, reusable components or the
+  change-management scenario, a different one each run). See *Engineering notes*.
 - **q07 ("which prospects seem most likely to purchase?")**: "yes" in about half the runs while the
   model chose the tiers (the gold set puts Juniper on top; the model's verdict was "viable, not a sure
   buyer" in some runs). Now each call is read for fixed signals and code computes the tier
-  (`mapper.tier_of`) and writes the ranking paragraph: 5 of 6 "yes" (`results/…-q07-rubric`), 117–179K
+  (`mapper.tier_of`) and writes the ranking paragraph: 5 of 6 "yes" run alone (`results/…-q07-rubric`)
+  and 2 of 4 in full evals (the answer's prose contradicted the ranking once; a signal was misread
+  once), 117–179K
   prompt tokens and 23–44 s. Three designs did not hold up on the way: caps on any blocker the model
   found (every prospect has one, so all ten came out conditional); caps on blockers the model marked as
   "stopping" the purchase (it marked the evaluation's own open questions in some runs and not in
@@ -290,6 +297,8 @@ What was measured, changed or dropped along the way, with the runs in `results/`
 | a bonus for points that recur across calls | no better on average (0.72–0.76 vs 0.76 over the 7 cross-call questions) | no |
 | rank notes by the question and the planner's search queries, budget 350 turns | 0.43 → 0.72 on saved plans, 0.33–0.50 live: the planner's queries change between runs; q07 fell to "no" twice (`…-query-rank`) | no |
 | `--across map`: read each call for the question, group the points into items, count calls in code | 1.0; core recall 0.50–0.83, "yes" in 1 of 3, at ~45 s and ~150K tokens (`…-q05-map-tally`) | as an option |
+| items counted once from the stored notes (one call per field after ingestion), their turns put first within the 250-turn budget | 0.67–0.75, "yes" 3 of 3, but q01 fell to "partly" in both full runs: the items took half the budget from what q01 needed | no |
+| the same, their turns added on top of the budget | 0.67–0.79, core recall 0.50–1.0, "yes" in 7 of 8, 34–46K tokens; q01 "yes" in 5 of 5 (`…-q05-themes`, `…-q01-q05-themes`, `…-213702/213723-auto-final`) | **yes** |
 
 The counting step still groups too coarsely ("security, compliance and access controls" instead of
 "export audit logs to our own SIEM"), which is what q05 loses on when it is "partly".

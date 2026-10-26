@@ -140,7 +140,7 @@ def main(argv: list[str] | None = None) -> None:
         n = pipe.store.ingest()
         c = pipe.store.counts()
         print(f"ingested {n} new or changed calls; store holds {c['calls']} calls, "
-              f"{c['claims']} vendor claims, {c['notes']} notes")
+              f"{c['claims']} vendor claims, {c['notes']} notes, {c['themes']} items counted across calls")
         return
     if args.cmd == "ask":
         r = pipe.ask(args.question, mode=args.mode, on_step=None if args.json else progress())

@@ -105,7 +105,12 @@ question
   - **notes** (`callqa/notes.py`): the call's points under 10 fields (needs, pains, objections,
     competitors, integrations, pricing, decision process, buying signals, outcome, how the team ran
     the call), each tied to a turn and embedded (1,441 notes, medium reasoning). Questions across calls
-    select notes by field and similarity, up to 250 turns, instead of reading the calls.
+    select notes by field and similarity, up to 250 turns, instead of reading the calls;
+  - **items counted across calls** (`callqa/themes.py`): after the calls are read, one call per note
+    field groups that field's notes from all calls into specific items ("exception queue owned by a
+    team"), each pointing at its notes (276 items). For "what matters most" the number of calls behind
+    each item is counted in code, for the calls the question is about, and those turns are added to
+    the context on top of the 250.
 - **Answering** (`callqa/prompts.py`): the model sees whose side each speaker is on. It is told that a
   vendor's product statement is a claim, not a fact. It is told to report contradictions instead of
   picking one side silently, and then to weigh them on fixed criteria: how many people say each side,
@@ -124,6 +129,7 @@ store       .cache/callqa.db (SQLite)
               calls  (call_id, digest, company, category, stage, date)              20 rows
               claims (call_id, turn_idx, topic, statement, speaker, quote)          749 rows, 12 topics
               notes  (call_id, turn_idx, field, point, speaker, quote, vector)    1,441 rows, 10 fields
+              themes (field, digest, item, refs: [(call_id, turn_idx)])            276 rows
 question    Plan → Context → Answer → CitationCheck for each quote → Result
 eval        questions.yaml (gold calls, facts as core + details, evidence turns) → Judgement per fact
 ```
@@ -259,47 +265,51 @@ The metrics are chosen to say *which step* failed, deterministic ones first:
 ### Results
 
 The current code, 29 headline questions (q30 is a bonus), `gpt-5.4-mini` answering, Claude Opus
-judging, 24.10. Both pipeline runs used the index committed to the repo, so
-`uv run python eval/run_eval.py` on a fresh clone starts from the same claims and notes.
+judging, 26.10. Both pipeline runs used the index committed to the repo, so
+`uv run python eval/run_eval.py` on a fresh clone starts from the same claims, notes and counted items.
 Which file in `eval/results/` is which: [`eval/results/README.md`](eval/results/README.md).
-These runs predate the buying rubric (26.10), the only change since: q07 was "partly" in both, and
-with the rubric it is "yes" in 5 of 6 runs of q07 alone (`…-q07-rubric`); the full eval was not
-re-run after it.
 
 | | pipeline, run 1 | pipeline, run 2 | whole dataset in prompt (`full`) |
 |---|---|---|---|
-| run | `…-211125-auto-final` | `…-211257-auto-final` | `…-094601-full-fresh-clone` |
-| correct: yes / partly / no | **19 / 10 / 0** | **19 / 10 / 0** | 13 / 14 / 2 |
-| core / atomic fact recall | 0.78 / 0.68 | 0.76 / 0.66 | 0.73 / 0.61 |
-| context recall · evidence recall | 1.00 · 0.90 | 1.00 · 0.90 | 1.00 · 1.00 (by construction) |
-| citation validity | 0.99 | 1.00 | 0.97 |
-| failed citations: not found · wrong call · wrong speaker | 1 · 4 · 2 | 0 · 1 · 1 | 4 · 10 · 3 |
-| abstention: right on unanswerable · false on answerable | 4/5 · 0 of 24 | 4/5 · 0 of 24 | 5/5 · 0 of 24 |
-| penalties hit | 0 | 0 | 3 |
-| prompt tokens per question (from the prompt cache) | 33K (23%) | 37K (34%) | 123K |
-| latency mean / p95, 4 questions in parallel | 10.4 / 23.1 s | 10.7 / 22.9 s | 11.3 / 38.5 s |
-| first failed step | retrieval 5, answer 4, attribution 1, abstention 1 | answer 6, retrieval 4, attribution 1, abstention 1 | answer 15, attribution 4 |
+| run | `…-213702-auto-final` | `…-213723-auto-final` | `…-094601-full-fresh-clone` |
+| correct: yes / partly / no | **18 / 11 / 0** | **17 / 11 / 1** | 13 / 14 / 2 |
+| core / atomic fact recall | 0.80 / 0.70 | 0.80 / 0.67 | 0.73 / 0.61 |
+| context recall · evidence recall | 1.00 · 0.91 | 1.00 · 0.91 | 1.00 · 1.00 (by construction) |
+| citation validity | 1.00 | 0.99 | 0.97 |
+| failed citations: not found · wrong call · wrong speaker | 0 · 4 · 1 | 0 · 5 · 0 | 4 · 10 · 3 |
+| abstention: right on unanswerable · false on answerable | 4/5 · 0 of 24 | 2/5 · 0 of 24 | 5/5 · 0 of 24 |
+| penalties hit | 0 | 3 | 3 |
+| prompt tokens per question (from the prompt cache) | 40K (31%) | 38K (24%) | 123K |
+| latency mean / p95, 4 questions in parallel | 12.7 / 31.5 s | 12.2 / 29.4 s | 11.3 / 38.5 s |
+| first failed step | answer 7, attribution 3, retrieval 3, abstention 1 | answer 7, retrieval 4, abstention 3, attribution 1 | answer 15, attribution 4 |
 
-Per question (`eval/results/comparison.md`): the two runs disagree on 6 of 30 (q03, q08, q09, q16,
-q24, q26), all on the yes/partly line; earlier runs of nearly the same code gave between 15 and 20
-"yes", which is the judge and answer noise this eval measures, so compare per question, not totals.
-The baseline is worse than both runs on q07, q11, q12, q15 and q19 and better on q17 and q30 (the
-bonus, where it sees every call). The two abstention misses (q29 in run 1, q26 in run 2) are judged
-"yes" and do say the data has no answer; the judge's abstention flag disagrees with its own verdict.
+Per question (`eval/results/comparison.md`): the two runs disagree on 6 of 30 (q09, q11, q15, q17,
+q18, q24), all but one on the yes/partly line; runs of nearly the same code have given between 15 and
+20 "yes", which is the judge and answer noise this eval measures, so compare per question, not totals.
+The baseline is worse than both runs on q03, q05, q07 and q16 and better on q30 (the bonus, where it
+sees every call).
+
+The code before the buying rubric and the counted items (24.10, `…-211125/211257-auto-final`) scored
+19 / 10 / 0 twice. The two changes moved the questions they route: q05 and q03 went from "partly"
+to "yes" in both runs, q01 stayed "yes", and q07 is "yes" in 7 of 10 runs of the current code (both
+earlier runs "partly"; see *A ranking is computed*). The questions that went the other way (q12, q15,
+q18, q19, q26, q27) answer from whole transcripts, a path neither change touches: q12 and q15 state
+the same facts as before and were graded differently, and run 2's three abstention misses (q26, q27,
+q29) are judged "yes" and do say the data has no answer.
 
 What I take from it:
 
-- **The pipeline is at least as good as the brute-force baseline, at about a quarter of the
+- **The pipeline is at least as good as the brute-force baseline, at about a third of the
   tokens.** The gap in "yes" is about the size of the judge's own noise (re-judging the same answers
   moved 6 of 30 verdicts), so "at least as good" is the safe claim. Two differences are not noise: the
-  baseline attaches far more quotes to the wrong call or speaker (17 failed citations vs 2–7), and on q24 ("Is SSO
+  baseline attaches far more quotes to the wrong call or speaker (17 failed citations vs 5), and on q24 ("Is SSO
   on Growth?") it concluded "yes, all plans" from one AE against nine calls that say Enterprise, the
   error the vendor-statement table and the weighing rules exist to prevent (example 1 in
   `eval/EVALUATION.md`).
 - **Two bottlenecks.** Questions about one or a few calls get whole transcripts, evidence recall is
   ~1.0, and the misses are details the answer leaves out (q13–q15, q18). Questions across all calls
-  get the notes written at ingestion, which reach about three quarters of the evidence turns (q05
-  lowest, ~0.4), and a pattern that only shows across calls is not in any one call's notes.
+  get the notes written at ingestion, which reach about three quarters of the evidence turns, and a
+  pattern that only shows across calls is not in any one call's notes unless it is counted (below).
 - **One pass over many calls or statements drops one; small parallel checks do not.** A single answer
   step over five cold calls said "all five" produced a follow-up (q10), left Acme out of the likely
   buyers (q07), listed calls that never mentioned Salesforce (q02), and found only some of the vendor's
@@ -310,12 +320,20 @@ What I take from it:
   decision waits on something other than OrbitFlow), each backed by a quote that must pass the
   citation check; code adds up the points and sets the tier, and writes the ranking paragraph with
   each call's caveats (rival, build option, gate, veto). With the model choosing the tiers, q07 was
-  "yes" in about half the runs (the top tier moved between Juniper and others); with the rubric, 5 of
-  6 (Ember and Juniper top in all six, Inkwell conditional in all six, Acme in five).
+  "yes" in about half the runs (the top tier moved between Juniper and others); with the rubric, 7 of
+  10 (5 of 6 run alone, 2 of 4 in full evals). What still fails: the answer's own prose contradicting
+  the computed ranking, and one signal misread (Juniper's sponsor as "engaged", Acme's Workato
+  alternative missed).
+- **A count is done in code, not by similarity.** "What capabilities matter most?" (q05) is a count
+  over calls; notes ranked by similarity to the abstract question put "Can the queue be owned by a
+  team?" (5 of 10 calls) at 389th–479th of 509 noted turns, below the budget, and q05 was "partly" in
+  most runs (evidence recall ~0.4). The items counted across calls at ingestion put it at the top
+  ("team-owned exception queue: 7 of 10 calls"), and their turns are added to the context: q05 is
+  "yes" in 7 of 8 runs (evidence recall 0.67–0.79, 34–46K tokens), against "yes" in 1 of 3 for
+  `--across map` at ~150K. Taking those turns out of the 250-turn budget instead of adding them cost
+  q01 its "yes" (two themes missing in both full runs); added on top, q01 is "yes" in all 5 runs.
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
-- **Open**: q05 ("which capabilities matter most?") is a count over calls that note similarity
-  ranks poorly; `--across map` closes it (evidence recall 1.0) at ~45 s and ~150K tokens, so it is
-  an option, not the default. q09 ("renewals vs new business") has its evidence (0.93)
+- **Open**: q09 ("renewals vs new business") has its evidence (0.93)
   but the answer stays general in some runs. q30 (bonus) needs a second retrieval hop and is declined.
   What was tried for each, including what did not hold up in live runs, is in `eval/EVALUATION.md`.
 
@@ -430,7 +448,7 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
   retrieval, which finds passages similar to the question, not passages that relate to each other.
 - **Exhaustive lists**: "which customers mentioned X" uses the notes written at ingestion, which
   reach about three quarters of the supporting turns on the cross-call questions (evidence recall,
-  q05 lowest at ~0.4); a call that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
+  q05 ~0.4 before its items were counted); a call that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
   notes in the relevant fields, but "this list is complete" is still only as good as the notes.
   `--across map` reads every candidate call for the question and reaches ~0.9, at ~5× the tokens.
 - **The buying rubric is mine, not a sales team's.** Its signals, points and thresholds (6 of 6 for

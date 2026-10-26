@@ -10,6 +10,9 @@ from callqa.store import Store
 CALLS = [c for c in load_calls(Path(__file__).resolve().parent.parent / "data") if c.call_id == "CALL-006"]
 
 
+from callqa.themes import ThemeItem, Themes  # noqa: E402
+
+
 class FakeLLM:
     chat_model, embed_model = "fake", "fake-embed"
 
@@ -17,6 +20,9 @@ class FakeLLM:
         self.reads = 0
 
     def structured(self, system, user, schema, **kw):
+        if schema is Themes:
+            self.themes = getattr(self, "themes", 0) + 1
+            return Themes(items=[ThemeItem(item="the one note", notes=[0, 99])])  # 99 is not a note
         if schema is CallClaims:
             self.reads += 1
             return CallClaims(claims=[VendorClaim(topic="SSO, SCIM and identity", statement="s", timestamp="07:23",
@@ -37,7 +43,7 @@ def test_ingest_is_idempotent_and_keeps_verified_notes(tmp_path):
     store = Store(CALLS, llm, path=tmp_path / "db.sqlite")
     assert store.ingest() == 1
     assert store.ingest() == 0 and llm.reads == 2  # two claim passes; unchanged call: not read again
-    assert store.counts() == {"calls": 1, "claims": 1, "notes": 1}  # the invented quote was dropped
+    assert store.counts() == {"calls": 1, "claims": 1, "notes": 1, "themes": 1}  # the invented quote was dropped
     notes, vecs = store.notes(["CALL-006"], ["pricing, budget and commercial terms"])
     assert [n.turn_idx for n in notes] and vecs.shape == (1, 3)
     assert store.notes(["CALL-006"], ["needs and requirements"])[0] == []
@@ -112,3 +118,14 @@ def test_a_request_with_no_answer_gets_a_duplicate_and_the_first_answer_wins():
     assert llm.structured("s", "u", CallClaims, hedge_after=0.2) == CallClaims(claims=[])
     assert len(calls) == 2 and time.time() - t < 2
     lost.set()
+
+
+def test_items_are_counted_once_per_field_and_point_at_real_notes(tmp_path):
+    llm = FakeLLM()
+    store = Store(CALLS, llm, path=tmp_path / "db.sqlite")
+    store.ingest()
+    assert llm.themes == 1  # one field has notes
+    store.ingest()
+    assert llm.themes == 1  # unchanged notes: not grouped again
+    (t,) = store.themes(["pricing, budget and commercial terms"])
+    assert len(t.refs) == 1  # note 99 was not in the input, so it is dropped
