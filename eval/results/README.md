@@ -9,7 +9,8 @@ Runs of the current code (the README's results table):
 | files | what it is | result |
 |---|---|---|
 | `20261026-213702-auto-final`, `20261026-213723-auto-final` | pipeline, twice, final code (buying rubric, items counted across calls), on the index committed in `.cache/` | 18 / 11 / 0 and 17 / 11 / 1; 38–40K tokens, 24–31% from the prompt cache |
-| `20261024-211125-auto-final`, `20261024-211257-auto-final` | pipeline, twice, the code before those two changes | 19 / 10 / 0 and 19 / 10 / 0; 33–37K tokens, 23–34% from the prompt cache |
+| `20261026-214902-auto-before-themes`, `20261026-214903-auto-before-themes` | the code without the counted items (`8e6ab58`), twice, run right after the two above: the same-day comparison | 20 / 8 / 1 and 17 / 12 / 0 |
+| `20261024-211125-auto-final`, `20261024-211257-auto-final` | pipeline, twice, the code before both changes | 19 / 10 / 0 and 19 / 10 / 0; 33–37K tokens, 23–34% from the prompt cache |
 | `20261024-154829-auto-parts`, `20261024-154956-auto-parts` | the same index before the coverage check, two-pass topic checks, duplicates and the cache-friendly order | 16 / 13 / 0 and 17 / 12 / 0; 34K tokens |
 | `20261024-094601-full-fresh-clone` | baseline: whole dataset in the prompt (`--mode full`) | 13 / 14 / 2; 123K tokens; 17 failed citations |
 | `comparison.md` | per-question verdicts of the two current runs and the baseline (`compare.py`) | which questions are unstable |

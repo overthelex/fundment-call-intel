@@ -289,10 +289,15 @@ q18, q24), all but one on the yes/partly line; runs of nearly the same code have
 The baseline is worse than both runs on q03, q05, q07 and q16 and better on q30 (the bonus, where it
 sees every call).
 
-The code before the buying rubric and the counted items (24.10, `…-211125/211257-auto-final`) scored
-19 / 10 / 0 twice. The two changes moved the questions they route: q05 and q03 went from "partly"
-to "yes" in both runs, q01 stayed "yes", and q07 is "yes" in 7 of 10 runs of the current code (both
-earlier runs "partly"; see *A ranking is computed*). The questions that went the other way (q12, q15,
+Totals from different days are not comparable; the same day and judge are. The code without the
+counted items (`8e6ab58`, rubric included), run twice right after these two runs, scored 20 / 8 / 1
+and 17 / 12 / 0: 48 and 46 points (yes = 2, partly = 1) against 47 and 45 here, the same within the
+noise (`…-214902/214903-auto-before-themes`). The difference that repeats is q05, "partly" in both
+runs there and "yes" in both here. q07, whose path is identical in both versions, was "yes" in both
+runs there and "partly" in both here: that is how much a single question moves between runs.
+The code before the buying rubric as well (24.10, `…-211125/211257-auto-final`) scored 19 / 10 / 0
+twice; against it, q05 and q03 went from "partly" to "yes" in both runs, q01 stayed "yes", and q07 is
+"yes" in 7 of 10 runs of the current code (see *A ranking is computed*). The questions that went the other way (q12, q15,
 q18, q19, q26, q27) answer from whole transcripts, a path neither change touches: q12 and q15 state
 the same facts as before and were graded differently, and run 2's three abstention misses (q26, q27,
 q29) are judged "yes" and do say the data has no answer.

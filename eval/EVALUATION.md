@@ -93,7 +93,9 @@ The current code, 29 headline questions (q30 excluded), `gpt-5.4-mini` answering
 runs of nearly the same code have given 15 to 20 "yes". The baseline is worse than both runs on q03,
 q05, q07 and q16 and better on q30. The abstention misses (q29 in run 1; q26, q27, q29 in run 2) are
 judged "yes" and do say the data has no answer: the judge's abstention flag and its verdict disagree.
-The code before the buying rubric and the counted items scored 19 / 10 / 0 twice (24.10,
+On the same day and judge, the code without the counted items (`8e6ab58`) scored 20 / 8 / 1 and
+17 / 12 / 0 (48 and 46 points against 47 and 45; `…-before-themes`), the same within the noise, with q05
+the difference that repeats. The code before the buying rubric as well scored 19 / 10 / 0 twice (24.10,
 `…-211125/211257-auto-final`); what moved and why is in the README, *Results*.
 
 ### How far the judge can be trusted
