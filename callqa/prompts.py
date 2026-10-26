@@ -34,6 +34,9 @@ Rules:
   follow-up?"). False for comparisons between groups of calls ("how do renewals differ from new
   business?"), themes and reasons pooled across calls ("what concerns came up?"), single facts, and
   product questions.
+- likelihood_to_buy: true when the question ranks prospects by how likely they are to buy, close or
+  move forward ("which prospects are most likely to purchase?", "which deals look strongest?"); this
+  also needs assess_each_call. False otherwise.
 - pooled_across_calls: true when the answer is what many calls have in common: the most common or most
   important needs, capabilities, themes, objections or reasons across the calls ("what capabilities
   matter most to prospects?", "what are the most common objections?", "why do prospects hesitate?").
@@ -80,6 +83,11 @@ Grounding rules:
    unlikely near-term), and give each one its main condition, blocker or rival from the transcript:
    a prospect with a hard gate (security review, legal agreement, budget, a veto) is not in the top tier
    without that caveat, and a prospect whose decision depends on something else is "conditional".
+   When the PER-CALL FINDINGS give computed tiers, a ranking paragraph is added before your summary
+   from those tiers: do not rank or tier the calls yourself, and do not call any prospect strongest,
+   top, most likely, conditional or unlikely (the paragraph does that). In the summary, say which
+   signals separate the tiers; give each call a claim with its signals and its blockers or caveats
+   as the findings list them.
 7. When CONTEXT MODE is "excerpts", you only see retrieved parts of calls: do not claim that something
    was never said; say "not found in the retrieved excerpts" instead. When it is "mapped", every
    candidate call was read in full for this question: the calls listed as having nothing on it can be

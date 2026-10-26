@@ -143,8 +143,8 @@ eval        questions.yaml (gold calls, facts as core + details, evidence turns)
   turns. The answer step gets those turns from the transcript, not the notes, so what it quotes is
   what was said.
 - **`Plan`**: call ids, call kinds, specific or across, search queries, notes on names, and the
-  routing flags (vendor consistency, product topics, note fields, a verdict per call, counting across
-  calls). **`Context`**: the mode and every turn the answer saw; the eval saves it, which is what
+  routing flags (vendor consistency, product topics, note fields, a verdict per call, likelihood to
+  buy, counting across calls). **`Context`**: the mode and every turn the answer saw; the eval saves it, which is what
   evidence recall and `--replay` use.
 - **`Answer`**: `relevant_turns` (call and timestamp only, written first), `summary`, `claims` with
   citations, `conflicts` with the better-supported side and why, `not_found`, `confidence`.
@@ -300,11 +300,17 @@ What I take from it:
   buyers (q07), listed calls that never mentioned Salesforce (q02), and found only some of the vendor's
   contradictions (q11). Hence a verdict per call, a check per claim topic, and a coverage check in
   code; q02, q10, q11 and q28 are "yes" in nearly every run.
+- **A ranking is computed, not asked for.** For "most likely to buy" (q07) each prospect's call is
+  read for fixed signals (sponsor committed / engaged, a dated decision, an agreed pilot, whether the
+  decision waits on something other than OrbitFlow), each backed by a quote that must pass the
+  citation check; code adds up the points and sets the tier, and writes the ranking paragraph with
+  each call's caveats (rival, build option, gate, veto). With the model choosing the tiers, q07 was
+  "yes" in about half the runs (the top tier moved between Juniper and others); with the rubric, 5 of
+  6 (Ember and Juniper top in all six, Inkwell conditional in all six, Acme in five).
 - **Unanswerable and near-miss questions work**: Kestrel's ERP, ISO 27001, the Enterprise list price.
 - **Open**: q05 ("which capabilities matter most?") is a count over calls that note similarity
   ranks poorly; `--across map` closes it (evidence recall 1.0) at ~45 s and ~150K tokens, so it is
-  an option, not the default. q07 ("most likely to buy?") is a judgement with no scoring rubric
-  behind it, "yes" in about half the runs. q09 ("renewals vs new business") has its evidence (0.93)
+  an option, not the default. q09 ("renewals vs new business") has its evidence (0.93)
   but the answer stays general in some runs. q30 (bonus) needs a second retrieval hop and is declined.
   What was tried for each, including what did not hold up in live runs, is in `eval/EVALUATION.md`.
 
@@ -422,9 +428,11 @@ Each step leaves a record, so a wrong answer can be traced to the step that fail
   q05 lowest at ~0.4); a call that mentions X once, in passing, can have no note on it. The answer is shown which calls have no
   notes in the relevant fields, but "this list is complete" is still only as good as the notes.
   `--across map` reads every candidate call for the question and reaches ~0.9, at ~5× the tokens.
-- **Judgement questions** ("most likely to buy") get a verdict per call, each call read whole on its
-  own, but there is no scoring rubric behind the ranking: it is one model's read of the signals, and
-  q07 is "yes" in about half the runs and "partly" or "no" in the rest.
+- **The buying rubric is mine, not a sales team's.** Its signals, points and thresholds (6 of 6 for
+  the top tier; 4–5 conditional) were set and tuned on q07, the only question of its kind, so there is
+  no held-out check of it. Reading the signals is still the model's: in one run of six it missed
+  Acme's Workato alternative and put Acme on top, and gates (a BAA that may not be met) are caveats,
+  not caps, because the model marked them inconsistently.
 - **The checker verifies that the quote exists and that the cited person said it, not that it supports
   the claim.** A real, correctly attributed quote attached to an overstated claim passes. The judge catches some of this in evaluation, but nothing does at runtime.
 - **Header vs body disagreements** are only surfaced when the question touches them.

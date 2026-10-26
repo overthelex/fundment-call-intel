@@ -133,10 +133,17 @@ would cut the noise.
   calls, and notes ranked by similarity to an abstract question miss concrete asks: "Can the queue be
   owned by a team?" is raised in 5 of 10 calls but ranked 389th–479th of 509 noted turns, below the
   budget. See *Engineering notes* for what was tried; `--across map` closes the evidence gap.
-- **q07 ("which prospects seem most likely to purchase?")**, "yes" in about half the runs. Each
-  candidate call gets its own verdict and the answer must place every call in a tier with its
-  condition, so Acme is no longer left out; what remains is a judgement (the rubric puts Juniper in the
-  top tier; the verdict on Juniper is "viable, not a sure buyer").
+- **q07 ("which prospects seem most likely to purchase?")**: "yes" in about half the runs while the
+  model chose the tiers (the gold set puts Juniper on top; the model's verdict was "viable, not a sure
+  buyer" in some runs). Now each call is read for fixed signals and code computes the tier
+  (`mapper.tier_of`) and writes the ranking paragraph: 5 of 6 "yes" (`results/…-q07-rubric`), 117–179K
+  prompt tokens and 23–44 s. Three designs did not hold up on the way: caps on any blocker the model
+  found (every prospect has one, so all ten came out conditional); caps on blockers the model marked as
+  "stopping" the purchase (it marked the evaluation's own open questions in some runs and not in
+  others); and a broad "the decision waits on something else" (it counted the prospect's own
+  evaluation). What caps the tier now is narrow: the prospect must first find out whether the problem
+  is there at all, or the decision is whether to expand a vendor they already use. The rubric was
+  tuned on q07 alone.
 - **q09 ("how do renewals differ from new business?")**: evidence recall 0.93 since the planner takes
   every note field an answer can sit in and comparisons send the small kinds of call whole (3
   renewals, 5 cold calls); "yes" in some runs, and when "partly" the answer stays general (the 7%

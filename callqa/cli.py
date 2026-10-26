@@ -50,6 +50,12 @@ def render(pipe: Pipeline, r: Result) -> str:
             if conflict.better_supported:
                 why = f": {conflict.why}" if conflict.why else ""
                 out.append(f"    → better supported: {conflict.better_supported}{why}")
+    if r.tiers:
+        out.append("\nTiers (computed from the verified signals: sponsor, timeline, next step, blockers)")
+        for f in r.tiers:
+            sig = ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in f.signals.items())
+            out.append(f"  {f.tier:<19} {f.call_id} {f.company}  ({f.score}/6: {sig})")
+            out.extend(f"      {x}" for x in f.caveats)
     if a.not_found:
         out.append("\nNot found in the transcripts")
         out.extend(f"  - {x}" for x in a.not_found)
@@ -109,6 +115,7 @@ def to_dict(r: Result) -> dict:
         "usage": r.usage,
         "seconds": round(r.seconds, 2),
         "steps": r.steps,
+        "tiers": [f.model_dump(exclude={"evidence", "verdict", "counts"}) for f in r.tiers],
     }
 
 

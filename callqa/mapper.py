@@ -173,6 +173,11 @@ class Finding(BaseModel):
     verdict: str
     counts: str = "yes"
     evidence: list[MapPoint]  # verified only
+    # buying rubric only: the tier computed in code from the verified signals, and what it rests on
+    tier: str | None = None
+    score: int | None = None
+    signals: dict[str, str] | None = None
+    caveats: list[str] | None = None
 
 
 def judge_call(question: str, call: Call, calls: dict[str, Call], llm: LLM,
@@ -211,8 +216,164 @@ def uncovered(findings: list[Finding], texts: list[str], cited: set[str]) -> lis
 
 def render_findings(findings: list[Finding]) -> str:
     lines = ["PER-CALL FINDINGS (each call was read on its own for this question; quotes verified)"]
+    if any(f.tier for f in findings):
+        lines.append("Tiers below are computed from the verified signals (sponsor, timeline, next step, "
+                     "blockers); use them as given and name each call's blockers and caveats")
     for f in findings:
         lines.append(f"{f.call_id} ({f.company}): {f.verdict}")
         for p in f.evidence:
             lines.append(f'   [{p.timestamp}] {p.speaker}: "{p.quote}"')
     return "\n".join(lines)
+
+
+# -- buying rubric -------------------------------------------------------------
+#
+# "Which prospects are most likely to buy?" asked the model to weigh each call and pick a tier, and the
+# tier moved between runs (Juniper top tier in some, "viable, not a sure buyer" in others). Here the
+# model only reads off fixed signals, each backed by a quote; the quote goes through the citation
+# checker, a signal whose quote fails counts as absent, and the tier is computed below from what is left.
+
+RUBRIC_SYSTEM = """You read ONE sales-call transcript. The vendor is OrbitFlow (workflow automation).
+Read off the buying signals below for THIS prospect. Report only what the transcript says; do not
+weigh them into a forecast. For each signal give timestamp, speaker exactly as shown and a VERBATIM
+contiguous span (max ~25 words) as quote; with no supporting turn, use the lowest level and no quote.
+- sponsor: "committed" = someone on the prospect side who can drive the purchase says they want to
+  move, proceed, buy or pilot it, even on a condition ("assuming X, I want to move"); "engaged" = a
+  decision maker takes part and is interested but does not say that; "none" = no decision maker, or
+  no interest.
+- timeline: "dated" = the purchase or vendor decision itself has a date or window in the current
+  year (a go/no-go, a vendor decision, a decision by a month); "vague" = a decision is expected but
+  not dated, or only steps before it are dated (a review, a pilot start); "none" = no timing, or the
+  purchase waits for next year's budget or a later cycle.
+- next_step: "pilot" = an agreed evaluation, pilot, sandbox trial or proposal with a defined scope or
+  decision point; "follow_up" = a further call, demo or material, nothing evaluated yet; "none".
+- waits_on: "yes" in two cases only: (1) before any purchase they must first find out whether their
+  own problem or data justifies one at all (the signal may not be in their data, the business case
+  may not exist), or (2) they say the decision itself is whether to expand a contract with a vendor
+  they already use instead of adding OrbitFlow. Everything else is "no": the evaluation or pilot
+  of OrbitFlow, its open questions (security, pricing, billing, connectors, residency), internal
+  checks and sign-offs, a build-versus-buy choice, keeping the current setup. With "yes", say what
+  it waits on in `point`.
+- blockers: other open issues that could stop or postpone the purchase, at most one per kind; routine
+  steps of a known process (a standard security pack, a DPA, procurement, sign-off above a limit) are
+  not blockers. Kinds: "gate" = must clear before any purchase (a requirement that may not be met, a
+  board that can stop it, budget that may not be there); "rival" = another vendor in the evaluation,
+  or its head start; "build" = an in-house build option or keeping what they have; "veto" = a person
+  who can block it.
+  Give each blocker a one-line description."""
+
+
+class Signal(BaseModel):
+    level: Literal["none", "engaged", "committed", "vague", "dated", "follow_up", "pilot"]
+    evidence: MapPoint | None = None
+
+
+class Blocker(BaseModel):
+    kind: Literal["gate", "rival", "build", "veto"]
+    description: str
+    evidence: MapPoint | None = None
+
+
+class WaitsOn(BaseModel):
+    answer: Literal["yes", "no"]
+    evidence: MapPoint | None = None
+
+
+class BuyingSignals(BaseModel):
+    sponsor: Signal
+    timeline: Signal
+    next_step: Signal
+    waits_on: WaitsOn
+    blockers: list[Blocker]
+
+
+LEVELS = {"sponsor": ["none", "engaged", "committed"],
+          "timeline": ["none", "vague", "dated"],
+          "next_step": ["none", "follow_up", "pilot"]}
+TIERS = ("strongest", "conditional", "unlikely near-term")
+
+
+def tier_of(levels: dict[str, str], waits: bool) -> tuple[str, int]:
+    """The tier from the verified signals: 0-2 points each for sponsor, timeline and next step.
+
+    A decision that waits on something other than OrbitFlow's evaluation (an analysis of their own,
+    extending a tool they have) caps the tier: the prospect is not yet choosing. Gates, vetoes, rivals
+    and build options are caveats: asked to mark which of them "stop" the purchase, the model marked
+    the evaluation's own open questions in some runs and not in others, and the tier moved with them."""
+    score = sum(LEVELS[k].index(levels.get(k, "none")) for k in LEVELS)
+    if score == 6 and not waits:
+        return "strongest", score
+    if score >= 4:
+        return "conditional", score
+    return "unlikely near-term", score
+
+
+def rate_call(call: Call, calls: dict[str, Call], llm: LLM, usage: Usage | None = None) -> Finding:
+    text = "\n".join(turn_line(call, t) for t in call.turns)
+    user = f"{call.call_id} · {call.company} · {call.stage}\n\n{text}"
+    out = llm.structured(RUBRIC_SYSTEM, user, BuyingSignals, reasoning_effort="low", usage=usage,
+                         hedge_after=CHECK_HEDGE_AFTER)
+    in_call = {(call.call_id, t.idx) for t in call.turns}
+
+    def verified(q: MapPoint | None) -> MapPoint | None:
+        if q is None:
+            return None
+        chk = check_citation(calls, call.call_id, q.timestamp, q.speaker, q.quote, in_call)
+        return MapPoint(timestamp=chk.turn.ts, speaker=chk.turn.speaker, quote=q.quote, point=q.point) \
+            if chk.ok and chk.turn is not None else None
+
+    levels, evidence, parts = {}, [], []
+    for name in LEVELS:
+        s: Signal = getattr(out, name)
+        level = s.level if s.level in LEVELS[name] else "none"
+        q = verified(s.evidence) if level != "none" else None
+        if q is None:
+            level = "none"  # a signal counts only with a quote that is in the transcript
+        else:
+            evidence.append(MapPoint(timestamp=q.timestamp, speaker=q.speaker, quote=q.quote,
+                                     point=f"{name}: {level}"))
+        levels[name] = level
+        parts.append(f"{name.replace('_', ' ')} {level}")
+    waits = False
+    if out.waits_on.answer == "yes" and (q := verified(out.waits_on.evidence)) is not None:
+        waits = True  # counts only with a quote that is in the transcript
+        evidence.append(MapPoint(timestamp=q.timestamp, speaker=q.speaker, quote=q.quote,
+                                 point=f"waits on: {q.point}"))
+    blockers = []
+    for b in out.blockers:
+        q = verified(b.evidence)
+        if q is None:
+            continue  # an unbacked blocker neither caps nor shows
+        blockers.append(b)
+        evidence.append(MapPoint(timestamp=q.timestamp, speaker=q.speaker, quote=q.quote,
+                                 point=f"{b.kind}: {b.description}"))
+    tier, score = tier_of(levels, waits)
+    labels = ([f"decision waits on: {out.waits_on.evidence.point}"] if waits else []) \
+        + [f"{b.kind}: {b.description}" for b in blockers]
+    caveats = "; ".join(labels) or "none found"
+    verdict = (f"tier {tier} (score {score}/6: {', '.join(parts)}); blockers and caveats: {caveats}")
+    return Finding(call_id=call.call_id, company=call.company, verdict=verdict, counts="yes",
+                   evidence=evidence, tier=tier, score=score, signals=levels,
+                   caveats=labels)
+
+
+def rate_calls(call_ids: list[str], calls: dict[str, Call], llm: LLM, usage: Usage | None = None,
+               workers: int = 8) -> list[Finding]:
+    with ThreadPoolExecutor(workers) as pool:
+        found = list(pool.map(lambda cid: rate_call(calls[cid], calls, llm, usage), call_ids))
+    return sorted(found, key=lambda f: TIERS.index(f.tier))
+
+
+def ranking_text(findings: list[Finding]) -> str:
+    """The ranking paragraph of a likelihood-to-buy answer, written from the computed tiers so that the
+    answer step cannot move a call between tiers or drop its caveats (it did both when asked to use the
+    tiers as given)."""
+    parts = []
+    for tier in TIERS:
+        fs = [f for f in findings if f.tier == tier]
+        if fs:
+            names = [f"{f.company} ({'; '.join(f.caveats)})" if f.caveats and tier != TIERS[-1] else f.company
+                     for f in fs]
+            parts.append(f"{tier[0].upper() + tier[1:]}: " + ", ".join(names) + ".")
+    return ("Ranking (computed from sponsor, timeline, next step and blockers; an inference from the calls, "
+            "no prospect has committed to buy). " + " ".join(parts))

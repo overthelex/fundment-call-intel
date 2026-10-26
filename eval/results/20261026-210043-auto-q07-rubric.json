@@ -1,0 +1,2965 @@
+[
+  {
+    "id": "q07",
+    "kind": "aggregate",
+    "bonus_question": false,
+    "question": "Which prospects seem most likely to purchase, based on the conversations?",
+    "context_recall": 1.0,
+    "cited_recall": 1.0,
+    "missed_calls": [],
+    "evidence_recall": 0.8,
+    "evidence_cited": 0.45,
+    "missed_evidence": [
+      "CALL-005 [25:35]",
+      "CALL-005 [29:49]",
+      "CALL-010 [21:41]",
+      "CALL-010 [21:43]"
+    ],
+    "citation_valid": 1.0,
+    "citations": 26,
+    "citation_status": {
+      "exact": 26
+    },
+    "should_abstain": false,
+    "confidence": "medium",
+    "core_recall": 1.0,
+    "atomic_recall": 0.7272727272727273,
+    "compound_recall": 0.7,
+    "contradicted": 0,
+    "penalties_hit": [],
+    "bonus_hit": 1,
+    "bonus_total": 1,
+    "correct": "yes",
+    "correct_reason": "Every required core claim is supported and no penalty is hit. The top tier matches the rubric: Ember and Juniper, each with the right caveats.",
+    "verdicts": [
+      {
+        "n": 1,
+        "core": "supported",
+        "details_covered": [
+          1
+        ],
+        "reason": "Ember is ranked strongest and the answer notes Tray.io's six-week head start. It cites the request for sandbox access and a six-week pilot proposal, but never mentions the remediation programme with a fixed date."
+      },
+      {
+        "n": 2,
+        "core": "supported",
+        "details_covered": [
+          1,
+          2
+        ],
+        "reason": "Juniper is ranked strong, with the internal build option and Ava's veto as caveats. The answer cites the four-week evaluation with a September go/no-go and quotes the sponsor saying he wants to proceed."
+      },
+      {
+        "n": 3,
+        "core": "supported",
+        "details_covered": [],
+        "reason": "Acme is shown as conditional on whether it expands Workato instead. The answer says Acme is interested enough to test, but never mentions three real workflows in a sandbox."
+      },
+      {
+        "n": 4,
+        "core": "supported",
+        "details_covered": [],
+        "reason": "Inkwell is shown as conditional on whether the signal exists in its data. The late-September deadline is not mentioned."
+      },
+      {
+        "n": 5,
+        "core": "supported",
+        "details_covered": [],
+        "reason": "The answer says explicitly that the ranking is an inference from the calls and that no prospect has committed to buy."
+      }
+    ],
+    "abstained": false,
+    "abstention_correct": true,
+    "failure": "",
+    "prompt_tokens": 117295,
+    "cached_tokens": 52224,
+    "completion_tokens": 9556,
+    "seconds": 25.5,
+    "result": {
+      "question": "Which prospects seem most likely to purchase, based on the conversations?",
+      "plan": {
+        "call_ids": [],
+        "categories": [
+          "prospect"
+        ],
+        "scope": "across",
+        "search_queries": [
+          "most likely to buy",
+          "strong buying signals",
+          "ready to move forward",
+          "evaluation and next steps"
+        ],
+        "entity_notes": [],
+        "vendor_consistency": false,
+        "product_topics": [],
+        "note_fields": [
+          "needs and requirements",
+          "pains and current process",
+          "objections, risks and concerns",
+          "competitors and current tools",
+          "integrations and systems",
+          "pricing, budget and commercial terms",
+          "decision process and timeline",
+          "buying signals and next steps",
+          "how the OrbitFlow team ran the call"
+        ],
+        "assess_each_call": true,
+        "likelihood_to_buy": true,
+        "pooled_across_calls": false
+      },
+      "context": {
+        "mode": "notes",
+        "call_ids": [
+          "CALL-001",
+          "CALL-002",
+          "CALL-003",
+          "CALL-004",
+          "CALL-005",
+          "CALL-006",
+          "CALL-007",
+          "CALL-008",
+          "CALL-009",
+          "CALL-010"
+        ],
+        "words": 16113,
+        "claim_topics": [],
+        "turns": [
+          [
+            "CALL-001",
+            13
+          ],
+          [
+            "CALL-001",
+            39
+          ],
+          [
+            "CALL-001",
+            53
+          ],
+          [
+            "CALL-001",
+            54
+          ],
+          [
+            "CALL-001",
+            55
+          ],
+          [
+            "CALL-001",
+            56
+          ],
+          [
+            "CALL-001",
+            57
+          ],
+          [
+            "CALL-001",
+            58
+          ],
+          [
+            "CALL-001",
+            59
+          ],
+          [
+            "CALL-001",
+            68
+          ],
+          [
+            "CALL-001",
+            86
+          ],
+          [
+            "CALL-001",
+            90
+          ],
+          [
+            "CALL-001",
+            122
+          ],
+          [
+            "CALL-001",
+            123
+          ],
+          [
+            "CALL-001",
+            124
+          ],
+          [
+            "CALL-001",
+            127
+          ],
+          [
+            "CALL-001",
+            128
+          ],
+          [
+            "CALL-001",
+            131
+          ],
+          [
+            "CALL-001",
+            132
+          ],
+          [
+            "CALL-001",
+            133
+          ],
+          [
+            "CALL-001",
+            134
+          ],
+          [
+            "CALL-001",
+            135
+          ],
+          [
+            "CALL-001",
+            136
+          ],
+          [
+            "CALL-001",
+            141
+          ],
+          [
+            "CALL-001",
+            145
+          ],
+          [
+            "CALL-001",
+            147
+          ],
+          [
+            "CALL-001",
+            148
+          ],
+          [
+            "CALL-001",
+            149
+          ],
+          [
+            "CALL-001",
+            151
+          ],
+          [
+            "CALL-001",
+            152
+          ],
+          [
+            "CALL-001",
+            153
+          ],
+          [
+            "CALL-001",
+            154
+          ],
+          [
+            "CALL-001",
+            155
+          ],
+          [
+            "CALL-001",
+            156
+          ],
+          [
+            "CALL-001",
+            157
+          ],
+          [
+            "CALL-001",
+            170
+          ],
+          [
+            "CALL-001",
+            171
+          ],
+          [
+            "CALL-002",
+            8
+          ],
+          [
+            "CALL-002",
+            15
+          ],
+          [
+            "CALL-002",
+            21
+          ],
+          [
+            "CALL-002",
+            45
+          ],
+          [
+            "CALL-002",
+            46
+          ],
+          [
+            "CALL-002",
+            77
+          ],
+          [
+            "CALL-002",
+            78
+          ],
+          [
+            "CALL-002",
+            82
+          ],
+          [
+            "CALL-002",
+            83
+          ],
+          [
+            "CALL-002",
+            85
+          ],
+          [
+            "CALL-002",
+            104
+          ],
+          [
+            "CALL-002",
+            105
+          ],
+          [
+            "CALL-002",
+            131
+          ],
+          [
+            "CALL-002",
+            132
+          ],
+          [
+            "CALL-002",
+            140
+          ],
+          [
+            "CALL-002",
+            141
+          ],
+          [
+            "CALL-002",
+            143
+          ],
+          [
+            "CALL-002",
+            148
+          ],
+          [
+            "CALL-002",
+            152
+          ],
+          [
+            "CALL-002",
+            153
+          ],
+          [
+            "CALL-002",
+            154
+          ],
+          [
+            "CALL-002",
+            155
+          ],
+          [
+            "CALL-002",
+            156
+          ],
+          [
+            "CALL-002",
+            157
+          ],
+          [
+            "CALL-002",
+            158
+          ],
+          [
+            "CALL-002",
+            159
+          ],
+          [
+            "CALL-002",
+            160
+          ],
+          [
+            "CALL-002",
+            161
+          ],
+          [
+            "CALL-002",
+            162
+          ],
+          [
+            "CALL-002",
+            163
+          ],
+          [
+            "CALL-002",
+            164
+          ],
+          [
+            "CALL-002",
+            165
+          ],
+          [
+            "CALL-002",
+            166
+          ],
+          [
+            "CALL-002",
+            170
+          ],
+          [
+            "CALL-002",
+            173
+          ],
+          [
+            "CALL-002",
+            175
+          ],
+          [
+            "CALL-002",
+            182
+          ],
+          [
+            "CALL-002",
+            185
+          ],
+          [
+            "CALL-002",
+            186
+          ],
+          [
+            "CALL-002",
+            187
+          ],
+          [
+            "CALL-002",
+            188
+          ],
+          [
+            "CALL-002",
+            189
+          ],
+          [
+            "CALL-002",
+            190
+          ],
+          [
+            "CALL-002",
+            191
+          ],
+          [
+            "CALL-002",
+            192
+          ],
+          [
+            "CALL-002",
+            193
+          ],
+          [
+            "CALL-002",
+            194
+          ],
+          [
+            "CALL-002",
+            195
+          ],
+          [
+            "CALL-002",
+            196
+          ],
+          [
+            "CALL-002",
+            197
+          ],
+          [
+            "CALL-002",
+            198
+          ],
+          [
+            "CALL-002",
+            199
+          ],
+          [
+            "CALL-002",
+            200
+          ],
+          [
+            "CALL-002",
+            201
+          ],
+          [
+            "CALL-002",
+            202
+          ],
+          [
+            "CALL-002",
+            203
+          ],
+          [
+            "CALL-002",
+            204
+          ],
+          [
+            "CALL-002",
+            205
+          ],
+          [
+            "CALL-003",
+            2
+          ],
+          [
+            "CALL-003",
+            3
+          ],
+          [
+            "CALL-003",
+            6
+          ],
+          [
+            "CALL-003",
+            7
+          ],
+          [
+            "CALL-003",
+            41
+          ],
+          [
+            "CALL-003",
+            42
+          ],
+          [
+            "CALL-003",
+            43
+          ],
+          [
+            "CALL-003",
+            44
+          ],
+          [
+            "CALL-003",
+            56
+          ],
+          [
+            "CALL-003",
+            57
+          ],
+          [
+            "CALL-003",
+            62
+          ],
+          [
+            "CALL-003",
+            63
+          ],
+          [
+            "CALL-003",
+            72
+          ],
+          [
+            "CALL-003",
+            87
+          ],
+          [
+            "CALL-003",
+            88
+          ],
+          [
+            "CALL-003",
+            93
+          ],
+          [
+            "CALL-003",
+            98
+          ],
+          [
+            "CALL-003",
+            104
+          ],
+          [
+            "CALL-003",
+            106
+          ],
+          [
+            "CALL-003",
+            107
+          ],
+          [
+            "CALL-003",
+            111
+          ],
+          [
+            "CALL-003",
+            113
+          ],
+          [
+            "CALL-003",
+            114
+          ],
+          [
+            "CALL-003",
+            115
+          ],
+          [
+            "CALL-003",
+            116
+          ],
+          [
+            "CALL-003",
+            117
+          ],
+          [
+            "CALL-003",
+            118
+          ],
+          [
+            "CALL-003",
+            119
+          ],
+          [
+            "CALL-003",
+            120
+          ],
+          [
+            "CALL-003",
+            121
+          ],
+          [
+            "CALL-003",
+            122
+          ],
+          [
+            "CALL-003",
+            123
+          ],
+          [
+            "CALL-003",
+            124
+          ],
+          [
+            "CALL-003",
+            125
+          ],
+          [
+            "CALL-003",
+            126
+          ],
+          [
+            "CALL-003",
+            127
+          ],
+          [
+            "CALL-003",
+            128
+          ],
+          [
+            "CALL-003",
+            129
+          ],
+          [
+            "CALL-003",
+            130
+          ],
+          [
+            "CALL-003",
+            131
+          ],
+          [
+            "CALL-003",
+            132
+          ],
+          [
+            "CALL-003",
+            133
+          ],
+          [
+            "CALL-003",
+            134
+          ],
+          [
+            "CALL-003",
+            135
+          ],
+          [
+            "CALL-003",
+            136
+          ],
+          [
+            "CALL-003",
+            137
+          ],
+          [
+            "CALL-003",
+            138
+          ],
+          [
+            "CALL-003",
+            139
+          ],
+          [
+            "CALL-003",
+            143
+          ],
+          [
+            "CALL-003",
+            144
+          ],
+          [
+            "CALL-004",
+            10
+          ],
+          [
+            "CALL-004",
+            24
+          ],
+          [
+            "CALL-004",
+            25
+          ],
+          [
+            "CALL-004",
+            26
+          ],
+          [
+            "CALL-004",
+            27
+          ],
+          [
+            "CALL-004",
+            28
+          ],
+          [
+            "CALL-004",
+            43
+          ],
+          [
+            "CALL-004",
+            44
+          ],
+          [
+            "CALL-004",
+            45
+          ],
+          [
+            "CALL-004",
+            50
+          ],
+          [
+            "CALL-004",
+            82
+          ],
+          [
+            "CALL-004",
+            83
+          ],
+          [
+            "CALL-004",
+            89
+          ],
+          [
+            "CALL-004",
+            120
+          ],
+          [
+            "CALL-004",
+            121
+          ],
+          [
+            "CALL-004",
+            122
+          ],
+          [
+            "CALL-004",
+            123
+          ],
+          [
+            "CALL-004",
+            124
+          ],
+          [
+            "CALL-004",
+            125
+          ],
+          [
+            "CALL-004",
+            126
+          ],
+          [
+            "CALL-004",
+            127
+          ],
+          [
+            "CALL-004",
+            128
+          ],
+          [
+            "CALL-004",
+            129
+          ],
+          [
+            "CALL-004",
+            130
+          ],
+          [
+            "CALL-004",
+            131
+          ],
+          [
+            "CALL-004",
+            132
+          ],
+          [
+            "CALL-004",
+            133
+          ],
+          [
+            "CALL-004",
+            134
+          ],
+          [
+            "CALL-004",
+            146
+          ],
+          [
+            "CALL-004",
+            147
+          ],
+          [
+            "CALL-004",
+            150
+          ],
+          [
+            "CALL-004",
+            151
+          ],
+          [
+            "CALL-004",
+            152
+          ],
+          [
+            "CALL-004",
+            153
+          ],
+          [
+            "CALL-004",
+            198
+          ],
+          [
+            "CALL-004",
+            219
+          ],
+          [
+            "CALL-004",
+            224
+          ],
+          [
+            "CALL-004",
+            225
+          ],
+          [
+            "CALL-004",
+            226
+          ],
+          [
+            "CALL-004",
+            227
+          ],
+          [
+            "CALL-004",
+            228
+          ],
+          [
+            "CALL-004",
+            229
+          ],
+          [
+            "CALL-004",
+            230
+          ],
+          [
+            "CALL-004",
+            231
+          ],
+          [
+            "CALL-004",
+            232
+          ],
+          [
+            "CALL-004",
+            233
+          ],
+          [
+            "CALL-004",
+            234
+          ],
+          [
+            "CALL-004",
+            235
+          ],
+          [
+            "CALL-004",
+            236
+          ],
+          [
+            "CALL-004",
+            238
+          ],
+          [
+            "CALL-004",
+            239
+          ],
+          [
+            "CALL-004",
+            242
+          ],
+          [
+            "CALL-004",
+            246
+          ],
+          [
+            "CALL-004",
+            248
+          ],
+          [
+            "CALL-004",
+            249
+          ],
+          [
+            "CALL-004",
+            251
+          ],
+          [
+            "CALL-004",
+            259
+          ],
+          [
+            "CALL-004",
+            261
+          ],
+          [
+            "CALL-005",
+            3
+          ],
+          [
+            "CALL-005",
+            11
+          ],
+          [
+            "CALL-005",
+            69
+          ],
+          [
+            "CALL-005",
+            81
+          ],
+          [
+            "CALL-005",
+            82
+          ],
+          [
+            "CALL-005",
+            83
+          ],
+          [
+            "CALL-005",
+            84
+          ],
+          [
+            "CALL-005",
+            85
+          ],
+          [
+            "CALL-005",
+            86
+          ],
+          [
+            "CALL-005",
+            87
+          ],
+          [
+            "CALL-005",
+            88
+          ],
+          [
+            "CALL-005",
+            89
+          ],
+          [
+            "CALL-005",
+            90
+          ],
+          [
+            "CALL-005",
+            91
+          ],
+          [
+            "CALL-005",
+            92
+          ],
+          [
+            "CALL-005",
+            93
+          ],
+          [
+            "CALL-005",
+            94
+          ],
+          [
+            "CALL-005",
+            107
+          ],
+          [
+            "CALL-005",
+            115
+          ],
+          [
+            "CALL-005",
+            116
+          ],
+          [
+            "CALL-005",
+            134
+          ],
+          [
+            "CALL-005",
+            139
+          ],
+          [
+            "CALL-005",
+            140
+          ],
+          [
+            "CALL-005",
+            141
+          ],
+          [
+            "CALL-005",
+            142
+          ],
+          [
+            "CALL-005",
+            143
+          ],
+          [
+            "CALL-005",
+            144
+          ],
+          [
+            "CALL-005",
+            145
+          ],
+          [
+            "CALL-005",
+            146
+          ],
+          [
+            "CALL-005",
+            147
+          ],
+          [
+            "CALL-005",
+            148
+          ],
+          [
+            "CALL-005",
+            150
+          ],
+          [
+            "CALL-005",
+            156
+          ],
+          [
+            "CALL-005",
+            157
+          ],
+          [
+            "CALL-005",
+            162
+          ],
+          [
+            "CALL-005",
+            179
+          ],
+          [
+            "CALL-005",
+            180
+          ],
+          [
+            "CALL-005",
+            190
+          ],
+          [
+            "CALL-005",
+            193
+          ],
+          [
+            "CALL-005",
+            196
+          ],
+          [
+            "CALL-005",
+            197
+          ],
+          [
+            "CALL-005",
+            199
+          ],
+          [
+            "CALL-005",
+            202
+          ],
+          [
+            "CALL-005",
+            203
+          ],
+          [
+            "CALL-005",
+            207
+          ],
+          [
+            "CALL-005",
+            208
+          ],
+          [
+            "CALL-005",
+            209
+          ],
+          [
+            "CALL-005",
+            215
+          ],
+          [
+            "CALL-006",
+            0
+          ],
+          [
+            "CALL-006",
+            41
+          ],
+          [
+            "CALL-006",
+            69
+          ],
+          [
+            "CALL-006",
+            70
+          ],
+          [
+            "CALL-006",
+            76
+          ],
+          [
+            "CALL-006",
+            86
+          ],
+          [
+            "CALL-006",
+            88
+          ],
+          [
+            "CALL-006",
+            102
+          ],
+          [
+            "CALL-006",
+            104
+          ],
+          [
+            "CALL-006",
+            105
+          ],
+          [
+            "CALL-006",
+            106
+          ],
+          [
+            "CALL-006",
+            107
+          ],
+          [
+            "CALL-006",
+            112
+          ],
+          [
+            "CALL-006",
+            113
+          ],
+          [
+            "CALL-006",
+            114
+          ],
+          [
+            "CALL-006",
+            115
+          ],
+          [
+            "CALL-006",
+            116
+          ],
+          [
+            "CALL-006",
+            117
+          ],
+          [
+            "CALL-006",
+            118
+          ],
+          [
+            "CALL-006",
+            119
+          ],
+          [
+            "CALL-006",
+            120
+          ],
+          [
+            "CALL-006",
+            121
+          ],
+          [
+            "CALL-006",
+            122
+          ],
+          [
+            "CALL-006",
+            123
+          ],
+          [
+            "CALL-006",
+            124
+          ],
+          [
+            "CALL-006",
+            125
+          ],
+          [
+            "CALL-006",
+            126
+          ],
+          [
+            "CALL-006",
+            127
+          ],
+          [
+            "CALL-006",
+            128
+          ],
+          [
+            "CALL-006",
+            129
+          ],
+          [
+            "CALL-006",
+            130
+          ],
+          [
+            "CALL-006",
+            131
+          ],
+          [
+            "CALL-006",
+            132
+          ],
+          [
+            "CALL-006",
+            133
+          ],
+          [
+            "CALL-006",
+            134
+          ],
+          [
+            "CALL-006",
+            135
+          ],
+          [
+            "CALL-006",
+            136
+          ],
+          [
+            "CALL-006",
+            137
+          ],
+          [
+            "CALL-006",
+            138
+          ],
+          [
+            "CALL-006",
+            140
+          ],
+          [
+            "CALL-006",
+            144
+          ],
+          [
+            "CALL-007",
+            52
+          ],
+          [
+            "CALL-007",
+            53
+          ],
+          [
+            "CALL-007",
+            57
+          ],
+          [
+            "CALL-007",
+            66
+          ],
+          [
+            "CALL-007",
+            67
+          ],
+          [
+            "CALL-007",
+            104
+          ],
+          [
+            "CALL-007",
+            105
+          ],
+          [
+            "CALL-007",
+            118
+          ],
+          [
+            "CALL-007",
+            133
+          ],
+          [
+            "CALL-007",
+            145
+          ],
+          [
+            "CALL-007",
+            146
+          ],
+          [
+            "CALL-007",
+            147
+          ],
+          [
+            "CALL-007",
+            148
+          ],
+          [
+            "CALL-007",
+            149
+          ],
+          [
+            "CALL-007",
+            150
+          ],
+          [
+            "CALL-007",
+            151
+          ],
+          [
+            "CALL-007",
+            152
+          ],
+          [
+            "CALL-007",
+            153
+          ],
+          [
+            "CALL-007",
+            157
+          ],
+          [
+            "CALL-007",
+            162
+          ],
+          [
+            "CALL-007",
+            163
+          ],
+          [
+            "CALL-007",
+            166
+          ],
+          [
+            "CALL-007",
+            175
+          ],
+          [
+            "CALL-007",
+            176
+          ],
+          [
+            "CALL-007",
+            177
+          ],
+          [
+            "CALL-007",
+            178
+          ],
+          [
+            "CALL-007",
+            179
+          ],
+          [
+            "CALL-007",
+            180
+          ],
+          [
+            "CALL-007",
+            181
+          ],
+          [
+            "CALL-007",
+            182
+          ],
+          [
+            "CALL-007",
+            183
+          ],
+          [
+            "CALL-007",
+            184
+          ],
+          [
+            "CALL-007",
+            185
+          ],
+          [
+            "CALL-007",
+            193
+          ],
+          [
+            "CALL-007",
+            194
+          ],
+          [
+            "CALL-007",
+            195
+          ],
+          [
+            "CALL-007",
+            196
+          ],
+          [
+            "CALL-007",
+            197
+          ],
+          [
+            "CALL-007",
+            198
+          ],
+          [
+            "CALL-007",
+            199
+          ],
+          [
+            "CALL-007",
+            200
+          ],
+          [
+            "CALL-007",
+            203
+          ],
+          [
+            "CALL-008",
+            80
+          ],
+          [
+            "CALL-008",
+            81
+          ],
+          [
+            "CALL-008",
+            90
+          ],
+          [
+            "CALL-008",
+            97
+          ],
+          [
+            "CALL-008",
+            101
+          ],
+          [
+            "CALL-008",
+            102
+          ],
+          [
+            "CALL-008",
+            131
+          ],
+          [
+            "CALL-008",
+            132
+          ],
+          [
+            "CALL-008",
+            150
+          ],
+          [
+            "CALL-008",
+            151
+          ],
+          [
+            "CALL-008",
+            152
+          ],
+          [
+            "CALL-008",
+            158
+          ],
+          [
+            "CALL-008",
+            178
+          ],
+          [
+            "CALL-008",
+            179
+          ],
+          [
+            "CALL-008",
+            188
+          ],
+          [
+            "CALL-008",
+            196
+          ],
+          [
+            "CALL-008",
+            197
+          ],
+          [
+            "CALL-008",
+            198
+          ],
+          [
+            "CALL-008",
+            199
+          ],
+          [
+            "CALL-008",
+            200
+          ],
+          [
+            "CALL-008",
+            201
+          ],
+          [
+            "CALL-008",
+            202
+          ],
+          [
+            "CALL-008",
+            203
+          ],
+          [
+            "CALL-008",
+            204
+          ],
+          [
+            "CALL-008",
+            205
+          ],
+          [
+            "CALL-008",
+            206
+          ],
+          [
+            "CALL-008",
+            207
+          ],
+          [
+            "CALL-008",
+            208
+          ],
+          [
+            "CALL-008",
+            209
+          ],
+          [
+            "CALL-008",
+            210
+          ],
+          [
+            "CALL-008",
+            211
+          ],
+          [
+            "CALL-008",
+            212
+          ],
+          [
+            "CALL-008",
+            226
+          ],
+          [
+            "CALL-008",
+            237
+          ],
+          [
+            "CALL-008",
+            238
+          ],
+          [
+            "CALL-008",
+            239
+          ],
+          [
+            "CALL-008",
+            241
+          ],
+          [
+            "CALL-008",
+            249
+          ],
+          [
+            "CALL-008",
+            272
+          ],
+          [
+            "CALL-008",
+            274
+          ],
+          [
+            "CALL-008",
+            280
+          ],
+          [
+            "CALL-008",
+            281
+          ],
+          [
+            "CALL-008",
+            282
+          ],
+          [
+            "CALL-008",
+            294
+          ],
+          [
+            "CALL-008",
+            295
+          ],
+          [
+            "CALL-008",
+            296
+          ],
+          [
+            "CALL-008",
+            297
+          ],
+          [
+            "CALL-008",
+            298
+          ],
+          [
+            "CALL-008",
+            299
+          ],
+          [
+            "CALL-008",
+            300
+          ],
+          [
+            "CALL-008",
+            301
+          ],
+          [
+            "CALL-008",
+            302
+          ],
+          [
+            "CALL-008",
+            303
+          ],
+          [
+            "CALL-008",
+            304
+          ],
+          [
+            "CALL-008",
+            305
+          ],
+          [
+            "CALL-009",
+            3
+          ],
+          [
+            "CALL-009",
+            4
+          ],
+          [
+            "CALL-009",
+            11
+          ],
+          [
+            "CALL-009",
+            31
+          ],
+          [
+            "CALL-009",
+            41
+          ],
+          [
+            "CALL-009",
+            42
+          ],
+          [
+            "CALL-009",
+            45
+          ],
+          [
+            "CALL-009",
+            46
+          ],
+          [
+            "CALL-009",
+            67
+          ],
+          [
+            "CALL-009",
+            68
+          ],
+          [
+            "CALL-009",
+            70
+          ],
+          [
+            "CALL-009",
+            75
+          ],
+          [
+            "CALL-009",
+            78
+          ],
+          [
+            "CALL-009",
+            91
+          ],
+          [
+            "CALL-009",
+            92
+          ],
+          [
+            "CALL-009",
+            109
+          ],
+          [
+            "CALL-009",
+            131
+          ],
+          [
+            "CALL-009",
+            132
+          ],
+          [
+            "CALL-009",
+            142
+          ],
+          [
+            "CALL-009",
+            143
+          ],
+          [
+            "CALL-009",
+            152
+          ],
+          [
+            "CALL-009",
+            153
+          ],
+          [
+            "CALL-009",
+            154
+          ],
+          [
+            "CALL-009",
+            159
+          ],
+          [
+            "CALL-009",
+            162
+          ],
+          [
+            "CALL-009",
+            163
+          ],
+          [
+            "CALL-009",
+            164
+          ],
+          [
+            "CALL-009",
+            166
+          ],
+          [
+            "CALL-009",
+            167
+          ],
+          [
+            "CALL-009",
+            168
+          ],
+          [
+            "CALL-009",
+            171
+          ],
+          [
+            "CALL-009",
+            173
+          ],
+          [
+            "CALL-009",
+            174
+          ],
+          [
+            "CALL-009",
+            175
+          ],
+          [
+            "CALL-009",
+            180
+          ],
+          [
+            "CALL-009",
+            181
+          ],
+          [
+            "CALL-009",
+            182
+          ],
+          [
+            "CALL-009",
+            183
+          ],
+          [
+            "CALL-009",
+            184
+          ],
+          [
+            "CALL-009",
+            185
+          ],
+          [
+            "CALL-009",
+            186
+          ],
+          [
+            "CALL-009",
+            187
+          ],
+          [
+            "CALL-009",
+            188
+          ],
+          [
+            "CALL-009",
+            189
+          ],
+          [
+            "CALL-009",
+            190
+          ],
+          [
+            "CALL-009",
+            191
+          ],
+          [
+            "CALL-009",
+            192
+          ],
+          [
+            "CALL-009",
+            193
+          ],
+          [
+            "CALL-009",
+            194
+          ],
+          [
+            "CALL-009",
+            195
+          ],
+          [
+            "CALL-009",
+            196
+          ],
+          [
+            "CALL-009",
+            197
+          ],
+          [
+            "CALL-009",
+            198
+          ],
+          [
+            "CALL-009",
+            199
+          ],
+          [
+            "CALL-009",
+            200
+          ],
+          [
+            "CALL-009",
+            201
+          ],
+          [
+            "CALL-009",
+            202
+          ],
+          [
+            "CALL-009",
+            203
+          ],
+          [
+            "CALL-009",
+            215
+          ],
+          [
+            "CALL-009",
+            240
+          ],
+          [
+            "CALL-009",
+            241
+          ],
+          [
+            "CALL-009",
+            246
+          ],
+          [
+            "CALL-009",
+            247
+          ],
+          [
+            "CALL-009",
+            248
+          ],
+          [
+            "CALL-010",
+            14
+          ],
+          [
+            "CALL-010",
+            15
+          ],
+          [
+            "CALL-010",
+            23
+          ],
+          [
+            "CALL-010",
+            24
+          ],
+          [
+            "CALL-010",
+            65
+          ],
+          [
+            "CALL-010",
+            70
+          ],
+          [
+            "CALL-010",
+            76
+          ],
+          [
+            "CALL-010",
+            104
+          ],
+          [
+            "CALL-010",
+            105
+          ],
+          [
+            "CALL-010",
+            106
+          ],
+          [
+            "CALL-010",
+            112
+          ],
+          [
+            "CALL-010",
+            113
+          ],
+          [
+            "CALL-010",
+            114
+          ],
+          [
+            "CALL-010",
+            115
+          ],
+          [
+            "CALL-010",
+            116
+          ],
+          [
+            "CALL-010",
+            117
+          ],
+          [
+            "CALL-010",
+            118
+          ],
+          [
+            "CALL-010",
+            119
+          ],
+          [
+            "CALL-010",
+            120
+          ],
+          [
+            "CALL-010",
+            121
+          ],
+          [
+            "CALL-010",
+            122
+          ],
+          [
+            "CALL-010",
+            123
+          ],
+          [
+            "CALL-010",
+            124
+          ],
+          [
+            "CALL-010",
+            125
+          ],
+          [
+            "CALL-010",
+            126
+          ],
+          [
+            "CALL-010",
+            137
+          ],
+          [
+            "CALL-010",
+            138
+          ],
+          [
+            "CALL-010",
+            139
+          ],
+          [
+            "CALL-010",
+            199
+          ],
+          [
+            "CALL-010",
+            203
+          ],
+          [
+            "CALL-010",
+            204
+          ],
+          [
+            "CALL-010",
+            214
+          ],
+          [
+            "CALL-010",
+            215
+          ],
+          [
+            "CALL-010",
+            219
+          ],
+          [
+            "CALL-010",
+            220
+          ],
+          [
+            "CALL-010",
+            222
+          ],
+          [
+            "CALL-010",
+            223
+          ],
+          [
+            "CALL-010",
+            236
+          ],
+          [
+            "CALL-010",
+            275
+          ],
+          [
+            "CALL-010",
+            276
+          ],
+          [
+            "CALL-010",
+            277
+          ],
+          [
+            "CALL-010",
+            278
+          ],
+          [
+            "CALL-010",
+            279
+          ],
+          [
+            "CALL-010",
+            280
+          ],
+          [
+            "CALL-010",
+            281
+          ],
+          [
+            "CALL-010",
+            282
+          ]
+        ],
+        "text": "PER-CALL FINDINGS (each call was read on its own for this question; quotes verified)\nTiers below are computed from the verified signals (sponsor, timeline, next step, blockers); use them as given and name each call's blockers and caveats\nCALL-005 (Ember Financial): tier strongest (score 6/6: sponsor committed, timeline dated, next step pilot); blockers and caveats: rival: Tray.io has a six-week head start in a live proof of concept.; build: A cheaper alternative is to keep the scripts and document them better.; gate: Model risk and auditability must be satisfied for the project to proceed.\n   [27:03] Noah Williams: \"Assuming the security material lines up, I want to move. Send sandbox access and a written proposal for a six-week pilot\"\n   [25:24] Noah Williams: \"Technical bake-off in July. Vendor decision in August. First controlled production workflows in October.\"\n   [27:03] Noah Williams: \"Send sandbox access and a written proposal for a six-week pilot so we can compare it against Tray properly\"\n   [29:49] Hannah Cole: \"it's a two-horse bake-off where one horse has a six-week head start.\"\n   [26:08] Noah Williams: \"It's also \"keep the scripts and document them better.\" That's cheaper and it's what someone will propose.\"\n   [02:00] Hannah Cole: \"The main gates are model-risk and auditability. If you can't satisfy those, connector breadth will not save the project.\"\nCALL-010 (Juniper Cloud Tools): tier strongest (score 6/6: sponsor committed, timeline dated, next step pilot); blockers and caveats: build: Prospect says the internal build option is real and could replace OrbitFlow.; veto: Ava can effectively stop the deal if platform engineering thinks the architecture is wrong.; gate: EU data residency may be required because of existing contract commitments.\n   [29:49] Marcus Chen: \"I want to proceed with the four-week evaluation. Ava's right to be sceptical. If we can't answer the engineering questions, we shouldn't buy it.\"\n   [22:41] Marcus Chen: \"We want a four-week evaluation starting immediately, with a go/no-go decision in September.\"\n   [22:41] Marcus Chen: \"We want a four-week evaluation starting immediately, with a go/no-go decision in September.\"\n   [11:33] Ava Sinclair: \"I think most of what you do could be built internally. We have the skills. The question is whether we should.\"\n   [21:41] Marcus Chen: \"Ava can stop it.\"\n   [18:19] Ava Sinclair: \"We have EU customers and a data residency commitment in some contracts. So EU residency is probably the requirement.\"\nCALL-001 (Acme Logistics): tier conditional (score 5/6: sponsor engaged, timeline dated, next step pilot); blockers and caveats: decision waits on: Decision hinges on whether Acme expands its existing Workato contract instead of adding OrbitFlow.; rival: Workato is the existing alternative being weighed against OrbitFlow.; build: They will compare OrbitFlow against improving what they already have.\n   [26:17] Rachel Morgan: \"my read is I'm interested enough to test it.\"\n   [25:10] Maya Chen: \"Timing — you'd said choose a vendor before end of July, first workflows live in September?\"\n   [26:33] Maya Chen: \"So — we send the security pack and a short architecture summary, you send the representative workflow and sample data, and we jointly write three to five pilot success criteria.\"\n   [20:58] Rachel Morgan: \"The real commercial question is whether we expand the Workato contract we already have instead of adding another vendor.\"\n   [20:58] Rachel Morgan: \"whether we expand the Workato contract we already have instead of adding another vendor\"\n   [25:48] Tom Alvarez: \"And the honest comparison is Workato, or just improving what we already have.\"\nCALL-002 (BrightPath Health): tier conditional (score 5/6: sponsor engaged, timeline dated, next step pilot); blockers and caveats: decision waits on: Purchase progress is waiting on the regulatory/BAA answer before anything else can move.; gate: BAA and related regulatory/security approval must be answered before OrbitFlow can be used for PHI workflows.; build: Power Automate / improving the current setup remains the main alternative if OrbitFlow does not win.\n   [27:07] Priya Shah: \"I'm the sponsor — business systems. Security can veto, as you've seen. Privacy counsel reviews the DPA and the BAA.\"\n   [28:32] Priya Shah: \"No production launch before Q4. That's firm. But we could run a non-sensitive proof of concept in August\"\n   [30:23] Maya Chen: \"Concrete next steps then. We send the security pack — SOC 2, subprocessors, DPA, architecture diagram, retention docs, pen test summary.\"\n   [31:19] Maya Chen: \"The blocker is regulatory, not technical, and until it's answered nothing else moves.\"\n   [01:01] Elliot Greene: \"The BAA is the gate. If you can't offer one, we cannot use OrbitFlow\"\n   [29:15] Priya Shah: \"Power Automate. Or just improving what we already have. Those are the real competitors\"\nCALL-003 (Cedar & Finch): tier conditional (score 4/6: sponsor engaged, timeline dated, next step follow_up); blockers and caveats: decision waits on: They need to quantify the current setup/business case before deciding.; gate: Budget is the biggest risk; the tool may be considered too expensive for the team size.; rival: Zapier and Make are the stated alternatives under consideration.; build: They may keep Zapier and improve documentation/ownership instead of buying OrbitFlow.\n   [15:13] Sophie Reed: \"I'm not saying no.\"\n   [12:29] Leo Grant: \"So realistically a decision in — August?\"\n   [15:27] Leo Grant: \"Two things, and both are cheap. One — Marcus logs the time spent on broken automations for four weeks.\"\n   [08:07] Sophie Reed: \"And that's the problem with building the business case. I can't put \"vibes\" in a spreadsheet for the finance director.\"\n   [13:35] Sophie Reed: \"budget is the biggest risk here. We could decide we're simply over-buying, and keep Zapier\"\n   [12:47] Sophie Reed: \"Honestly? Zapier and Make.\"\n   [13:35] Sophie Reed: \"keep Zapier while improving documentation and ownership.\"\nCALL-004 (DeltaWorks Manufacturing): tier conditional (score 4/6: sponsor engaged, timeline dated, next step follow_up); blockers and caveats: gate: Architecture board can stop the deal if it says no.; rival: MuleSoft plus custom integration services are the stated alternative path.; veto: Regional IT is not a formal gate but can make implementation impossible.\n   [33:56] Maya Chen: \"What has to be true to move from where we are to a decision?\"\n   [33:19] Martin Vogel: \"Formal architecture review in September. Procurement in Q4. Realistic production use early next year.\"\n   [36:31] Martin Vogel: \"So — send us the architecture material first. The deployment patterns, the on-premise connectivity options, the SAP integration routes with honest difficulty ratings.\"\n   [32:24] Martin Vogel: \"Architecture board first, and that is the one that matters. If architecture says no, nothing else happens.\"\n   [34:45] Martin Vogel: \"MuleSoft and custom integration services. We already own MuleSoft.\"\n   [07:30] Anika Bose: \"Regional IT will have opinions. That is not a formal gate but it is a real one.\"\nCALL-006 (Fable Media): tier conditional (score 4/6: sponsor engaged, timeline dated, next step follow_up); blockers and caveats: gate: Contract is above Imogen's approval limit and needs founder approval over $20k.; build: They may stick with Zapier plus improved process discipline instead of OrbitFlow.; veto: Founder can approve or block spend above the COO's limit.\n   [12:37] Imogen Price: \"Price and complexity are the two risks. And honestly, we may well decide that Zapier plus better process discipline is good enough\"\n   [12:02] Imogen Price: \"We've got a new client-services process launching in September. I'd want something running before that\"\n   [13:27] Imogen Price: \"What would actually be most useful is a recorded demo I can share with the founder and our ops manager.\"\n   [09:05] Imogen Price: \"I can sign software contracts up to twenty thousand. Above that the founder approves it.\"\n   [12:37] Imogen Price: \"we may well decide that Zapier plus better process discipline is good enough\"\n   [09:05] Imogen Price: \"Above that the founder approves it.\"\nCALL-007 (Greenline Energy Services): tier conditional (score 4/6: sponsor engaged, timeline dated, next step follow_up); blockers and caveats: rival: Power Automate is already embedded and first-class for Dynamics, so OrbitFlow has to be materially better.; veto: The Microsoft platform team may strongly object and has killed things before.\n   [21:29] Carlos Mendes: \"Digital operations researches options, so that's me.\"\n   [22:25] Carlos Mendes: \"Budgeting for next fiscal year starts in October, so if anything were to happen it'd be in that cycle.\"\n   [23:11] Carlos Mendes: \"I'd rather have a roadmap and architecture conversation than a commercial proposal at this point.\"\n   [13:20] Carlos Mendes: \"Power Automate is already embedded here. It's licensed, it's approved, the platform team likes it.\"\n   [21:29] Carlos Mendes: \"The Microsoft platform team will strongly influence the decision, which I'm saying carefully.\"\nCALL-008 (Harbor Legal): tier conditional (score 5/6: sponsor engaged, timeline dated, next step pilot); blockers and caveats: gate: UK residency availability is still unconfirmed and may block the deal.; rival: Power Automate is already in use for some administrative work and is the incumbent alternative.; build: Harbor Legal has an internal development team, and building in-house is a real alternative.; veto: Security and risk have veto power, held by Samir and his director.\n   [00:24] Eleanor Brooks: \"I'd move one thing. You've got security at the end and I'd like it woven through, because Samir will raise it on every point anyway\"\n   [30:24] Eleanor Brooks: \"Possible proof of concept in Q4. Broader rollout would be next year.\"\n   [30:24] Eleanor Brooks: \"Possible proof of concept in Q4.\"\n   [11:52] Nina Patel: \"Then it's a genuine open question and it may be a gate.\"\n   [21:09] Eleanor Brooks: \"We do. It's used for low-risk administrative tasks — document routing, some notifications. It works for that.\"\n   [21:37] Samir Khan: \"There's also internal development. We build things. That's the other alternative\"\n   [29:04] Eleanor Brooks: \"Security and risk have veto power, which is Samir and his director.\"\nCALL-009 (Inkwell Learning): tier conditional (score 5/6: sponsor committed, timeline dated, next step follow_up); blockers and caveats: decision waits on: They first need to determine whether the signal exists in their data at all.; rival: Expansion of the existing Gainsight deployment is the main alternative being compared against OrbitFlow.; veto: Darren can effectively block the purchase if the data does not support it.\n   [22:48] Olivia Grant: \"Decision process, quickly, because I need to go. I sponsor it. Darren validates the data architecture\"\n   [23:37] Olivia Grant: \"We want a pilot before the November renewal planning cycle, with a decision by late September.\"\n   [24:24] Olivia Grant: \"Darren's analysis, obviously.\"\n   [05:11] Jon Bell: \"You absolutely don't, and you should do it before you buy anything from us.\"\n   [08:49] Olivia Grant: \"I'd want that. A cost model comparing this with expanding Gainsight.\"\n   [23:13] Olivia Grant: \"Darren can effectively say no. Security can say no. Finance can say not yet, which is the same thing in practice.\"\n\n=== CALL-001 (call kind: prospect)\nCALL ID: CALL-001\nDATE: 2026-06-03\nVENDOR: OrbitFlow\nPROSPECT: Acme Logistics\nINDUSTRY: Logistics\nCOMPANY SIZE: 650 employees\nSTAGE: Discovery / first demo\nDURATION: 30 minutes\nPARTICIPANTS:\n- Maya Chen, Account Executive, OrbitFlow\n- Jon Bell, Solutions Engineer, OrbitFlow\n- Rachel Morgan, VP Revenue Operations, Acme Logistics\n- Tom Alvarez, Director of Customer Success, Acme Logistics\nTRANSCRIPT\n[01:51] Rachel Morgan (VP Revenue Operations, Acme Logistics): Sure. Handoffs between sales, onboarding and customer success. All of that is managed through spreadsheets and Slack reminders. So renewal risks and implementation blockers get noticed late. Not never — late.\n[...]\n[05:31] Rachel Morgan (VP Revenue Operations, Acme Logistics): I can probably still justify it if we replace enough manual work, and maybe some of what we're paying Gainsight for. But I'd need a clearer ROI story than \"it saves time.\"\n[...]\n[07:33] Tom Alvarez (Director of Customer Success, Acme Logistics): So I don't want to frame this as \"we have no automation.\" The question is whether a different layer gives us better maintainability and operational control.\n[07:45] Maya Chen (Account Executive, OrbitFlow): That's a much better framing than most people give us, honestly. And to be clear, we're not trying to replace every integration platform. Plenty of our customers keep an iPaaS or internal services for deep systems integration and use us for the business-owned workflows — the ones with human decisions, exceptions, cross-functional handoffs.\n[08:09] Rachel Morgan (VP Revenue Operations, Acme Logistics): That's closer to how we'd think about it. I'd be nervous if the proposal was migrate everything.\n[08:17] Maya Chen (Account Executive, OrbitFlow): It won't be.\n[08:19] Rachel Morgan (VP Revenue Operations, Acme Logistics): I'm more interested in a bounded set of workflows where the current approach is visibly failing.\n[08:26] Maya Chen (Account Executive, OrbitFlow): Okay, so let me try one. If we picked a single workflow for phase one — opportunity closes in Salesforce, create the onboarding plan, assign tasks based on product mix, notify the right Slack channel, escalate stalled milestones up to CS leadership. Is that the right shape?\n[08:47] Rachel Morgan (VP Revenue Operations, Acme Logistics): That's the right shape. One caveat though, and it's a big one. The happy path is not the hard part. Anyone can demo the happy path.\n[...]\n[10:12] Rachel Morgan (VP Revenue Operations, Acme Logistics): There's a second use case I'd flag, not for phase one — identifying renewal risk by combining CRM fields, support activity and product usage signals out of Snowflake. I don't need it now. I do want to know the architecture doesn't rule it out.\n[...]\n[13:34] Maya Chen (Account Executive, OrbitFlow): On integrations — you'd said Salesforce is mandatory, Slack and Snowflake matter for phase one, Gainsight would be useful but isn't essential. Which one's the deal-breaker?\n[...]\n[14:19] Jon Bell (Solutions Engineer, OrbitFlow): One thing I noted from your pre-call form — you've got roughly a hundred and forty customer-facing users but you'd only expect twenty-five to actually build or administer workflows?\n[...]\n[20:05] Jon Bell (Solutions Engineer, OrbitFlow): That's fine. Baseline is SOC 2 Type II. SAML SSO and SCIM on Enterprise. Encryption in transit and at rest. Audit logs cover administrative and workflow events. Retention configurable within supported ranges. EU residency available on Enterprise if you ever need it.\n[20:27] Tom Alvarez (Director of Customer Success, Acme Logistics): Can you send the SOC 2 report, subprocessor list, DPA, architecture diagram, retention documentation?\n[20:35] Maya Chen (Account Executive, OrbitFlow): Yes, all of that under the normal process, and we can complete your questionnaire. One ask from me — if anything on your list is an absolute gate, flag it now. I'd rather not spend six weeks on a pilot that can't pass review.\n[...]\n[20:58] Rachel Morgan (VP Revenue Operations, Acme Logistics): The real commercial question is whether we expand the Workato contract we already have instead of adding another vendor. That's the conversation I'll have to win internally. I'd rather you knew that upfront than designed around an assumption.\n[21:16] Maya Chen (Account Executive, OrbitFlow): I appreciate that, genuinely. We'll write it up as a pilot exit criterion. If we can't satisfy it, that should be an explicit result, not something that surfaces in procurement at the end.\n[...]\n[22:03] Tom Alvarez (Director of Customer Success, Acme Logistics): That separation would help. AI's interesting but it's not worth blocking the automation case over.\n[22:11] Maya Chen (Account Executive, OrbitFlow): Right — pricing properly. What counts as a user, since you asked.\n[22:17] Tom Alvarez (Director of Customer Success, Acme Logistics): Yes, because we may have a small number of builders and a lot of people who only approve something or receive a notification.\n[22:26] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed users. Approval-only or notification-only can be structured differently depending on the package. I'm deliberately not giving you an exact number today because without the user model any number I give you is misleading.\n[22:46] Rachel Morgan (VP Revenue Operations, Acme Logistics): Please make that explicit in the proposal. I do not want to find out in month four that every occasional approver needs a full seat.\n[22:56] Maya Chen (Account Executive, OrbitFlow): It'll be itemised — assumed builder count, viewer and approver population, expected workflow volume, and any one-time services separately.\n[...]\n[23:52] Maya Chen (Account Executive, OrbitFlow): For a pilot we can baseline one or two things before we automate — elapsed time, number of manual touches, exception rate, engineer hours spent maintaining the current process.\n[...]\n[24:26] Rachel Morgan (VP Revenue Operations, Acme Logistics): I own the project. IT security and the VP of Customer Success sign off. Finance gets involved above twenty-five thousand a year, so — yes, finance gets involved. Operationally I'd expect a small central group owning standards, business teams contributing requirements.\n[...]\n[24:58] Jon Bell (Solutions Engineer, OrbitFlow): That's more or less our recommended model. Start with a few centrally owned templates, define who can publish to production, separate dev from prod.\n[25:10] Maya Chen (Account Executive, OrbitFlow): Timing — you'd said choose a vendor before end of July, first workflows live in September?\n[25:18] Rachel Morgan (VP Revenue Operations, Acme Logistics): That's the intent. It'll slip. It always slips. But that's the plan.\n[...]\n[25:29] Rachel Morgan (VP Revenue Operations, Acme Logistics): One representative workflow working with real enough data. Security gates understood. A commercial model without hidden scaling surprises. And the people who'll operate it have to believe they can own it — that last one is not a small thing.\n[25:48] Tom Alvarez (Director of Customer Success, Acme Logistics): And the honest comparison is Workato, or just improving what we already have. Not doing nothing.\n[25:57] Maya Chen (Account Executive, OrbitFlow): Agreed. We can define the pilot against the status quo and the alternative. And a perfectly valid outcome is \"don't buy OrbitFlow\" if the existing approach meets the criteria more cheaply.\n[26:11] Rachel Morgan (VP Revenue Operations, Acme Logistics): You're allowed to say that?\n[26:13] Maya Chen (Account Executive, OrbitFlow): I'd rather say it now than in month nine.\n[26:17] Rachel Morgan (VP Revenue Operations, Acme Logistics): Fair enough. Look — my read is I'm interested enough to test it. If you can give us a sandbox I can supply three real workflows and we'll see whether the exception handling is as good as it looked today.\n[26:33] Maya Chen (Account Executive, OrbitFlow): That's exactly what I'd want. So — we send the security pack and a short architecture summary, you send the representative workflow and sample data, and we jointly write three to five pilot success criteria. Then we decide on the sandbox.\n[...]\n[28:39] Tom Alvarez (Director of Customer Success, Acme Logistics): Can you also write down the assumptions you made today? Some of what we told you was approximate and I don't want it hardening into requirements by accident.\n[28:51] Maya Chen (Account Executive, OrbitFlow): Will do. Written recap with open questions separated from confirmed requirements.\n\n=== CALL-002 (call kind: prospect)\nCALL ID: CALL-002\nDATE: 2026-06-05\nVENDOR: OrbitFlow\nPROSPECT: BrightPath Health\nINDUSTRY: Digital health\nCOMPANY SIZE: 1,100 employees\nSTAGE: Technical discovery\nDURATION: 34 minutes\nPARTICIPANTS:\n- Maya Chen, Account Executive, OrbitFlow\n- Jon Bell, Solutions Engineer, OrbitFlow\n- Priya Shah, Head of Business Systems, BrightPath Health\n- Elliot Greene, Security Architect, BrightPath Health\nTRANSCRIPT\n[01:19] Maya Chen (Account Executive, OrbitFlow): Understood, and I want to be careful here because this is exactly the thing people fudge on sales calls. I'm not going to give you a yes on this call. What I will do is get you a written answer from our legal and compliance side within — Jon, what's realistic, a week?\n[...]\n[02:30] Jon Bell (Solutions Engineer, OrbitFlow): Default depends on where the workspace is provisioned. I'd rather confirm the specifics in writing than guess at your architecture on a call.\n[...]\n[03:04] Jon Bell (Solutions Engineer, OrbitFlow): We publish the list and there's a notification mechanism for changes. The exact notice period is contractual, so — again, that's a document question not a call question.\n[...]\n[06:31] Maya Chen (Account Executive, OrbitFlow): What else can we send? SOC 2 report, subprocessor list, DPA, architecture diagram, retention documentation — is that the pack?\n[06:42] Elliot Greene (Security Architect, BrightPath Health): Add pen test summary. And yes. And we'll send you our questionnaire, which is long, and I apologise in advance.\n[...]\n[11:36] Maya Chen (Account Executive, OrbitFlow): And you've got Power Automate today.\n[11:40] Priya Shah (Head of Business Systems, BrightPath Health): We do. It's already covered by our Microsoft agreement, which matters a lot to procurement.\n[...]\n[12:35] Priya Shah (Head of Business Systems, BrightPath Health): That's closer to how we'd think about it. I'd be nervous if the proposal was migrate everything off Microsoft.\n[12:44] Maya Chen (Account Executive, OrbitFlow): It isn't, and frankly that proposal would lose to your licensing agreement anyway.\n[...]\n[12:54] Maya Chen (Account Executive, OrbitFlow): Let me try a phase-one candidate on you. Route implementation requests from HubSpot into Jira, enrich them with account data, notify Teams, track exceptions — and do all of that without copying sensitive notes into three more systems.\n[...]\n[15:56] Elliot Greene (Security Architect, BrightPath Health): The idea is to give operations teams a governed way to build simple workflows without receiving broad access to production systems. I'm supportive of that in principle. In practice it lives or dies on whether the permission model is genuinely least-privilege or just a UI that hides things.\n[16:20] Jon Bell (Solutions Engineer, OrbitFlow): That's a fair challenge and I'd want to demo the permission model specifically rather than hand-wave it.\n[...]\n[20:26] Priya Shah (Head of Business Systems, BrightPath Health): That's the model I've been trying to sell internally for two years.\n[20:32] Maya Chen (Account Executive, OrbitFlow): Then let's make that explicit in the pilot criteria rather than leaving it implied.\n[...]\n[21:40] Jon Bell (Solutions Engineer, OrbitFlow): We cache metadata but refresh it, and mapping errors surface on the run. For high-impact flows I'd recommend explicit validation at the start rather than assuming every source field is populated. You can also alert when error rates cross a threshold.\n[22:00] Priya Shah (Head of Business Systems, BrightPath Health): I'd want that in the evaluation. A demo with clean data proves nothing.\n[...]\n[22:11] Maya Chen (Account Executive, OrbitFlow): Integrations — you'd said HubSpot, Teams, Jira and Azure AD are the important ones, and Databricks would be via API initially?\n[...]\n[22:55] Jon Bell (Solutions Engineer, OrbitFlow): For your stack it's a mix of native connectors and API-based options. In a pilot I'd want to validate each required operation rather than pointing at a logo on our integrations page.\n[...]\n[23:31] Maya Chen (Account Executive, OrbitFlow): Do you need to —\n[23:33] Priya Shah (Head of Business Systems, BrightPath Health): No, no, it's a test, it stops in about — [pause] there. Gone. Sorry.\n[23:41] Maya Chen (Account Executive, OrbitFlow): No problem.\n[23:44] Priya Shah (Head of Business Systems, BrightPath Health): Where were we.\n[23:46] Maya Chen (Account Executive, OrbitFlow): Commercials, if you're happy to.\n[23:50] Priya Shah (Head of Business Systems, BrightPath Health): Go on then.\n[23:53] Maya Chen (Account Executive, OrbitFlow): Growth starts at eighteen hundred a month for up to thirty users on an annual agreement. Enterprise is custom-priced — that's where advanced governance, the security capabilities, and higher usage sit. Given your list, you're an Enterprise conversation, not a Growth one.\n[24:15] Priya Shah (Head of Business Systems, BrightPath Health): Honestly? I'm not ready to react to that.\n[24:19] Maya Chen (Account Executive, OrbitFlow): That's fine.\n[24:22] Priya Shah (Head of Business Systems, BrightPath Health): I don't mean that as a negotiating position. Procurement will not have a serious pricing conversation until security tells us whether the BAA requirement can be met. If the answer's no, the price is irrelevant.\n[24:38] Maya Chen (Account Executive, OrbitFlow): That's completely logical and I'm not going to push. What I'd ask is that when we do get to it, you let me build the model around your actual user population rather than a headline number.\n[24:53] Priya Shah (Head of Business Systems, BrightPath Health): What counts as a user? Because we'd have a small number of builders and a lot of people who only approve something or get a notification.\n[25:04] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only can be structured differently depending on package. I'm deliberately not quoting you a figure today because without the user model any figure I give is misleading.\n[25:23] Priya Shah (Head of Business Systems, BrightPath Health): Please make that explicit in the proposal when it comes. I don't want to discover in month four that every occasional approver needs a full seat.\n[25:35] Maya Chen (Account Executive, OrbitFlow): It'll be itemised. Assumed builders, viewer and approver population, expected workflow volume, one-time services separately.\n[...]\n[26:26] Maya Chen (Account Executive, OrbitFlow): For a pilot we can baseline one or two things before automating. Elapsed time, manual touches, exception rate, or systems-group hours spent on requests.\n[...]\n[26:48] Priya Shah (Head of Business Systems, BrightPath Health): I'd also measure adoption. A technically correct workflow that everyone routes around is a failed implementation. That's literally what happened with our last internal tool.\n[...]\n[27:07] Priya Shah (Head of Business Systems, BrightPath Health): I'm the sponsor — business systems. Security can veto, as you've seen. Privacy counsel reviews the DPA and the BAA. Procurement handles final terms.\n[...]\n[28:07] Jon Bell (Solutions Engineer, OrbitFlow): Version history and change metadata, yes. Rollback and promotion patterns vary by workflow and package. For your evaluation I'd suggest we include a change-management scenario rather than just building it once.\n[...]\n[28:32] Priya Shah (Head of Business Systems, BrightPath Health): No production launch before Q4. That's firm. But we could run a non-sensitive proof of concept in August — synthetic data, or clearly non-PHI.\n[28:47] Maya Chen (Account Executive, OrbitFlow): What has to be true to move from evaluation to a decision?\n[28:53] Priya Shah (Head of Business Systems, BrightPath Health): One representative workflow working with real enough data. The security gates understood, and by understood I mean answered. A commercial model without hidden scaling surprises. And the people who'd operate it believing they can own it.\n[29:12] Maya Chen (Account Executive, OrbitFlow): And the honest alternative?\n[29:15] Priya Shah (Head of Business Systems, BrightPath Health): Power Automate. Or just improving what we already have. Those are the real competitors, not another workflow vendor.\n[29:26] Maya Chen (Account Executive, OrbitFlow): Then let's define the pilot against the status quo and against Power Automate. And I'll say the same thing I said to Elliot — a valid outcome is \"don't buy OrbitFlow\" if the existing approach meets the criteria more cheaply.\n[29:44] Priya Shah (Head of Business Systems, BrightPath Health): I'll hold you to that.\n[29:47] Maya Chen (Account Executive, OrbitFlow): Please do.\n[29:50] Priya Shah (Head of Business Systems, BrightPath Health): So — where does that leave us. My read is I would still consider a limited pilot with synthetic or clearly non-PHI data. But I want to be explicit about something: a successful pilot would not automatically mean we can deploy broadly. Those are two different decisions and they have different approvers.\n[30:15] Maya Chen (Account Executive, OrbitFlow): That's understood and I'd rather you said it now.\n[30:20] Priya Shah (Head of Business Systems, BrightPath Health): Good.\n[30:23] Maya Chen (Account Executive, OrbitFlow): Concrete next steps then. We send the security pack — SOC 2, subprocessors, DPA, architecture diagram, retention docs, pen test summary. Separately, and this is the one that matters, a written position on the BAA within a week. You send us the representative workflow and some sample data, ideally messy. And we jointly write three to five pilot success criteria.\n[30:53] Priya Shah (Head of Business Systems, BrightPath Health): And a session on the permission model for Elliot.\n[30:58] Maya Chen (Account Executive, OrbitFlow): And a session on the permission model for Elliot. Jon, can you own that?\n[31:04] Jon Bell (Solutions Engineer, OrbitFlow): Yeah. I'd want an hour and I'd want Elliot to bring his worst-case scenario rather than me showing him a clean one.\n[31:14] Priya Shah (Head of Business Systems, BrightPath Health): He will have one ready. He always has one ready.\n[31:19] Maya Chen (Account Executive, OrbitFlow): Let me summarise. You don't need automation for its own sake. The opportunity is a systems group that builds components rather than fulfilling tickets, and a small number of cross-system processes that are observable and less dependent on individuals. The blocker is regulatory, not technical, and until it's answered nothing else moves.\n[31:47] Priya Shah (Head of Business Systems, BrightPath Health): That's an accurate summary.\n[31:51] Maya Chen (Account Executive, OrbitFlow): One more thing — can you write down the assumptions we made today? Some of what you told me was approximate and I don't want it hardening into a requirement by accident.\n[32:04] Priya Shah (Head of Business Systems, BrightPath Health): You want me to do that?\n[32:07] Maya Chen (Account Executive, OrbitFlow): No, sorry — I'll do that. I'll send a recap with open questions separated from confirmed requirements.\n\n=== CALL-003 (call kind: prospect)\nCALL ID: CALL-003\nDATE: 2026-06-11\nVENDOR: OrbitFlow\nPROSPECT: Cedar & Finch\nINDUSTRY: E-commerce\nCOMPANY SIZE: 180 employees\nSTAGE: Discovery / demo\nDURATION: 17 minutes\nPARTICIPANTS:\n- Leo Grant, Account Executive, OrbitFlow\n- Sophie Reed, Director of E-commerce Operations, Cedar & Finch\n- Marcus Lee, Customer Support Manager, Cedar & Finch\nTRANSCRIPT\n[00:09] Marcus Lee (Customer Support Manager, Cedar & Finch): Yeah, sorry, I'm walking. I'll be at a desk in five.\n[00:14] Leo Grant (Account Executive, OrbitFlow): No problem. So normally I'd spend twenty minutes on discovery before showing anything, but —\n[...]\n[00:25] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): We've done three of these in a fortnight. I can recite our own pain points. Can we just see it and I'll interrupt when something matters?\n[00:35] Leo Grant (Account Executive, OrbitFlow): Deal. I'll ask about four questions along the way rather than up front. Fair?\n[...]\n[04:42] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): Let me give you the full list. Shopify, Zendesk, Klaviyo, Slack, Airtable, and Zapier holding it all together with string.\n[04:53] Leo Grant (Account Executive, OrbitFlow): And of those, which one is the one that has to work perfectly?\n[04:58] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): Shopify. A native Shopify trigger is — that's important. If that's a polling hack I'm not interested.\n[05:07] Leo Grant (Account Executive, OrbitFlow): Understood. I'm going to be careful here — I believe the Shopify integration is native and event-driven, but I'm not going to swear to the exact trigger coverage without checking. That's a Nina question and I'll get you a written answer.\n[...]\n[06:34] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): Then let's do money now, because I don't want to spend twenty minutes falling in love with this.\n[06:41] Leo Grant (Account Executive, OrbitFlow): Sensible. Growth starts at eighteen hundred a month, up to thirty users, on an annual agreement.\n[...]\n[07:09] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): I could potentially do an annual prepay if that materially changes the number. Does it?\n[07:16] Leo Grant (Account Executive, OrbitFlow): It can. I'd be lying if I said it halves it. It's a meaningful discount, not a transformation.\n[...]\n[08:15] Leo Grant (Account Executive, OrbitFlow): No. But you could count it for four weeks before you decide anything. That's free and it'd make the conversation much easier either way.\n[...]\n[10:27] Leo Grant (Account Executive, OrbitFlow): There might be one. You mentioned wanting a weekly digest of recurring support reasons pushed to the e-commerce and product teams?\n[10:37] Marcus Lee (Customer Support Manager, Cedar & Finch): That was me. I want that. I've wanted that for two years.\n[...]\n[11:07] Leo Grant (Account Executive, OrbitFlow): Usage is scoped on workflow runs and premium connectors. I'd want to model that for your volumes rather than say \"no\" and surprise you later.\n[...]\n[11:38] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): I can choose tools under fifteen thousand a year on my own. Above that it goes to the COO and the finance director.\n[...]\n[12:12] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): I'd like to clean up the automations before the holiday peak. Ideally something in place by early October, because after that nobody's changing anything until January.\n[...]\n[12:29] Leo Grant (Account Executive, OrbitFlow): Sensible rule. So realistically a decision in — August?\n[12:35] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): August, if we do it.\n[...]\n[13:06] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): Maintenance and visibility. The same two things. Make would give me the branching but I'd still have the ownership problem.\n[...]\n[13:20] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): Which is its own ownership problem.\n[13:24] Leo Grant (Account Executive, OrbitFlow): So the honest framing is: we'd have to beat Zapier plus better documentation and ownership discipline. Not beat doing nothing.\n[13:35] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): That's exactly right. And to be blunt — budget is the biggest risk here. We could decide we're simply over-buying, and keep Zapier while improving documentation and ownership. That's a real outcome and it might be the right one.\n[13:53] Leo Grant (Account Executive, OrbitFlow): It might be. I'd rather you concluded that in July than in month five.\n[14:00] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): You keep saying things that don't sound like sales.\n[14:04] Leo Grant (Account Executive, OrbitFlow): I've been doing this a while. The deals that go wrong are the ones where someone talked themselves past a genuine objection.\n[14:13] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): Mm.\n[14:16] Marcus Lee (Customer Support Manager, Cedar & Finch): Sorry — Soph, you've frozen.\n[14:19] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): [inaudible]\n[14:21] Marcus Lee (Customer Support Manager, Cedar & Finch): You're breaking up. Leo, can you hear her?\n[14:25] Leo Grant (Account Executive, OrbitFlow): Not really.\n[14:27] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): — sorry. Sorry. Back. My office wifi is genuinely worse than my house wifi and I don't understand why.\n[14:36] Leo Grant (Account Executive, OrbitFlow): [laughs] Mine too. Where'd we lose you?\n[14:40] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): You were being honest about objections, which I appreciated, and then I vanished, which was poor timing.\n[14:48] Leo Grant (Account Executive, OrbitFlow): So — where does that leave you? Genuinely.\n[14:53] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): I like the monitoring. I like the reusable templates. That's the bit that speaks to our actual problem. I'm just not yet convinced the value closes the gap between this and the tools we already pay for.\n[15:10] Leo Grant (Account Executive, OrbitFlow): That's a completely fair position.\n[15:13] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): I'm not saying no.\n[15:16] Leo Grant (Account Executive, OrbitFlow): I know. And I'd rather have a considered maybe than an enthusiastic yes that dies in procurement.\n[15:24] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): What would you want from us?\n[15:27] Leo Grant (Account Executive, OrbitFlow): Two things, and both are cheap. One — Marcus logs the time spent on broken automations for four weeks. Not for me, for you. Two — send me your three worst automations, the ones that break most, and I'll come back with what they'd look like rebuilt here, plus an honest note on which bits are actually better and which are just different.\n[15:53] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): You'll tell me which bits aren't better?\n[15:56] Leo Grant (Account Executive, OrbitFlow): If I don't, you'll find out in month two and then I've lost you anyway.\n[16:02] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): Alright. Marcus, can you do the logging thing?\n[16:06] Marcus Lee (Customer Support Manager, Cedar & Finch): I can do the logging thing.\n[16:09] Sophie Reed (Director of E-commerce Operations, Cedar & Finch): Then yes. Send me that.\n[16:12] Leo Grant (Account Executive, OrbitFlow): I'll also get you written answers on the Shopify trigger coverage and the default processing region. Those are the two I dodged.\n[...]\n[16:29] Leo Grant (Account Executive, OrbitFlow): Anything else before we drop?\n[16:32] Marcus Lee (Customer Support Manager, Cedar & Finch): Actually, yeah, one. If we did buy this, do we have to migrate all sixty at once?\n\n=== CALL-004 (call kind: prospect)\nCALL ID: CALL-004\nDATE: 2026-06-18\nVENDOR: OrbitFlow\nPROSPECT: DeltaWorks Manufacturing\nINDUSTRY: Industrial manufacturing\nCOMPANY SIZE: 4,500 employees\nSTAGE: Enterprise discovery\nDURATION: 41 minutes\nPARTICIPANTS:\n- Maya Chen, Account Executive, OrbitFlow\n- Jon Bell, Solutions Engineer, OrbitFlow\n- Martin Vogel, Director of Enterprise Applications, DeltaWorks Manufacturing\n- Anika Bose, IT Governance Lead, DeltaWorks Manufacturing\nTRANSCRIPT\n[01:08] Maya Chen (Account Executive, OrbitFlow): Then let's do governance and architecture first, current state woven through, and commercials at the end — and if we don't reach commercials, we don't reach commercials.\n[...]\n[03:41] Jon Bell (Solutions Engineer, OrbitFlow): Understood. So the pattern there is generally an agent or a controlled gateway sitting inside your network that the platform communicates with, rather than direct outbound calls to your systems. But I want to validate that against your actual environment rather than describe it in the abstract.\n[04:03] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): That is the answer I expected and it is the answer I wanted.\n[04:08] Anika Bose (IT Governance Lead, DeltaWorks Manufacturing): Disaster recovery documentation and pen test material — you have these?\n[04:14] Jon Bell (Solutions Engineer, OrbitFlow): Yes, both available under the normal security process, along with SOC 2, subprocessor list, DPA, and an architecture diagram.\n[04:25] Anika Bose (IT Governance Lead, DeltaWorks Manufacturing): Good. Send all of it. We will also send our questionnaire. It is two hundred and forty questions.\n[...]\n[06:14] Jon Bell (Solutions Engineer, OrbitFlow): That's genuinely designable. You would aggregate at the queue or team level rather than the individual level, and you would restrict who can view run-level detail. It's a permissions and reporting design question.\n[06:31] Anika Bose (IT Governance Lead, DeltaWorks Manufacturing): If you can show me that design, it helps my case with the works council considerably.\n[06:38] Maya Chen (Account Executive, OrbitFlow): Let's make that an explicit deliverable rather than a conversation. Jon, can you write a short note on team-level versus individual-level visibility?\n[...]\n[07:30] Anika Bose (IT Governance Lead, DeltaWorks Manufacturing): Regional IT will have opinions. That is not a formal gate but it is a real one. And procurement has a standard process that takes as long as it takes.\n[...]\n[12:44] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): It is significant for you specifically, which is why I am saying it now.\n[12:50] Jon Bell (Solutions Engineer, OrbitFlow): Are those two plants in scope for the first use case?\n[...]\n[13:34] Maya Chen (Account Executive, OrbitFlow): Let me try a phase-one candidate and you tell me if it's wrong. A large service contract closes in Salesforce. We validate the customer and product data against SAP. We create implementation tasks in ServiceNow. And we escalate mismatches before order processing rather than after.\n[...]\n[18:41] Jon Bell (Solutions Engineer, OrbitFlow): A week, and I'd want an hour with whoever owns your SAP interfaces rather than reading a spreadsheet in isolation.\n[18:51] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): That can be arranged.\n[18:54] Maya Chen (Account Executive, OrbitFlow): Can I flag something commercial that's hiding in this? If phase one requires significant SAP and on-premise work, that's professional services, and I'd rather price it honestly up front than have it appear after architecture review.\n[19:12] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): Thank you. That is exactly the thing I was going to raise later.\n[19:18] Maya Chen (Account Executive, OrbitFlow): Then let's raise it now.\n[19:21] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): The headline licence price is not going to surprise me. We buy enterprise software. What I care about is transparency around professional services, premium connectors, and anything we would only discover after an architecture review. That is where the surprises live.\n[19:43] Maya Chen (Account Executive, OrbitFlow): Then here's what I'll commit to. The proposal will separate licence, assumed builder count, viewer and approver population, expected workflow volume, and services as distinct line items, with the assumptions written next to each. And where I don't know, it'll say \"to be determined after architecture review\" rather than a placeholder number that looks like a quote.\n[20:11] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): If you do that, you will be the second vendor this year who has.\n[20:17] Maya Chen (Account Executive, OrbitFlow): Who was the first?\n[20:19] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): [laughs] I'm not going to tell you that.\n[20:23] Maya Chen (Account Executive, OrbitFlow): Fair enough. For the record — Growth is eighteen hundred a month up to thirty users on an annual agreement, but that's not your shape. You're an Enterprise conversation. Custom priced, advanced governance, security capabilities, higher usage.\n[20:42] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): Yes, obviously.\n[20:45] Anika Bose (IT Governance Lead, DeltaWorks Manufacturing): What is a user? We may have twenty people building and several hundred who only approve something.\n[20:53] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed users. Approval-only or notification-only populations can be structured differently depending on package. I'm not going to give you a number today because without the user model any number is misleading.\n[21:12] Anika Bose (IT Governance Lead, DeltaWorks Manufacturing): Please put that in the proposal explicitly. I do not want to discover in year two that every occasional approver requires a full seat.\n[...]\n[22:33] Maya Chen (Account Executive, OrbitFlow): I'd argue you can put a number on it. Not savings — avoided incident cost. But that's a harder internal sell and I wouldn't lead with it.\n[22:45] Anika Bose (IT Governance Lead, DeltaWorks Manufacturing): No. Lead with cycle time.\n[...]\n[23:12] Jon Bell (Solutions Engineer, OrbitFlow): Workspace separation is supported and Enterprise has stronger governance around who can publish where. There's version history and change metadata on every workflow. Rollback and promotion patterns vary a bit depending on the workflow and the package, and I'd want to walk through your specific promotion process rather than assume it maps.\n[23:37] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): Our promotion process is documented. I will send it.\n[23:42] Jon Bell (Solutions Engineer, OrbitFlow): Then I'll map it against what the platform does and tell you where the gaps are. There will be gaps — there always are — the question is whether they're gaps you can live with.\n[23:56] Anika Bose (IT Governance Lead, DeltaWorks Manufacturing): I would also like the change-management scenario included in any evaluation. Not just \"build the workflow.\" Build it, change it, break it, roll it back.\n[...]\n[29:53] Maya Chen (Account Executive, OrbitFlow): Yes. I want to cover ROI, the decision process, and timing, and then I want to ask you a direct question about next steps.\n[...]\n[32:24] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): Architecture board first, and that is the one that matters. If architecture says no, nothing else happens. Information security runs in parallel. The works council only if the use case requires it, which is why Anika wanted it discussed today. Procurement last, and slowly.\n[...]\n[33:16] Maya Chen (Account Executive, OrbitFlow): Noted. Timing?\n[33:19] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): Formal architecture review in September. Procurement in Q4. Realistic production use early next year.\n[33:29] Maya Chen (Account Executive, OrbitFlow): Early next year.\n[33:31] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): I know that is slow for you.\n[33:34] Maya Chen (Account Executive, OrbitFlow): It's slow, but it's honest, and a slow honest timeline is worth more to me than a fast invented one. I've had Q3 dates that turned into the following June.\n[33:47] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): Ours will not turn into the following June. It may turn into March.\n[33:53] Maya Chen (Account Executive, OrbitFlow): [laughs] I'll take March.\n[33:56] Maya Chen (Account Executive, OrbitFlow): What has to be true to move from where we are to a decision?\n[34:02] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): The architecture has to be viable. Specifically SAP and the on-premise systems. If the answer is \"possible but requires nine months of integration work\", then the first use case is too heavy and we should choose a different first use case or not proceed.\n[34:23] Maya Chen (Account Executive, OrbitFlow): That's the crux, isn't it.\n[34:26] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): That is the crux. Honestly — the biggest issue is whether SAP and our on-premise systems make the implementation too heavy for the first use case. Everything else is manageable.\n[34:42] Maya Chen (Account Executive, OrbitFlow): And the alternative?\n[34:45] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): MuleSoft and custom integration services. We already own MuleSoft. If someone can demonstrate that the business-owned workflow layer can be built on top of it acceptably, that is the cheaper path even if it is the worse one.\n[...]\n[35:09] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): [pause] It is a real possibility. I do not think it is a good idea, because it makes every workflow change an integration project, which is the problem we are trying to solve. But it is a real possibility and someone will propose it.\n[35:29] Maya Chen (Account Executive, OrbitFlow): Then let's make sure the architecture note addresses it directly rather than pretending it isn't the alternative.\n[...]\n[35:45] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): I will be honest with you. I see strategic potential here. But I do not think a sandbox is the next step.\n[...]\n[36:31] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): So — send us the architecture material first. The deployment patterns, the on-premise connectivity options, the SAP integration routes with honest difficulty ratings. Then we determine whether the deployment model is viable. If it is, we talk about a sandbox and a pilot. If it is not, we stop and neither of us has wasted a quarter.\n[...]\n[37:05] Jon Bell (Solutions Engineer, OrbitFlow): The list of specific SAP operations for the candidate use case. Your promotion process documentation. And an hour with whoever owns the SAP interfaces. With those I can produce something with substance rather than a marketing architecture diagram.\n[37:24] Martin Vogel (Director of Enterprise Applications, DeltaWorks Manufacturing): You will have all three by the end of next week.\n[...]\n[37:34] Maya Chen (Account Executive, OrbitFlow): And I'll send the security pack in parallel — SOC 2, subprocessor list, DPA, architecture diagram, retention documentation, DR documentation, pen test material. Plus Jon's note on team-level versus individual-level visibility for the works council question.\n[...]\n[38:57] Maya Chen (Account Executive, OrbitFlow): I'll send a written recap with open questions in a separate column from confirmed requirements. And I'll list the things I heard as estimates so you can correct them.\n[...]\n[39:14] Maya Chen (Account Executive, OrbitFlow): Let me summarise. The opportunity is a business-owned workflow layer above MuleSoft, not a replacement for it. The first candidate is contract close to SAP validation to ServiceNow tasks, with early mismatch escalation. The decisive question is deployment architecture, specifically SAP and on-premise connectivity, and until that's answered nothing else matters. Governance requires the full security pack plus a works council position on individual-level visibility. And the next step is architecture material, not a sandbox.\n\n=== CALL-005 (call kind: prospect)\nCALL ID: CALL-005\nDATE: 2026-07-02\nVENDOR: OrbitFlow\nPROSPECT: Ember Financial\nINDUSTRY: Fintech\nCOMPANY SIZE: 900 employees\nSTAGE: Evaluation\nDURATION: 31 minutes\nPARTICIPANTS:\n- Leo Grant, Account Executive, OrbitFlow\n- Nina Patel, Solutions Engineer, OrbitFlow\n- Noah Williams, VP Operations Technology, Ember Financial\n- Hannah Cole, Senior Risk Engineer, Ember Financial\nTRANSCRIPT\n[00:13] Noah Williams (VP Operations Technology, Ember Financial): So you should know we're running this as a bake-off. You and Tray.io. We've had a Tray proof of concept running for about six weeks. This isn't a discovery call for us, we know what we want. This is us testing whether you can do it.\n[...]\n[01:30] Noah Williams (VP Operations Technology, Ember Financial): The other thing you should know is who has to be convinced. I'm the executive sponsor and I'm broadly positive. Hannah and platform engineering score technical fit. Then security, legal, procurement, and the COO approve. So there are a lot of ways for this to die and only one way for it to happen.\n[...]\n[10:15] Nina Patel (Solutions Engineer, OrbitFlow): Okay. So let me play back the phase-one candidate as I understood it. Detect failed or delayed partner onboarding events. Enrich them from Salesforce and Snowflake. Open a Jira incident. And maintain a complete audit trail of approvals and remediation steps.\n[...]\n[11:51] Hannah Cole (Senior Risk Engineer, Ember Financial): Is the original value retained?\n[11:54] Nina Patel (Solutions Engineer, OrbitFlow): [pause] You can see both here — the value at the point the step ran and the value after the approval form. So yes, but I want to be precise: that's because this approval was configured to collect a structured input. If someone had just clicked approve, there'd be nothing to compare.\n[12:16] Hannah Cole (Senior Risk Engineer, Ember Financial): So it depends on how the workflow was designed.\n[12:20] Nina Patel (Solutions Engineer, OrbitFlow): It depends on how the workflow was designed.\n[12:24] Hannah Cole (Senior Risk Engineer, Ember Financial): Then design standards matter as much as the platform.\n[12:29] Nina Patel (Solutions Engineer, OrbitFlow): For your use case, yes, considerably.\n[12:33] Hannah Cole (Senior Risk Engineer, Ember Financial): [pause] I appreciate you not overselling that.\n[12:38] Noah Williams (VP Operations Technology, Ember Financial): Hannah has been oversold to a lot.\n[12:41] Hannah Cole (Senior Risk Engineer, Ember Financial): I have been oversold to a great deal.\n[12:45] Leo Grant (Account Executive, OrbitFlow): Can I flag something? If design standards are load-bearing for your audit position, that should be a pilot deliverable, not an afterthought. As in, the pilot produces a documented standard for how audit-relevant workflows must be built, and that's a deliverable you keep whether or not you buy.\n[13:07] Noah Williams (VP Operations Technology, Ember Financial): That's a good idea.\n[13:10] Hannah Cole (Senior Risk Engineer, Ember Financial): That's a very good idea, actually.\n[13:13] Leo Grant (Account Executive, OrbitFlow): Then let's write it into the criteria.\n[13:17] Nina Patel (Solutions Engineer, OrbitFlow): Let me show the composition point since it came up at the start. [pause] Rather than one large canvas, you build subflows — partner lookup, enrichment, approval, incident creation — and assemble them. So when something fails, you're debugging a twelve-step subflow, not step forty of sixty.\n[...]\n[15:24] Noah Williams (VP Operations Technology, Ember Financial): Salesforce, Snowflake, Slack, Okta, Jira, and an internal event bus. Required: all of those, plus webhooks and a generic REST connector.\n[...]\n[16:31] Nina Patel (Solutions Engineer, OrbitFlow): We cache metadata but refresh it, and mapping errors surface on the run. For high-impact flows I'd recommend explicit validation at the start rather than assuming every source field is populated. And you can alert when error rates cross a threshold.\n[16:51] Hannah Cole (Senior Risk Engineer, Ember Financial): I'd want that tested in the evaluation. With bad data.\n[...]\n[19:07] Hannah Cole (Senior Risk Engineer, Ember Financial): I'd want a change-management scenario in the evaluation. Build it, change it, break it, roll it back. Not just build it.\n[...]\n[19:46] Noah Williams (VP Operations Technology, Ember Financial): On-call style. Does that integrate with PagerDuty or is it internal?\n[19:52] Nina Patel (Solutions Engineer, OrbitFlow): There's an internal fallback mechanism, and separately you can call out to your incident tooling. Which one you'd want depends on whether the exception is an operational incident or a business exception, and I'd argue those should be handled differently.\n[20:11] Noah Williams (VP Operations Technology, Ember Financial): They should. We currently handle them identically, which is part of the problem.\n[20:18] Leo Grant (Account Executive, OrbitFlow): Shall I do commercials? Because I want to leave time for next steps.\n[20:23] Noah Williams (VP Operations Technology, Ember Financial): Go on.\n[20:25] Leo Grant (Account Executive, OrbitFlow): Growth is eighteen hundred a month up to thirty users on an annual agreement. You're not a Growth shape — you're Enterprise, which is custom priced and adds the advanced governance, the security capabilities, and higher usage.\n[20:42] Noah Williams (VP Operations Technology, Ember Financial): The range is roughly where I expected an enterprise workflow product to land. That's not my concern.\n[20:50] Leo Grant (Account Executive, OrbitFlow): What is?\n[20:52] Noah Williams (VP Operations Technology, Ember Financial): Usage overages. If the bill becomes unpredictable as volumes grow, finance will dislike it even if the base price is fine. I've been through this with two other vendors and both times the second-year invoice was the problem, not the first.\n[21:12] Leo Grant (Account Executive, OrbitFlow): That's the right thing to worry about and I'd rather deal with it now. Usage is scoped on workflow runs and premium connector needs. What I'd want to do is model your actual expected volumes, agree what happens above the threshold before you sign, and put the overage mechanism in the contract explicitly rather than in a rate card that changes.\n[...]\n[21:40] Leo Grant (Account Executive, OrbitFlow): There are mechanisms. I don't want to promise a specific structure on a call before I've modelled your volumes, because if I say \"yes we can cap it\" and then the cap has conditions, I've made things worse.\n[...]\n[22:29] Leo Grant (Account Executive, OrbitFlow): Builders and full workspace users are the licensed users. Approval-only or notification-only populations can be structured differently depending on the package. Forty and three hundred is a very common shape and it's exactly why I won't quote you a number before I know it.\n[22:49] Noah Williams (VP Operations Technology, Ember Financial): Make that split explicit in the proposal. I don't want to find out in year two that every approver needs a full seat.\n[...]\n[23:12] Leo Grant (Account Executive, OrbitFlow): Then I'll model three hundred and five hundred and you can see the shape of the curve rather than a point estimate.\n[...]\n[25:22] Leo Grant (Account Executive, OrbitFlow): Timing?\n[25:24] Noah Williams (VP Operations Technology, Ember Financial): Technical bake-off in July. Vendor decision in August. First controlled production workflows in October.\n[...]\n[26:42] Leo Grant (Account Executive, OrbitFlow): Then let's address it in the pilot criteria explicitly rather than pretending the only alternative is Tray. I'd rather we lose to a documented decision than lose to a two-month detour.\n[...]\n[27:03] Noah Williams (VP Operations Technology, Ember Financial): Assuming the security material lines up, I want to move. Send sandbox access and a written proposal for a six-week pilot so we can compare it against Tray properly rather than impressionistically.\n[...]\n[27:31] Hannah Cole (Senior Risk Engineer, Ember Financial): I'll need a week.\n[27:33] Leo Grant (Account Executive, OrbitFlow): Then let's say the pack goes out tomorrow, sandbox by end of next week, pilot starts the week after.\n[...]\n[27:44] Leo Grant (Account Executive, OrbitFlow): Let me list what we owe you. Security pack — SOC 2, subprocessor list, DPA, architecture diagram, retention documentation, encryption details. The audit event payload schema for Hannah. A written answer on per-workspace AI disablement granularity. Sandbox access. And a six-week pilot proposal with three to five success criteria that we write jointly, not that I write and you approve.\n[...]\n[28:31] Hannah Cole (Senior Risk Engineer, Ember Financial): Thank you.\n[28:34] Nina Patel (Solutions Engineer, OrbitFlow): And I'd like an hour with whoever owns the event bus, and I'd like bad data.\n[...]\n[29:04] Leo Grant (Account Executive, OrbitFlow): Understood. I'll need those volume estimates from you.\n[29:09] Noah Williams (VP Operations Technology, Ember Financial): You'll have them Friday.\n[29:12] Leo Grant (Account Executive, OrbitFlow): Then let me summarise. You're running a two-horse bake-off with a real third option of doing nothing better. Your gates are model risk and auditability, and the deciding factors against Tray are debugging experience and genuinely programmatic audit export. The timeline is driven by a remediation programme with a fixed date. And a successful pilot means a documented workflow design standard as well as a working workflow.\n[...]\n[30:13] Noah Williams (VP Operations Technology, Ember Financial): One thing, and it's not a question. When you send the proposal, please don't send me a forty-slide deck. Send me the pilot criteria, the commercials with assumptions, and the known limitations. That's it.\n\n=== CALL-006 (call kind: prospect)\nCALL ID: CALL-006\nDATE: 2026-07-09\nVENDOR: OrbitFlow\nPROSPECT: Fable Media\nINDUSTRY: Marketing agency\nCOMPANY SIZE: 120 employees\nSTAGE: Discovery\nDURATION: 16 minutes\nPARTICIPANTS:\n- Alastair McCrae, Account Executive, OrbitFlow\n- Imogen Price, COO, Fable Media\n- Ben Foster, Head of Client Services, Fable Media\nTRANSCRIPT\n[00:00] Alastair McCrae (Account Executive, OrbitFlow): Hi hi hi. Imogen? Ben? Can you hear me? Great. Brilliant. So — really excited about this one, genuinely, because agencies are honestly our sweet spot at the moment.\n[...]\n[04:42] Imogen Price (COO, Fable Media): Can you build the one we'd actually want? Deal closes in HubSpot, we create the right Asana project from a template, assign the owners, spin up a Slack channel, chase whatever client information's missing, and alert me when a launch date slips.\n[...]\n[07:40] Alastair McCrae (Account Executive, OrbitFlow): We don't train on customer data. That's in the terms.\n[07:45] Ben Foster (Head of Client Services, Fable Media): Can we see that in writing?\n[...]\n[08:16] Imogen Price (COO, Fable Media): Is there any way to start with ten users? Or bill monthly while we prove the process before committing for a year?\n[...]\n[09:05] Imogen Price (COO, Fable Media): I know. That's the problem. I can sign software contracts up to twenty thousand. Above that the founder approves it.\n[...]\n[09:18] Imogen Price (COO, Fable Media): It's a hard limit. And more to the point, if I have to take it to him, he'll ask what we get for twenty-one thousand that we don't get from Zapier for two thousand, and I need a better answer than \"it's more robust.\"\n[...]\n[10:46] Alastair McCrae (Account Executive, OrbitFlow): Oh — yeah, I mean, I moved off that account so I'm not across the detail. But they renewed, I think.\n[...]\n[10:57] Alastair McCrae (Account Executive, OrbitFlow): I'd have to check.\n[11:00] Ben Foster (Head of Client Services, Fable Media): Because that's actually the question. Not whether they signed.\n[11:05] Alastair McCrae (Account Executive, OrbitFlow): No, absolutely, and I can get you a reference. We've got loads of happy customers.\n[11:12] Imogen Price (COO, Fable Media): A reference in an agency would be useful, if you've got one.\n[...]\n[11:36] Alastair McCrae (Account Executive, OrbitFlow): For what you'd be doing, yeah.\n[11:39] Ben Foster (Head of Client Services, Fable Media): Earlier you said you'd have to check with an SE about the date thing.\n[11:44] Alastair McCrae (Account Executive, OrbitFlow): That's — that's a slightly different question, that's about how you architect it rather than whether you need code.\n[11:52] Ben Foster (Head of Client Services, Fable Media): Okay.\n[11:54] Imogen Price (COO, Fable Media): What's the timeline if we did want to do this?\n[11:58] Alastair McCrae (Account Executive, OrbitFlow): We could have you up and running in a couple of weeks.\n[12:02] Imogen Price (COO, Fable Media): We've got a new client-services process launching in September. I'd want something running before that, otherwise we'll build the new process around the old tooling and then we're stuck for another year.\n[12:17] Alastair McCrae (Account Executive, OrbitFlow): September's no problem at all.\n[12:20] Ben Foster (Head of Client Services, Fable Media): Including the pod customisation thing?\n[12:24] Alastair McCrae (Account Executive, OrbitFlow): Yeah, that's just configuration.\n[12:27] Ben Foster (Head of Client Services, Fable Media): [pause] Okay.\n[12:30] Imogen Price (COO, Fable Media): Right. Let me be straight with you about where I am.\n[12:35] Alastair McCrae (Account Executive, OrbitFlow): Please.\n[12:37] Imogen Price (COO, Fable Media): Price and complexity are the two risks. And honestly, we may well decide that Zapier plus better process discipline is good enough for a company that doesn't have an IT team. That's a real possibility and I'd be doing my job badly if I didn't consider it.\n[12:57] Alastair McCrae (Account Executive, OrbitFlow): I mean, you could, but you'd be back here in eighteen months.\n[13:02] Imogen Price (COO, Fable Media): Maybe. Or maybe we'd have spent eighteen months not paying twenty-one thousand pounds.\n[13:09] Alastair McCrae (Account Executive, OrbitFlow): [laughs] Fair.\n[13:12] Imogen Price (COO, Fable Media): So — I'm interested. I'm not dismissing it. But I'm not ready to run a sandbox myself, I don't have the time and neither does Ben.\n[13:23] Alastair McCrae (Account Executive, OrbitFlow): I could set it up for you, it takes five minutes.\n[13:27] Imogen Price (COO, Fable Media): It's not the setup, it's the evaluating. What would actually be most useful is a recorded demo I can share with the founder and our ops manager. Something that shows our use case specifically, that I can send in an email.\n[13:44] Alastair McCrae (Account Executive, OrbitFlow): Yeah, I can do a Loom.\n[13:47] Imogen Price (COO, Fable Media): Not a generic one. Ours. Deal closes in HubSpot, Asana project, Slack channel, chase the missing info, flag the slipped date.\n[13:58] Alastair McCrae (Account Executive, OrbitFlow): Yep. Absolutely.\n[14:01] Imogen Price (COO, Fable Media): How long?\n[14:03] Alastair McCrae (Account Executive, OrbitFlow): End of the week?\n[14:05] Imogen Price (COO, Fable Media): That'd be good.\n[14:08] Ben Foster (Head of Client Services, Fable Media): And the reference. And the written thing about model training.\n[...]\n[14:17] Imogen Price (COO, Fable Media): And can you confirm the monthly billing thing properly rather than \"probably\"? Because if that's not actually available I'd rather know now.\n[...]\n[14:36] Ben Foster (Head of Client Services, Fable Media): The SSO thing. You said all plans. Can you just double check that? Because two other vendors we've spoken to had it as an enterprise-only feature and I'd be surprised if you were different.\n\n=== CALL-007 (call kind: prospect)\nCALL ID: CALL-007\nDATE: 2026-07-16\nVENDOR: OrbitFlow\nPROSPECT: Greenline Energy Services\nINDUSTRY: Renewable energy field services\nCOMPANY SIZE: 2,300 employees\nSTAGE: Discovery\nDURATION: 27 minutes\nPARTICIPANTS:\n- Maya Chen, Account Executive, OrbitFlow\n- Jon Bell, Solutions Engineer, OrbitFlow (joined at 09:12)\n- Carlos Mendes, Head of Digital Operations, Greenline Energy Services\n- Lucy Hart, Field Systems Product Manager, Greenline Energy Services\nTRANSCRIPT\n[06:36] Maya Chen (Account Executive, OrbitFlow): Tell me honestly how it's going.\n[06:39] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): We use it heavily. And we get favourable licensing on it, which matters more than I'd like it to.\n[...]\n[07:10] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): So I'm exploring alternatives. That's what this is. I want to be honest that it's exploration, not a procurement process.\n[...]\n[08:12] Lucy Hart (Field Systems Product Manager, Greenline Energy Services): North and South West.\n[08:15] Maya Chen (Account Executive, OrbitFlow): That's actually useful. Those two could be your pilot builders rather than your resistance.\n[...]\n[13:04] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): [pause] Right.\n[13:07] Jon Bell (Solutions Engineer, OrbitFlow): I'd rather say that now than have you find it in week four.\n[...]\n[15:02] Maya Chen (Account Executive, OrbitFlow): Can I add a slightly awkward version of it? Do the same test in Power Automate at the same time. If it's not better, you should know.\n[...]\n[16:51] Lucy Hart (Field Systems Product Manager, Greenline Energy Services): It was you, and it is preferably rather than mandatory. We're not regulated in that way. It's more that our procurement people prefer it.\n[...]\n[18:27] Maya Chen (Account Executive, OrbitFlow): Understood. Growth is eighteen hundred a month up to thirty users on an annual agreement. Enterprise is custom priced — advanced governance, the security capabilities, higher usage.\n[18:41] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): The price might be defensible for central operations. What I need to understand is the licensing model.\n[18:50] Maya Chen (Account Executive, OrbitFlow): Go on.\n[18:52] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): We've got a lot of supervisors. Hundreds. And most of them would approve or view something maybe once a week. They should not need full seats. If your model says they do, this is over before it starts.\n[19:09] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only populations can be structured differently depending on the package. I'm deliberately not giving you a number today, because without knowing your builder count versus your approver count any number I give you would be misleading in one direction or the other.\n[19:33] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): How many builders would we have? Lucy?\n[19:37] Lucy Hart (Field Systems Product Manager, Greenline Energy Services): Realistically? My team, so four. Plus the two regional specialists. Six.\n[19:44] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): Six builders, several hundred approvers.\n[19:48] Maya Chen (Account Executive, OrbitFlow): Then that shape needs to be explicit in any proposal, and I'd want it in writing before you take it anywhere internally. I've seen this go wrong — someone quotes a headline number, the approver population gets discovered in month four, and then the whole thing is a credibility problem rather than a pricing problem.\n[...]\n[20:25] Maya Chen (Account Executive, OrbitFlow): It is, and I'm not going to pretend we can beat bundled licensing on price. If the decision is purely cost per seat, Microsoft wins and everyone knows it. The argument has to be that the operational cost — Carlos's six people fielding troubleshooting tickets — is bigger than the licence delta.\n[...]\n[21:13] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): More.\n[21:15] Maya Chen (Account Executive, OrbitFlow): Then measure it for a month. That's free, and whichever way this goes you'll want the number.\n[...]\n[21:29] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): Digital operations researches options, so that's me. Enterprise architecture sets standards. And the Microsoft platform team will strongly influence the decision, which I'm saying carefully.\n[...]\n[22:25] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): This is early exploration. Budgeting for next fiscal year starts in October, so if anything were to happen it'd be in that cycle.\n[22:36] Maya Chen (Account Executive, OrbitFlow): So no decision this year.\n[22:39] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): Realistically, no. I want to be straight with you about that rather than let you forecast something that isn't there.\n[22:48] Maya Chen (Account Executive, OrbitFlow): I appreciate it, genuinely. It's better for both of us.\n[22:53] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): You say that now.\n[22:56] Maya Chen (Account Executive, OrbitFlow): [laughs] I mean it. A slow honest deal is worth more than a fast imaginary one.\n[23:03] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): Then let me tell you what I actually want, since we're being honest.\n[23:09] Maya Chen (Account Executive, OrbitFlow): Please.\n[23:11] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): I'm curious, but this is still early. I'd rather have a roadmap and architecture conversation than a commercial proposal at this point. Show me where the Dynamics integration is going. Show me what the offline-tolerant patterns look like properly. If those two things look right, then in October I've got something to take into budgeting.\n[23:37] Maya Chen (Account Executive, OrbitFlow): That's a clear ask and it's a reasonable one. Jon, can you do a roadmap and architecture session?\n[23:45] Jon Bell (Solutions Engineer, OrbitFlow): Yes, and I'd want to be careful about one thing — I can talk about architecture patterns in detail, and I can talk about roadmap direction, but I can't commit to roadmap dates. If I say \"Dynamics improvements are coming in Q1\" and they don't, I've done more harm than the gap did.\n[...]\n[24:50] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): That'd be the most useful thing anyone's shown me this year.\n[24:55] Maya Chen (Account Executive, OrbitFlow): And from us in writing — the UK residency answer, and a note on the regional workspace and permissions design.\n[25:04] Lucy Hart (Field Systems Product Manager, Greenline Energy Services): Can I add one? The rota question. If you can tell us what \"resolve on-call from the source of truth\" needs from us, we can start fixing the shared-calendar thing regardless of whether we buy anything.\n[25:20] Jon Bell (Solutions Engineer, OrbitFlow): I'll write that up. And you're right that it's worth doing either way.\n[25:26] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): That's the second thing today that's worth doing either way.\n[25:31] Maya Chen (Account Executive, OrbitFlow): That's usually a good sign about a process, even if it's a bad sign about my quarter.\n[25:38] Carlos Mendes (Head of Digital Operations, Greenline Energy Services): [laughs]\n[25:40] Maya Chen (Account Executive, OrbitFlow): Let me summarise. You have visibility, not coordination. The candidate is blocked-installation remediation with Dynamics kept current through the lifecycle. The decisive gap is that Power Automate is embedded and first-class on Dynamics and we're not, so the case has to be operational cost, not licence cost. Offline tolerance is a hard constraint. Two regions already build their own and should be treated as allies rather than exceptions. And the next step is an architecture and roadmap session, not a proposal.\n[...]\n[26:24] Maya Chen (Account Executive, OrbitFlow): I'll send it in writing, and I'll separate what you confirmed from what you estimated. Some of today's numbers were off the top of your heads and I don't want them turning into requirements.\n\n=== CALL-008 (call kind: prospect)\nCALL ID: CALL-008\nDATE: 2026-07-23\nVENDOR: OrbitFlow\nPROSPECT: Harbor Legal\nINDUSTRY: Legal services\nCOMPANY SIZE: 780 employees\nSTAGE: Discovery / security review\nDURATION: 39 minutes\nPARTICIPANTS:\n- Leo Grant, Account Executive, OrbitFlow\n- Nina Patel, Solutions Engineer, OrbitFlow\n- Eleanor Brooks, Chief Transformation Officer, Harbor Legal\n- Samir Khan, Information Security Manager, Harbor Legal\nTRANSCRIPT\n[10:22] Samir Khan (Information Security Manager, Harbor Legal): Deferred and written down. Yes.\n[10:26] Leo Grant (Account Executive, OrbitFlow): I'm noting that as an explicit limitation in whatever we send you.\n[...]\n[11:52] Nina Patel (Solutions Engineer, OrbitFlow): Then it's a genuine open question and it may be a gate. I'll get you a definitive answer within the week.\n[...]\n[12:47] Nina Patel (Solutions Engineer, OrbitFlow): Agreed, and I'd send you the payload schema so your SIEM team can look at it before you commit to anything.\n[...]\n[13:12] Samir Khan (Information Security Manager, Harbor Legal): Fine. But be aware — we have a retention policy that says certain operational records are deleted at ninety days, and if your floor is above that, we have a problem.\n[13:26] Nina Patel (Solutions Engineer, OrbitFlow): That's a very specific and very useful thing to tell me. I'll check it against the floor explicitly.\n[...]\n[16:46] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): How long is the written list now?\n[16:49] Nina Patel (Solutions Engineer, OrbitFlow): Four items. UK residency, retention floor, AI-step permission granularity, and the audit payload schema.\n[...]\n[18:46] Nina Patel (Solutions Engineer, OrbitFlow): I can't give you a number without knowing the specific operations. If you send me the list of reads and writes phase one actually needs — not \"iManage integration\", the actual operations — I'll come back with an honest difficulty rating per operation.\n[19:05] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): We can produce that.\n[19:08] Nina Patel (Solutions Engineer, OrbitFlow): Then that's the single most useful thing you could send me.\n[...]\n[19:57] Leo Grant (Account Executive, OrbitFlow): With Nina's operation-by-operation difficulty assessment, plus an honest services estimate, against Eleanor's number for what matter-opening delay actually costs. If the effort exceeds the value, you shouldn't do it, and I'd rather you concluded that in September than next March.\n[...]\n[22:16] Leo Grant (Account Executive, OrbitFlow): Same argument everywhere. It's usually decided by whoever has the loudest voice rather than by a cost comparison.\n[22:25] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): That is a depressingly accurate description of our governance.\n[...]\n[23:23] Nina Patel (Solutions Engineer, OrbitFlow): Can I ask a design question off the back of that? If a partner had one place to go that showed only the things waiting on them, with a button — would that be used, or would they still want it in email?\n[...]\n[24:42] Samir Khan (Information Security Manager, Harbor Legal): That is genuinely better than what we have.\n[24:46] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): What we have is an email.\n[24:49] Samir Khan (Information Security Manager, Harbor Legal): What we have is an email that someone forwarded.\n[24:53] Leo Grant (Account Executive, OrbitFlow): Let me do commercials briefly, because I want to leave time for next steps.\n[24:59] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Go on.\n[25:01] Leo Grant (Account Executive, OrbitFlow): Growth is eighteen hundred a month up to thirty users on an annual agreement. You're not a Growth shape — everything Samir's asked for sits in Enterprise, which is custom priced.\n[25:15] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): The enterprise range itself doesn't worry me. We buy expensive software.\n[25:22] Leo Grant (Account Executive, OrbitFlow): What does worry you?\n[25:24] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Scope. We need to prove value on low-risk operational workflows first. I would not make a business case that assumes use around privileged client content, because that case would be rejected and it would poison the whole thing.\n[25:43] Samir Khan (Information Security Manager, Harbor Legal): I'd reject it.\n[25:45] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Samir would reject it, and he'd be right to.\n[25:49] Leo Grant (Account Executive, OrbitFlow): Then the proposal should be scoped to the low-risk operational tier explicitly, with the privileged-content question marked as out of scope rather than as a future upsell. Is that fair?\n[26:04] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): That's exactly fair. And frankly if you'd tried to upsell it today I'd have been less interested.\n[26:12] Leo Grant (Account Executive, OrbitFlow): Noted.\n[26:15] Samir Khan (Information Security Manager, Harbor Legal): What's a user? We'd have very few builders and a very large number of partners who approve something occasionally.\n[26:24] Leo Grant (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only populations can be structured differently depending on package. I'm not giving you a number today because without the split it'd be misleading.\n[26:41] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Please put the split in writing when you do. If it turns out every partner needs a seat, this is a very short conversation.\n[...]\n[28:05] Leo Grant (Account Executive, OrbitFlow): Honestly? In your sector, maybe a third of the time. But almost never at this stage. It kills things in month four, when something that was answered vaguely in month one turns out to be a no.\n[...]\n[29:04] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Transformation sponsors, which is me. Security and risk have veto power, which is Samir and his director. Practice-group leaders must agree to any process change, and that's the slow one. Procurement handles the contract.\n[29:23] Leo Grant (Account Executive, OrbitFlow): How slow are the practice groups?\n[29:26] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): They're not slow to say no. They're slow to say yes.\n[...]\n[29:34] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Realistically, if we scoped this to matter opening in two practice groups rather than all of them, that's a much easier conversation.\n[...]\n[30:24] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Possible proof of concept in Q4. Broader rollout would be next year. I want to be realistic — nothing significant happens here in December, and January is taken up with the annual planning cycle.\n[...]\n[33:27] Leo Grant (Account Executive, OrbitFlow): Let me set out next steps and you tell me what's missing. We send the security pack — SOC 2, subprocessor list, DPA, architecture diagram, retention documentation, pen test summary. Plus written answers on UK residency, the retention floor, AI-step permission granularity, the audit payload schema, and termination data handling.\n[...]\n[33:58] Leo Grant (Account Executive, OrbitFlow): From you, the list of specific iManage and Intapp operations phase one needs, so Nina can give you honest difficulty ratings rather than a vague estimate. And a view on which two practice groups.\n[...]\n[34:43] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): The governance side interests me. Genuinely. The run history, the approval logging, the connection scoping Samir liked — that's better than what we have and it addresses things we've been complaining about for years.\n[35:01] Leo Grant (Account Executive, OrbitFlow): And the reservation?\n[35:03] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): The reservation is Samir's. Integration effort versus value.\n[...]\n[36:30] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Three what?\n[36:32] Samir Khan (Information Security Manager, Harbor Legal): Three things we've identified today that we should do whether or not we buy anything.\n[36:38] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): [pause] That's true, actually. What were the other two?\n[36:44] Samir Khan (Information Security Manager, Harbor Legal): Reviewing connection scopes as a standing control — which we should do for everything, not just this. And getting a number on the client-relationship cost of delayed matter opening.\n[36:58] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Both good.\n[37:01] Leo Grant (Account Executive, OrbitFlow): I'll take that as a compliment even though it isn't a purchase.\n[37:06] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): [laughs] Take it however you like.\n[37:10] Leo Grant (Account Executive, OrbitFlow): Summarising, then. Scope is administrative orchestration around matter opening, with conflicts decisions untouched and enforced at the credential layer. Information barriers are a real unsolved constraint, so phase one avoids barriered matters and we document that as deferred. AI is off for phase one. The decisive question is whether integration effort into iManage and Intapp is proportionate to the value, and we answer that with an operations list and honest difficulty ratings. Two practice groups, not the firm. Q4 PoC, Q1 decision.\n[37:56] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): That's accurate.\n[37:59] Samir Khan (Information Security Manager, Harbor Legal): That's more accurate than most of our internal summaries.\n[38:04] Leo Grant (Account Executive, OrbitFlow): I'll send it in writing today.\n[38:07] Eleanor Brooks (Chief Transformation Officer, Harbor Legal): Thank you both. That was more useful than I expected, and I say that having been quite sceptical about this meeting.\n\n=== CALL-009 (call kind: prospect)\nCALL ID: CALL-009\nDATE: 2026-08-04\nVENDOR: OrbitFlow\nPROSPECT: Inkwell Learning\nINDUSTRY: Education technology\nCOMPANY SIZE: 520 employees\nSTAGE: Solution evaluation\nDURATION: 31 minutes\nPARTICIPANTS:\n- Maya Chen, Account Executive, OrbitFlow\n- Jon Bell, Solutions Engineer, OrbitFlow\n- Olivia Grant, SVP Customer Experience, Inkwell Learning\n- Darren Wu, Director of Business Intelligence, Inkwell Learning\nTRANSCRIPT\n[00:14] Maya Chen (Account Executive, OrbitFlow): That'd be helpful, actually. Where I'd like to start is the use case, because we've had two rounds of email on it and I want to make sure we're solving the same problem.\n[00:26] Olivia Grant (SVP Customer Experience, Inkwell Learning): Yes. So — support volume spikes around school-term launches. Enormously. And the problem isn't the volume itself, we can staff for volume. The problem is that we struggle to distinguish isolated tickets from account-level implementation risk until the escalation reaches an executive.\n[...]\n[01:23] Darren Wu (Director of Business Intelligence, Inkwell Learning): [laughs] I am. So — the proposal, as I understand it, is to combine Zendesk ticket patterns, Salesforce account status, and Snowflake product usage to flag accounts needing proactive intervention, and create structured follow-up tasks.\n[...]\n[03:47] Darren Wu (Director of Business Intelligence, Inkwell Learning): Salesforce is reliable for the commercial facts — contract dates, ARR, owner. It is unreliable for anything a human has to remember to type.\n[...]\n[05:05] Darren Wu (Director of Business Intelligence, Inkwell Learning): We could do that with SQL. We don't need a workflow platform to do that.\n[05:11] Jon Bell (Solutions Engineer, OrbitFlow): You absolutely don't, and you should do it before you buy anything from us.\n[...]\n[05:32] Olivia Grant (SVP Customer Experience, Inkwell Learning): Darren, could you do that?\n[05:35] Darren Wu (Director of Business Intelligence, Inkwell Learning): I could do that in a day. Maybe two.\n[...]\n[07:37] Olivia Grant (SVP Customer Experience, Inkwell Learning): Customer success uses a limited Gainsight deployment. Limited meaning we bought it, we implemented about forty percent of it, and then the person who owned it left.\n[07:51] Darren Wu (Director of Business Intelligence, Inkwell Learning): And my team has built a set of Looker alerts. Which work, but they're alerts. They tell you something and then nothing happens.\n[...]\n[08:07] Darren Wu (Director of Business Intelligence, Inkwell Learning): Neither gives us the workflow. Gainsight has the customer success concepts but we haven't implemented them. Looker has the data but no ability to make anything happen. And nothing joins Zendesk to Snowflake to Salesforce in a way that produces an action.\n[...]\n[08:49] Olivia Grant (SVP Customer Experience, Inkwell Learning): I'd want that. A cost model comparing this with expanding Gainsight. Including the implementation effort on both sides, because the forty-percent thing wasn't a licensing failure, it was an implementation failure.\n[...]\n[09:17] Maya Chen (Account Executive, OrbitFlow): I'll build one that includes them accurately. Whether it's fair is for you to judge, and you should check my numbers.\n[...]\n[10:47] Jon Bell (Solutions Engineer, OrbitFlow): In this flow — create a structured follow-up task with the account, the signal that triggered it, and links back to the underlying tickets and usage. Assign it to the account's CSM, or to a queue if the owner field is stale. Escalate if nothing happens in N days.\n[11:09] Olivia Grant (SVP Customer Experience, Inkwell Learning): The escalation. That's the bit I want.\n[...]\n[13:01] Maya Chen (Account Executive, OrbitFlow): That's the AI use case. As I've got it written: produce a weekly narrative summary of emerging customer themes, with links back to supporting tickets and account records.\n[...]\n[16:03] Jon Bell (Solutions Engineer, OrbitFlow): So the workflow operates on account-level aggregates only.\n[16:09] Darren Wu (Director of Business Intelligence, Inkwell Learning): Correct. Usage counts, engagement rates, ticket volumes at the account level. Never a student record, never a student identifier.\n[...]\n[17:53] Darren Wu (Director of Business Intelligence, Inkwell Learning): That's sufficient for us. We're not a bank.\n[17:57] Olivia Grant (SVP Customer Experience, Inkwell Learning): We are occasionally treated like one by district procurement.\n[...]\n[18:47] Olivia Grant (SVP Customer Experience, Inkwell Learning): The spreadsheet Darren makes. The at-risk review meeting, which is ninety minutes a week of expensive people reading a list. And a chunk of what we're notionally paying Gainsight for.\n[19:03] Darren Wu (Director of Business Intelligence, Inkwell Learning): Olivia, we're not going to switch off Gainsight.\n[19:07] Olivia Grant (SVP Customer Experience, Inkwell Learning): I know we're not going to switch it off. I'm saying the spend is questionable.\n[...]\n[19:36] Darren Wu (Director of Business Intelligence, Inkwell Learning): Which is why I want the model to be honest. If the answer is \"expand Gainsight, it's cheaper\", I want to be able to say that.\n[...]\n[19:53] Maya Chen (Account Executive, OrbitFlow): Builders and full workspace users are the licensed ones. Approval-only or notification-only can be structured differently by package. For you the shape matters — how many people build versus how many receive a task?\n[20:10] Olivia Grant (SVP Customer Experience, Inkwell Learning): Building? Darren's team, so three or four. Receiving tasks — every CSM, so about sixty.\n[20:19] Darren Wu (Director of Business Intelligence, Inkwell Learning): Sixty-two.\n[...]\n[20:23] Maya Chen (Account Executive, OrbitFlow): Then that split goes in the proposal explicitly with the assumptions next to it. I won't quote a figure today because without that split any figure I give would mislead you in one direction or the other.\n[20:38] Olivia Grant (SVP Customer Experience, Inkwell Learning): Please do make it explicit. I don't want to find out in month four that all sixty-two need full seats.\n[20:46] Maya Chen (Account Executive, OrbitFlow): It'll be itemised — assumed builders, task recipients, expected run volume, and any one-time services separately.\n[...]\n[21:02] Olivia Grant (SVP Customer Experience, Inkwell Learning): Renewal retention. If we intervene three weeks earlier on four accounts a term, and one of them renews that wouldn't have, that pays for it several times over.\n[...]\n[21:29] Olivia Grant (SVP Customer Experience, Inkwell Learning): Nobody can ever say that.\n[21:32] Darren Wu (Director of Business Intelligence, Inkwell Learning): Which is why finance is sceptical of customer success business cases generally.\n[21:38] Maya Chen (Account Executive, OrbitFlow): Is there a leading indicator you could commit to instead? Something measurable that isn't the renewal itself.\n[...]\n[22:19] Darren Wu (Director of Business Intelligence, Inkwell Learning): I'm writing it down.\n[22:22] Maya Chen (Account Executive, OrbitFlow): And I'd add — Inkwell wants to measure whether the system identifies at-risk accounts earlier than the current process. That's the actual success criterion and it's testable against history.\n[22:37] Olivia Grant (SVP Customer Experience, Inkwell Learning): Which brings us back to Darren's backward-looking analysis.\n[22:42] Darren Wu (Director of Business Intelligence, Inkwell Learning): Everything brings us back to that.\n[22:45] Maya Chen (Account Executive, OrbitFlow): It's the load-bearing question.\n[22:48] Olivia Grant (SVP Customer Experience, Inkwell Learning): Decision process, quickly, because I need to go. I sponsor it. Darren validates the data architecture — and given the last twenty minutes, that's not a formality. IT security and finance approve. And customer success leadership will judge usability, which is a soft gate but a real one.\n[23:11] Maya Chen (Account Executive, OrbitFlow): Who can say no?\n[23:13] Olivia Grant (SVP Customer Experience, Inkwell Learning): Darren can effectively say no. Security can say no. Finance can say not yet, which is the same thing in practice.\n[23:24] Darren Wu (Director of Business Intelligence, Inkwell Learning): I wouldn't say no out of principle. I'd say no if the data doesn't support it.\n[23:31] Olivia Grant (SVP Customer Experience, Inkwell Learning): I know. That's why you're on the call.\n[23:35] Maya Chen (Account Executive, OrbitFlow): Timing?\n[23:37] Olivia Grant (SVP Customer Experience, Inkwell Learning): We want a pilot before the November renewal planning cycle, with a decision by late September. That's driven by the calendar rather than by us — if we miss November, the next natural point is March.\n[23:54] Maya Chen (Account Executive, OrbitFlow): So late September is a real date.\n[23:58] Olivia Grant (SVP Customer Experience, Inkwell Learning): It's a real date. And term starts in early September, which means everyone in customer success is unavailable for the first two weeks.\n[24:09] Darren Wu (Director of Business Intelligence, Inkwell Learning): Which means August is the month.\n[24:12] Olivia Grant (SVP Customer Experience, Inkwell Learning): August is the month, and it's the fourth today.\n[24:17] Maya Chen (Account Executive, OrbitFlow): Then let's not spend two weeks arranging things. What's the fastest useful next step?\n[24:24] Olivia Grant (SVP Customer Experience, Inkwell Learning): Darren's analysis, obviously.\n[24:27] Darren Wu (Director of Business Intelligence, Inkwell Learning): I can have that by the end of next week.\n[24:31] Maya Chen (Account Executive, OrbitFlow): And if the signal is there?\n[24:34] Olivia Grant (SVP Customer Experience, Inkwell Learning): Then I want to pilot it. And I'll tell you exactly how — we give you twenty historical escalations and we test whether the system would have surfaced them earlier than our current process. Not a demo on clean data. Those twenty, with the data as it actually was.\n[24:56] Jon Bell (Solutions Engineer, OrbitFlow): That's the best-specified pilot anyone's proposed to me this year.\n[25:02] Olivia Grant (SVP Customer Experience, Inkwell Learning): Is that flattery?\n[25:04] Jon Bell (Solutions Engineer, OrbitFlow): No, it's relief. Most pilots are \"build something and we'll see how we feel.\"\n[...]\n[26:18] Maya Chen (Account Executive, OrbitFlow): The security pack — SOC 2, subprocessor list, DPA, architecture diagram, retention documentation. The cost model comparing us with expanding Gainsight, including implementation effort on both sides. And a written recap separating what you confirmed today from what you estimated.\n[...]\n[29:36] Darren Wu (Director of Business Intelligence, Inkwell Learning): So the answer is \"it depends on us.\"\n[29:40] Jon Bell (Solutions Engineer, OrbitFlow): Largely, yes. What I'd say is that this platform makes it possible. It doesn't make it happen.\n[...]\n[30:02] Darren Wu (Director of Business Intelligence, Inkwell Learning): Alright. I'll do the backward analysis and I'll be honest about what it shows. If the signal's not there I'll say so and we'll stop.\n[30:13] Maya Chen (Account Executive, OrbitFlow): That's all I'd want.\n[30:16] Darren Wu (Director of Business Intelligence, Inkwell Learning): And if it is there, I'll be more enthusiastic than I've been today.\n\n=== CALL-010 (call kind: prospect)\nCALL ID: CALL-010\nDATE: 2026-08-12\nVENDOR: OrbitFlow\nPROSPECT: Juniper Cloud Tools\nINDUSTRY: Developer infrastructure SaaS\nCOMPANY SIZE: 350 employees\nSTAGE: Technical evaluation\nDURATION: 32 minutes\nPARTICIPANTS:\n- Leo Grant, Account Executive, OrbitFlow\n- Nina Patel, Solutions Engineer, OrbitFlow\n- Marcus Chen, VP Business Operations, Juniper Cloud Tools\n- Ava Sinclair, Staff Software Engineer, Juniper Cloud Tools\nTRANSCRIPT\n[01:38] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): Three exported definitions. One trivial, one with branching, one with a custom step. I want to look at the diffs myself.\n[01:48] Nina Patel (Solutions Engineer, OrbitFlow): Yes. I'll send those today.\n[...]\n[02:19] Nina Patel (Solutions Engineer, OrbitFlow): API and UI both.\n[02:22] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): So I could, in principle, keep the repo as the source of truth and push?\n[...]\n[07:13] Leo Grant (Account Executive, OrbitFlow): It's a sale that survives year two. If we priced ourselves into your event firehose, the first person to look at the invoice would kill it.\n[...]\n[07:42] Leo Grant (Account Executive, OrbitFlow): Usage is scoped on workflow runs and premium connector needs. Growth is eighteen hundred a month up to thirty users, annual. You're an Enterprise conversation given the security list.\n[...]\n[08:32] Nina Patel (Solutions Engineer, OrbitFlow): [pause] That's a good question and I want to give you an accurate answer rather than a convenient one. I believe subflow invocations are counted, but I'm not going to state the exact billing semantics from memory. I'll get you the definitive answer in writing.\n[...]\n[11:33] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): I'll be direct. I think most of what you do could be built internally. We have the skills. The question is whether we should.\n[11:44] Nina Patel (Solutions Engineer, OrbitFlow): What would you build it with?\n[11:47] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): Step Functions, probably. Or we've looked at Retool Workflows, which is honestly quite close to what you do.\n[...]\n[12:16] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): Say it then.\n[12:18] Marcus Chen (VP Business Operations, Juniper Cloud Tools): My argument is that maintenance and observability are the real costs and Ava consistently underestimates them. Building it is a sprint. Owning it is forever. And the person who owns it will be Ava, and Ava already owns four other things.\n[12:37] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): Five.\n[12:38] Marcus Chen (VP Business Operations, Juniper Cloud Tools): Five. Which proves my point.\n[12:41] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): It doesn't prove your point, it illustrates it.\n[12:45] Marcus Chen (VP Business Operations, Juniper Cloud Tools): [laughs] Fine.\n[12:47] Leo Grant (Account Executive, OrbitFlow): For what it's worth, that's the correct argument and it's also the hardest one to win internally, because building is visible and maintaining isn't.\n[12:58] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): I'm aware of the asymmetry. I'm not naive about it. But I've also seen teams buy a platform to avoid maintenance and then spend a year maintaining the integration to the platform.\n[13:13] Nina Patel (Solutions Engineer, OrbitFlow): That happens.\n[13:15] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): It happens a lot.\n[13:17] Nina Patel (Solutions Engineer, OrbitFlow): Then the thing to test in your evaluation is exactly that. Not \"can we build a workflow\" — obviously we can, and so can you. Test how much of your time it consumes over four weeks, and extrapolate.\n[13:33] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): That's what I intend to test.\n[13:36] Nina Patel (Solutions Engineer, OrbitFlow): Good.\n[13:38] Marcus Chen (VP Business Operations, Juniper Cloud Tools): Should we do the use case?\n[13:40] Leo Grant (Account Executive, OrbitFlow): Yes. As I've got it — react to customer lifecycle events, combine product and CRM signals, create or update operational tasks, and expose the logic clearly enough that business operations can own it.\n[...]\n[15:07] Nina Patel (Solutions Engineer, OrbitFlow): Adding your vote.\n[15:10] Marcus Chen (VP Business Operations, Juniper Cloud Tools): What's the stack question you need answered?\n[15:13] Nina Patel (Solutions Engineer, OrbitFlow): Just confirm what I've got. Salesforce, Segment, PostgreSQL, Slack, Linear, internal services, AWS.\n[...]\n[21:28] Marcus Chen (VP Business Operations, Juniper Cloud Tools): I own the budget. Ava and platform engineering have to be comfortable with the architecture. Security and finance sign off. That's the process.\n[...]\n[21:45] Marcus Chen (VP Business Operations, Juniper Cloud Tools): Not formally.\n[21:47] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): Formally I can't. Practically, if platform engineering says the architecture is wrong, you're not going to overrule us.\n[...]\n[22:39] Leo Grant (Account Executive, OrbitFlow): Say more about that.\n[22:41] Marcus Chen (VP Business Operations, Juniper Cloud Tools): We want a four-week evaluation starting immediately, with a go/no-go decision in September.\n[...]\n[23:02] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): Sandbox access. The three exported definitions. The subflow billing answer. And documentation on the Postgres connector's behaviour — connection handling, timeouts, whatever's there.\n[23:18] Nina Patel (Solutions Engineer, OrbitFlow): You'll have all four by Friday.\n[...]\n[23:23] Leo Grant (Account Executive, OrbitFlow): And from you — the Linear analysis on what fraction of the backlog is business rule changes, the Salesforce API allocation, and whether those two EU contracts have residency commitments.\n[23:38] Marcus Chen (VP Business Operations, Juniper Cloud Tools): I'll do the contracts.\n[...]\n[24:51] Leo Grant (Account Executive, OrbitFlow): Can I add a second criterion? Time consumed. Ava, log the hours you spend on it over the four weeks — including the plumbing, including answering Tom's questions. Because your maintenance argument is the actual decision and right now both of you are guessing at it.\n[...]\n[29:00] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): It's a low bar.\n[29:02] Leo Grant (Account Executive, OrbitFlow): We'll take it. Let me summarise so we're aligned. The problem is that business rule changes sit at the bottom of a correctly prioritised engineering queue and always will. The design principle is a split — business logic owned by operations in the UI, connector code and secrets owned by engineering and version controlled. Event filtering stays in AWS; only business-relevant events reach us. The evaluation runs four weeks from Monday against four criteria, and the honest alternative is building it internally, probably on Step Functions or Retool Workflows.\n[29:47] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): That's accurate.\n[29:49] Marcus Chen (VP Business Operations, Juniper Cloud Tools): That's accurate. And I want to say — I want to proceed with the four-week evaluation. Ava's right to be sceptical. If we can't answer the engineering questions, we shouldn't buy it.\n[30:04] Ava Sinclair (Staff Software Engineer, Juniper Cloud Tools): I appreciate you saying that.\n[30:06] Marcus Chen (VP Business Operations, Juniper Cloud Tools): I mean it. I don't want to win this argument and then discover you were right.\n[30:12] Leo Grant (Account Executive, OrbitFlow): That's a better position than most sponsors take.\n[30:16] Marcus Chen (VP Business Operations, Juniper Cloud Tools): I've been on the wrong end of it. At my last company I pushed through a tool over engineering's objection and it was a disaster for eighteen months."
+      },
+      "answer": {
+        "relevant_turns": [
+          {
+            "call_id": "CALL-001",
+            "timestamp": "20:58"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "24:26"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "25:18"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "25:29"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "26:17"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "27:07"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "28:32"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "29:15"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "29:50"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "30:23"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "31:19"
+          },
+          {
+            "call_id": "CALL-003",
+            "timestamp": "13:35"
+          },
+          {
+            "call_id": "CALL-003",
+            "timestamp": "15:13"
+          },
+          {
+            "call_id": "CALL-003",
+            "timestamp": "15:27"
+          },
+          {
+            "call_id": "CALL-004",
+            "timestamp": "32:24"
+          },
+          {
+            "call_id": "CALL-004",
+            "timestamp": "33:19"
+          },
+          {
+            "call_id": "CALL-004",
+            "timestamp": "34:02"
+          },
+          {
+            "call_id": "CALL-004",
+            "timestamp": "34:45"
+          },
+          {
+            "call_id": "CALL-004",
+            "timestamp": "36:31"
+          },
+          {
+            "call_id": "CALL-005",
+            "timestamp": "01:30"
+          },
+          {
+            "call_id": "CALL-005",
+            "timestamp": "25:24"
+          },
+          {
+            "call_id": "CALL-005",
+            "timestamp": "27:03"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "09:05"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "12:37"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "13:12"
+          },
+          {
+            "call_id": "CALL-007",
+            "timestamp": "22:25"
+          },
+          {
+            "call_id": "CALL-007",
+            "timestamp": "23:11"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "25:24"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "29:04"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "30:24"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "36:32"
+          },
+          {
+            "call_id": "CALL-009",
+            "timestamp": "23:37"
+          },
+          {
+            "call_id": "CALL-009",
+            "timestamp": "24:34"
+          },
+          {
+            "call_id": "CALL-009",
+            "timestamp": "30:02"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "11:33"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "21:28"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "22:41"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "29:49"
+          }
+        ],
+        "summary": "Ranking (computed from sponsor, timeline, next step and blockers; an inference from the calls, no prospect has committed to buy). Strongest: Ember Financial (rival: Tray.io has a six-week head start in a live proof of concept.; build: A cheaper alternative is to keep the scripts and document them better.; gate: Model risk and auditability must be satisfied for the project to proceed.), Juniper Cloud Tools (build: Prospect says the internal build option is real and could replace OrbitFlow.; veto: Ava can effectively stop the deal if platform engineering thinks the architecture is wrong.; gate: EU data residency may be required because of existing contract commitments.). Conditional: Acme Logistics (decision waits on: Decision hinges on whether Acme expands its existing Workato contract instead of adding OrbitFlow.; rival: Workato is the existing alternative being weighed against OrbitFlow.; build: They will compare OrbitFlow against improving what they already have.), BrightPath Health (decision waits on: Purchase progress is waiting on the regulatory/BAA answer before anything else can move.; gate: BAA and related regulatory/security approval must be answered before OrbitFlow can be used for PHI workflows.; build: Power Automate / improving the current setup remains the main alternative if OrbitFlow does not win.), Cedar & Finch (decision waits on: They need to quantify the current setup/business case before deciding.; gate: Budget is the biggest risk; the tool may be considered too expensive for the team size.; rival: Zapier and Make are the stated alternatives under consideration.; build: They may keep Zapier and improve documentation/ownership instead of buying OrbitFlow.), DeltaWorks Manufacturing (gate: Architecture board can stop the deal if it says no.; rival: MuleSoft plus custom integration services are the stated alternative path.; veto: Regional IT is not a formal gate but can make implementation impossible.), Fable Media (gate: Contract is above Imogen's approval limit and needs founder approval over $20k.; build: They may stick with Zapier plus improved process discipline instead of OrbitFlow.; veto: Founder can approve or block spend above the COO's limit.), Greenline Energy Services (rival: Power Automate is already embedded and first-class for Dynamics, so OrbitFlow has to be materially better.; veto: The Microsoft platform team may strongly object and has killed things before.), Harbor Legal (gate: UK residency availability is still unconfirmed and may block the deal.; rival: Power Automate is already in use for some administrative work and is the incumbent alternative.; build: Harbor Legal has an internal development team, and building in-house is a real alternative.; veto: Security and risk have veto power, held by Samir and his director.), Inkwell Learning (decision waits on: They first need to determine whether the signal exists in their data at all.; rival: Expansion of the existing Gainsight deployment is the main alternative being compared against OrbitFlow.; veto: Darren can effectively block the purchase if the data does not support it.).\nThis is an inference from the calls, not a commitment: Ember Financial looks most likely to buy, with Juniper Cloud Tools also strong but still gated by engineering review. BrightPath Health, Acme Logistics, DeltaWorks Manufacturing, Fable Media, Cedar & Finch, Greenline Energy Services, Harbor Legal, and Inkwell Learning are all conditional, with purchase depends on blockers like security/BAA, architecture, budget, or internal alternatives.",
+        "claims": [
+          {
+            "statement": "Ember Financial looks like the strongest purchase signal: Noah Williams said he wanted to move if security lined up and asked for a six-week pilot, while the team set July/August/October timing.",
+            "citations": [
+              {
+                "call_id": "CALL-005",
+                "timestamp": "27:03",
+                "speaker": "Noah Williams",
+                "quote": "Assuming the security material lines up, I want to move. Send sandbox access and a written proposal for a six-week pilot"
+              },
+              {
+                "call_id": "CALL-005",
+                "timestamp": "25:24",
+                "speaker": "Noah Williams",
+                "quote": "Technical bake-off in July. Vendor decision in August. First controlled production workflows in October."
+              }
+            ]
+          },
+          {
+            "statement": "Juniper Cloud Tools also has a strong purchase signal, but it is conditional on architecture and engineering approval; Marcus Chen said he wanted to proceed with a four-week evaluation starting immediately.",
+            "citations": [
+              {
+                "call_id": "CALL-010",
+                "timestamp": "29:49",
+                "speaker": "Marcus Chen",
+                "quote": "I want to proceed with the four-week evaluation. Ava's right to be sceptical."
+              },
+              {
+                "call_id": "CALL-010",
+                "timestamp": "22:41",
+                "speaker": "Marcus Chen",
+                "quote": "We want a four-week evaluation starting immediately, with a go/no-go decision in September."
+              }
+            ]
+          },
+          {
+            "statement": "BrightPath Health is only conditional: Priya Shah would consider a limited pilot, but no production launch is allowed before Q4 and regulatory/BAA approval is the blocker.",
+            "citations": [
+              {
+                "call_id": "CALL-002",
+                "timestamp": "29:50",
+                "speaker": "Priya Shah",
+                "quote": "I would still consider a limited pilot with synthetic or clearly non-PHI data."
+              },
+              {
+                "call_id": "CALL-002",
+                "timestamp": "28:32",
+                "speaker": "Priya Shah",
+                "quote": "No production launch before Q4. That's firm."
+              },
+              {
+                "call_id": "CALL-002",
+                "timestamp": "31:19",
+                "speaker": "Maya Chen",
+                "quote": "The blocker is regulatory, not technical, and until it's answered nothing else moves."
+              }
+            ]
+          },
+          {
+            "statement": "Acme Logistics is conditional: Rachel Morgan said she was interested enough to test it, but the Workato expansion decision and current tools remain the key internal comparison.",
+            "citations": [
+              {
+                "call_id": "CALL-001",
+                "timestamp": "26:17",
+                "speaker": "Rachel Morgan",
+                "quote": "my read is I'm interested enough to test it."
+              },
+              {
+                "call_id": "CALL-001",
+                "timestamp": "20:58",
+                "speaker": "Rachel Morgan",
+                "quote": "The real commercial question is whether we expand the Workato contract we already have instead of adding another vendor."
+              }
+            ]
+          },
+          {
+            "statement": "DeltaWorks Manufacturing is conditional, not imminent, because Martin Vogel said the architecture must be viable and that if it is not, they should stop before a sandbox.",
+            "citations": [
+              {
+                "call_id": "CALL-004",
+                "timestamp": "34:02",
+                "speaker": "Martin Vogel",
+                "quote": "The architecture has to be viable. Specifically SAP and the on-premise systems."
+              },
+              {
+                "call_id": "CALL-004",
+                "timestamp": "36:31",
+                "speaker": "Martin Vogel",
+                "quote": "If it is, we talk about a sandbox and a pilot. If it is not, we stop"
+              }
+            ]
+          },
+          {
+            "statement": "Fable Media is conditional: Imogen Price is interested, but she said price and complexity are the risks and that Zapier plus better process discipline could be good enough.",
+            "citations": [
+              {
+                "call_id": "CALL-006",
+                "timestamp": "13:12",
+                "speaker": "Imogen Price",
+                "quote": "I'm interested. I'm not dismissing it."
+              },
+              {
+                "call_id": "CALL-006",
+                "timestamp": "12:37",
+                "speaker": "Imogen Price",
+                "quote": "Price and complexity are the two risks."
+              },
+              {
+                "call_id": "CALL-006",
+                "timestamp": "12:37",
+                "speaker": "Imogen Price",
+                "quote": "we may well decide that Zapier plus better process discipline is good enough"
+              }
+            ]
+          },
+          {
+            "statement": "Cedar & Finch is conditional: Sophie Reed was not saying no, but she said budget is the biggest risk and that they may keep Zapier while improving documentation and ownership.",
+            "citations": [
+              {
+                "call_id": "CALL-003",
+                "timestamp": "15:13",
+                "speaker": "Sophie Reed",
+                "quote": "I'm not saying no."
+              },
+              {
+                "call_id": "CALL-003",
+                "timestamp": "13:35",
+                "speaker": "Sophie Reed",
+                "quote": "budget is the biggest risk here."
+              },
+              {
+                "call_id": "CALL-003",
+                "timestamp": "13:35",
+                "speaker": "Sophie Reed",
+                "quote": "keep Zapier while improving documentation and ownership."
+              }
+            ]
+          },
+          {
+            "statement": "Greenline Energy Services is early exploration rather than a near-term purchase; Carlos Mendes said this was not a procurement process and that no decision was realistic this year.",
+            "citations": [
+              {
+                "call_id": "CALL-007",
+                "timestamp": "07:10",
+                "speaker": "Carlos Mendes",
+                "quote": "I want to be honest that it's exploration, not a procurement process."
+              },
+              {
+                "call_id": "CALL-007",
+                "timestamp": "22:39",
+                "speaker": "Carlos Mendes",
+                "quote": "Realistically, no."
+              }
+            ]
+          },
+          {
+            "statement": "Harbor Legal is conditional: Eleanor Brooks sees strategic potential, but the deal depends on integration effort versus value, security/risk veto power, and scoping to two practice groups.",
+            "citations": [
+              {
+                "call_id": "CALL-008",
+                "timestamp": "34:43",
+                "speaker": "Eleanor Brooks",
+                "quote": "The governance side interests me. Genuinely."
+              },
+              {
+                "call_id": "CALL-008",
+                "timestamp": "35:03",
+                "speaker": "Eleanor Brooks",
+                "quote": "The reservation is Samir's. Integration effort versus value."
+              },
+              {
+                "call_id": "CALL-008",
+                "timestamp": "29:04",
+                "speaker": "Eleanor Brooks",
+                "quote": "Security and risk have veto power"
+              },
+              {
+                "call_id": "CALL-008",
+                "timestamp": "29:34",
+                "speaker": "Eleanor Brooks",
+                "quote": "if we scoped this to matter opening in two practice groups rather than all of them"
+              }
+            ]
+          },
+          {
+            "statement": "Inkwell Learning is conditional: Olivia Grant wants a pilot if the signal is there, but Darren Wu says the decision hinges on whether the data supports it and he can stop it if it does not.",
+            "citations": [
+              {
+                "call_id": "CALL-009",
+                "timestamp": "24:34",
+                "speaker": "Olivia Grant",
+                "quote": "Then I want to pilot it."
+              },
+              {
+                "call_id": "CALL-009",
+                "timestamp": "30:02",
+                "speaker": "Darren Wu",
+                "quote": "I'll be honest about what it shows. If the signal's not there I'll say so and we'll stop."
+              },
+              {
+                "call_id": "CALL-009",
+                "timestamp": "23:13",
+                "speaker": "Olivia Grant",
+                "quote": "Darren can effectively say no. Security can say no. Finance can say not yet"
+              }
+            ]
+          }
+        ],
+        "conflicts": [],
+        "not_found": [],
+        "confidence": "medium",
+        "confidence_reason": "The calls support an inference about purchase likelihood through sponsor intent, timelines, and blockers, but this is still a judgment question. The strongest evidence is Ember Financial, while Juniper Cloud Tools is close but explicitly gated by engineering review and internal build concerns."
+      },
+      "confidence": "medium",
+      "claim_checks": [
+        [
+          {
+            "call_id": "CALL-005",
+            "timestamp": "27:03",
+            "speaker": "Noah Williams",
+            "quote": "Assuming the security material lines up, I want to move. Send sandbox access and a written proposal for a six-week pilot",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-005 [27:03] line 211"
+          },
+          {
+            "call_id": "CALL-005",
+            "timestamp": "25:24",
+            "speaker": "Noah Williams",
+            "quote": "Technical bake-off in July. Vendor decision in August. First controlled production workflows in October.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-005 [25:24] line 198"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-010",
+            "timestamp": "29:49",
+            "speaker": "Marcus Chen",
+            "quote": "I want to proceed with the four-week evaluation. Ava's right to be sceptical.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-010 [29:49] line 296"
+          },
+          {
+            "call_id": "CALL-010",
+            "timestamp": "22:41",
+            "speaker": "Marcus Chen",
+            "quote": "We want a four-week evaluation starting immediately, with a go/no-go decision in September.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-010 [22:41] line 233"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-002",
+            "timestamp": "29:50",
+            "speaker": "Priya Shah",
+            "quote": "I would still consider a limited pilot with synthetic or clearly non-PHI data.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-002 [29:50] line 211"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "28:32",
+            "speaker": "Priya Shah",
+            "quote": "No production launch before Q4. That's firm.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-002 [28:32] line 203"
+          },
+          {
+            "call_id": "CALL-002",
+            "timestamp": "31:19",
+            "speaker": "Maya Chen",
+            "quote": "The blocker is regulatory, not technical, and until it's answered nothing else moves.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-002 [31:19] line 219"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-001",
+            "timestamp": "26:17",
+            "speaker": "Rachel Morgan",
+            "quote": "my read is I'm interested enough to test it.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-001 [26:17] line 174"
+          },
+          {
+            "call_id": "CALL-001",
+            "timestamp": "20:58",
+            "speaker": "Rachel Morgan",
+            "quote": "The real commercial question is whether we expand the Workato contract we already have instead of adding another vendor.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-001 [20:58] line 145"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-004",
+            "timestamp": "34:02",
+            "speaker": "Martin Vogel",
+            "quote": "The architecture has to be viable. Specifically SAP and the on-premise systems.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-004 [34:02] line 250"
+          },
+          {
+            "call_id": "CALL-004",
+            "timestamp": "36:31",
+            "speaker": "Martin Vogel",
+            "quote": "If it is, we talk about a sandbox and a pilot. If it is not, we stop",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-004 [36:31] line 264"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-006",
+            "timestamp": "13:12",
+            "speaker": "Imogen Price",
+            "quote": "I'm interested. I'm not dismissing it.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [13:12] line 146"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "12:37",
+            "speaker": "Imogen Price",
+            "quote": "Price and complexity are the two risks.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [12:37] line 142"
+          },
+          {
+            "call_id": "CALL-006",
+            "timestamp": "12:37",
+            "speaker": "Imogen Price",
+            "quote": "we may well decide that Zapier plus better process discipline is good enough",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-006 [12:37] line 142"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-003",
+            "timestamp": "15:13",
+            "speaker": "Sophie Reed",
+            "quote": "I'm not saying no.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-003 [15:13] line 147"
+          },
+          {
+            "call_id": "CALL-003",
+            "timestamp": "13:35",
+            "speaker": "Sophie Reed",
+            "quote": "budget is the biggest risk here.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-003 [13:35] line 132"
+          },
+          {
+            "call_id": "CALL-003",
+            "timestamp": "13:35",
+            "speaker": "Sophie Reed",
+            "quote": "keep Zapier while improving documentation and ownership.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-003 [13:35] line 132"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-007",
+            "timestamp": "07:10",
+            "speaker": "Carlos Mendes",
+            "quote": "I want to be honest that it's exploration, not a procurement process.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-007 [07:10] line 75"
+          },
+          {
+            "call_id": "CALL-007",
+            "timestamp": "22:39",
+            "speaker": "Carlos Mendes",
+            "quote": "Realistically, no.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-007 [22:39] line 195"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-008",
+            "timestamp": "34:43",
+            "speaker": "Eleanor Brooks",
+            "quote": "The governance side interests me. Genuinely.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [34:43] line 298"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "35:03",
+            "speaker": "Eleanor Brooks",
+            "quote": "The reservation is Samir's. Integration effort versus value.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [35:03] line 300"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "29:04",
+            "speaker": "Eleanor Brooks",
+            "quote": "Security and risk have veto power",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [29:04] line 255"
+          },
+          {
+            "call_id": "CALL-008",
+            "timestamp": "29:34",
+            "speaker": "Eleanor Brooks",
+            "quote": "if we scoped this to matter opening in two practice groups rather than all of them",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-008 [29:34] line 259"
+          }
+        ],
+        [
+          {
+            "call_id": "CALL-009",
+            "timestamp": "24:34",
+            "speaker": "Olivia Grant",
+            "quote": "Then I want to pilot it.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-009 [24:34] line 218"
+          },
+          {
+            "call_id": "CALL-009",
+            "timestamp": "30:02",
+            "speaker": "Darren Wu",
+            "quote": "I'll be honest about what it shows. If the signal's not there I'll say so and we'll stop.",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-009 [30:02] line 264"
+          },
+          {
+            "call_id": "CALL-009",
+            "timestamp": "23:13",
+            "speaker": "Olivia Grant",
+            "quote": "Darren can effectively say no. Security can say no. Finance can say not yet",
+            "status": "exact",
+            "in_context": true,
+            "resolved": "CALL-009 [23:13] line 205"
+          }
+        ]
+      ],
+      "conflict_checks": [],
+      "cited_calls": [
+        "CALL-005",
+        "CALL-010",
+        "CALL-002",
+        "CALL-001",
+        "CALL-004",
+        "CALL-006",
+        "CALL-003",
+        "CALL-007",
+        "CALL-008",
+        "CALL-009"
+      ],
+      "warnings": [],
+      "usage": {
+        "calls": 14,
+        "prompt_tokens": 117295,
+        "completion_tokens": 9556,
+        "embed_tokens": 41,
+        "cached_tokens": 52224
+      },
+      "seconds": 25.48,
+      "steps": {
+        "plan": {
+          "seconds": 2.2,
+          "prompt_tokens": 2311,
+          "completion_tokens": 346,
+          "cached_tokens": 1792
+        },
+        "context": {
+          "seconds": 12.19,
+          "prompt_tokens": 88500,
+          "completion_tokens": 6979,
+          "cached_tokens": 48128
+        },
+        "answer": {
+          "seconds": 11.09,
+          "prompt_tokens": 26484,
+          "completion_tokens": 2231,
+          "cached_tokens": 2304
+        },
+        "check": {
+          "seconds": 0.0,
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "cached_tokens": 0
+        }
+      },
+      "tiers": [
+        {
+          "call_id": "CALL-005",
+          "company": "Ember Financial",
+          "tier": "strongest",
+          "score": 6,
+          "signals": {
+            "sponsor": "committed",
+            "timeline": "dated",
+            "next_step": "pilot"
+          },
+          "caveats": [
+            "rival: Tray.io has a six-week head start in a live proof of concept.",
+            "build: A cheaper alternative is to keep the scripts and document them better.",
+            "gate: Model risk and auditability must be satisfied for the project to proceed."
+          ]
+        },
+        {
+          "call_id": "CALL-010",
+          "company": "Juniper Cloud Tools",
+          "tier": "strongest",
+          "score": 6,
+          "signals": {
+            "sponsor": "committed",
+            "timeline": "dated",
+            "next_step": "pilot"
+          },
+          "caveats": [
+            "build: Prospect says the internal build option is real and could replace OrbitFlow.",
+            "veto: Ava can effectively stop the deal if platform engineering thinks the architecture is wrong.",
+            "gate: EU data residency may be required because of existing contract commitments."
+          ]
+        },
+        {
+          "call_id": "CALL-001",
+          "company": "Acme Logistics",
+          "tier": "conditional",
+          "score": 5,
+          "signals": {
+            "sponsor": "engaged",
+            "timeline": "dated",
+            "next_step": "pilot"
+          },
+          "caveats": [
+            "decision waits on: Decision hinges on whether Acme expands its existing Workato contract instead of adding OrbitFlow.",
+            "rival: Workato is the existing alternative being weighed against OrbitFlow.",
+            "build: They will compare OrbitFlow against improving what they already have."
+          ]
+        },
+        {
+          "call_id": "CALL-002",
+          "company": "BrightPath Health",
+          "tier": "conditional",
+          "score": 5,
+          "signals": {
+            "sponsor": "engaged",
+            "timeline": "dated",
+            "next_step": "pilot"
+          },
+          "caveats": [
+            "decision waits on: Purchase progress is waiting on the regulatory/BAA answer before anything else can move.",
+            "gate: BAA and related regulatory/security approval must be answered before OrbitFlow can be used for PHI workflows.",
+            "build: Power Automate / improving the current setup remains the main alternative if OrbitFlow does not win."
+          ]
+        },
+        {
+          "call_id": "CALL-003",
+          "company": "Cedar & Finch",
+          "tier": "conditional",
+          "score": 4,
+          "signals": {
+            "sponsor": "engaged",
+            "timeline": "dated",
+            "next_step": "follow_up"
+          },
+          "caveats": [
+            "decision waits on: They need to quantify the current setup/business case before deciding.",
+            "gate: Budget is the biggest risk; the tool may be considered too expensive for the team size.",
+            "rival: Zapier and Make are the stated alternatives under consideration.",
+            "build: They may keep Zapier and improve documentation/ownership instead of buying OrbitFlow."
+          ]
+        },
+        {
+          "call_id": "CALL-004",
+          "company": "DeltaWorks Manufacturing",
+          "tier": "conditional",
+          "score": 4,
+          "signals": {
+            "sponsor": "engaged",
+            "timeline": "dated",
+            "next_step": "follow_up"
+          },
+          "caveats": [
+            "gate: Architecture board can stop the deal if it says no.",
+            "rival: MuleSoft plus custom integration services are the stated alternative path.",
+            "veto: Regional IT is not a formal gate but can make implementation impossible."
+          ]
+        },
+        {
+          "call_id": "CALL-006",
+          "company": "Fable Media",
+          "tier": "conditional",
+          "score": 4,
+          "signals": {
+            "sponsor": "engaged",
+            "timeline": "dated",
+            "next_step": "follow_up"
+          },
+          "caveats": [
+            "gate: Contract is above Imogen's approval limit and needs founder approval over $20k.",
+            "build: They may stick with Zapier plus improved process discipline instead of OrbitFlow.",
+            "veto: Founder can approve or block spend above the COO's limit."
+          ]
+        },
+        {
+          "call_id": "CALL-007",
+          "company": "Greenline Energy Services",
+          "tier": "conditional",
+          "score": 4,
+          "signals": {
+            "sponsor": "engaged",
+            "timeline": "dated",
+            "next_step": "follow_up"
+          },
+          "caveats": [
+            "rival: Power Automate is already embedded and first-class for Dynamics, so OrbitFlow has to be materially better.",
+            "veto: The Microsoft platform team may strongly object and has killed things before."
+          ]
+        },
+        {
+          "call_id": "CALL-008",
+          "company": "Harbor Legal",
+          "tier": "conditional",
+          "score": 5,
+          "signals": {
+            "sponsor": "engaged",
+            "timeline": "dated",
+            "next_step": "pilot"
+          },
+          "caveats": [
+            "gate: UK residency availability is still unconfirmed and may block the deal.",
+            "rival: Power Automate is already in use for some administrative work and is the incumbent alternative.",
+            "build: Harbor Legal has an internal development team, and building in-house is a real alternative.",
+            "veto: Security and risk have veto power, held by Samir and his director."
+          ]
+        },
+        {
+          "call_id": "CALL-009",
+          "company": "Inkwell Learning",
+          "tier": "conditional",
+          "score": 5,
+          "signals": {
+            "sponsor": "committed",
+            "timeline": "dated",
+            "next_step": "follow_up"
+          },
+          "caveats": [
+            "decision waits on: They first need to determine whether the signal exists in their data at all.",
+            "rival: Expansion of the existing Gainsight deployment is the main alternative being compared against OrbitFlow.",
+            "veto: Darren can effectively block the purchase if the data does not support it."
+          ]
+        }
+      ]
+    }
+  }
+]

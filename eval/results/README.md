@@ -17,6 +17,9 @@ The same code before calls were read in parts, on the previous index (whole call
 `20261024-123718-auto-final` 20 / 9 / 0 and `20261024-123853-auto-final` 15 / 13 / 1 (32–33K tokens).
 The ingestion benchmark behind the switch is `eval/bench_ingest.py` (README, *Speed*).
 
+The buying rubric for "most likely to buy" (tiers computed in code), q07 six times:
+`20261026-2059*/2100*-auto-q07-rubric` (yes in 5, partly in 1: Acme on top once).
+
 `--across map` with counting across calls, q05 three times: `20261024-1746*-auto-q05-map-tally`
 (yes, partly, partly; evidence recall 1.0; ~45 s, ~150K tokens).
 Prompts with the transcript before the question (prefix cache) and duplicates for lost question-time

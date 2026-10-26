@@ -15,7 +15,7 @@ from .claims import ClaimStore, Topic
 from .conflicts import find_conflicts, render as render_conflicts
 from .index import Chunk, Index, turn_line
 from .llm import LLM, QUESTION_HEDGE_AFTER, Usage
-from .mapper import call_findings, map_calls, render_findings, render_tally, tally, uncovered
+from .mapper import call_findings, map_calls, ranking_text, rate_calls, render_findings, render_tally, tally, uncovered
 from .notes import NoteField
 from .store import Store
 from .names import ambiguous_names
@@ -64,6 +64,10 @@ class Plan(BaseModel):
     assess_each_call: bool = Field(
         description="True when the answer needs a verdict on each candidate call: ranking or classifying "
                     "calls, saying which calls did something, or comparing groups of calls"
+    )
+    likelihood_to_buy: bool = Field(
+        default=False,
+        description="True when the question ranks prospects by how likely they are to buy or close",
     )
     pooled_across_calls: bool = Field(
         default=False,
@@ -142,6 +146,8 @@ class Result:
     # per step: seconds and tokens, so a slow answer shows which step was slow (latency follows the
     # tokens the model generates, not the size of the context)
     steps: dict = field(default_factory=dict)
+    # likelihood-to-buy questions: the tier of each prospect as computed in code (mapper.tier_of)
+    tiers: list = field(default_factory=list)
 
     @property
     def cited_calls(self) -> list[str]:
@@ -439,7 +445,9 @@ class Pipeline:
             if (plan.scope == "across" and len(ids) > 1 and context.mode in ("full", "notes", "excerpts")
                     and (context.mode == "full" or (plan.assess_each_call and len(ids) <= MAX_MAP_CALLS))):
                 say(f"reading each of {len(ids)} calls on its own")
-                findings = call_findings(question, ids, self.calls, self.llm, usage)
+                # likelihood to buy: fixed signals per call, the tier computed in code (mapper.tier_of)
+                findings = (rate_calls(ids, self.calls, self.llm, usage) if plan.likelihood_to_buy
+                            else call_findings(question, ids, self.calls, self.llm, usage))
                 context.text = render_findings(findings) + "\n\n" + context.text
             if (plan.product_topics and len(plan.product_topics) <= MAX_PRODUCT_TOPICS
                     and plan.scope == "specific" and context.mode != "claims" and not plan.call_ids):
@@ -456,6 +464,9 @@ class Pipeline:
                     + "\n".join(f"- {f.call_id} ({f.company}): {f.verdict}" for f in missing) + "\n\n")
             answer = self.answer(question, context, plan, usage, extra=note)
             missing = uncovered(findings, answer_texts(answer), cited_call_ids(answer))
+        tiers = [f for f in findings if f.tier]
+        if tiers:  # the ranking comes from the computed tiers, not from the answer step
+            answer.summary = ranking_text(tiers) + "\n" + answer.summary
         done("answer")
         claim_checks = [self.check(c.citations, context) for c in answer.claims]
         conflict_checks = [self.check(c.citations, context) for c in answer.conflicts]
@@ -468,4 +479,5 @@ class Pipeline:
         return Result(
             question, plan, context, answer, claim_checks, conflict_checks,
             confidence, warnings, usage.snapshot(), time.time() - t0, steps,
+            tiers,
         )
