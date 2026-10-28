@@ -75,6 +75,10 @@ Then `correct`, the overall verdict:
           wrongly declines
 Do not grade the order of ranked items unless a required fact asks for it.
 
+`inconsistent`: true if the answer contradicts itself on a point the question asks about: the summary
+and the claims (or two claims) give the same item a different verdict, tier, figure or outcome. Two
+sides of a conflict reported as a conflict are not an inconsistency.
+
 Finally, `declines`: true only if the answer's main message is that the transcripts do not contain
 the requested information (it may still cite related material). An answer that reports evidence on
 both sides and says it cannot conclude is NOT a decline: declines = false, and grade `correct` by the
@@ -100,6 +104,7 @@ class Judgement(BaseModel):
     penalties: list[ExtraVerdict]
     correct: Literal["yes", "partly", "no"]
     correct_reason: str
+    inconsistent: bool = False
     declines: bool
 
 
@@ -184,8 +189,27 @@ def combine(votes: list[Judgement]) -> Judgement:
     return Judgement(
         facts=facts, bonus=extras(lambda v: v.bonus), penalties=extras(lambda v: v.penalties),
         correct=correct, correct_reason=next(v.correct_reason for v in votes if v.correct == correct),
+        inconsistent=majority([v.inconsistent for v in votes]),
         declines=majority([v.declines for v in votes]),
     )
+
+
+# The judge's overall verdict moved on 5 of 29 answers between two regrades even with three votes each:
+# on a borderline answer the votes split about evenly, and a majority of three still flips. Its verdicts
+# on single facts hold much better (core recall 0.80 vs 0.79), so `correct` is computed here from them,
+# by the rule the judge is given; the judge's own overall verdict is kept as `judge_correct`.
+BROAD_SHARE = 0.75  # a broad (aggregate) question is right when this share of its cores is supported
+
+
+def derive_correct(item: dict, j: Judgement, should_abstain: bool) -> str:
+    cores = [v.core for v in j.facts]
+    if not cores or (j.declines and not should_abstain) or "contradicted" in cores:
+        return "no" if cores or j.declines else j.correct
+    supported = cores.count("supported") / len(cores)
+    main_point = supported == 1 or (item["kind"] == "aggregate" and supported >= BROAD_SHARE)
+    if main_point and not j.inconsistent and not any(p.hit for p in j.penalties):
+        return "yes"
+    return "partly" if supported > 0 else "no"
 
 
 def judge_once(pipe: Pipeline, item: dict, user: str) -> Judgement:
@@ -365,13 +389,15 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
         "penalties_hit": [p.model_dump() for p in j.penalties if p.hit],
         "bonus_hit": sum(b.hit for b in j.bonus),
         "bonus_total": len(item.get("bonus_facts") or []),
-        "correct": j.correct,
+        "correct": derive_correct(item, j, should_abstain),
+        "judge_correct": j.correct,
         "correct_reason": j.correct_reason,
+        "inconsistent": j.inconsistent,
         "verdicts": [v.model_dump() for v in j.facts],
         "abstained": j.declines,
         "abstention_correct": j.declines == should_abstain,
         "judge_votes": [v.correct for v in votes],
-        "judge_agreement": sum(v.correct == j.correct for v in votes) / len(votes),
+        "judge_agreement": sum(v.correct == j.correct for v in votes) / len(votes),  # on the judge's own verdict
     }
     return row | {"failure": failure(row)}
 
@@ -496,7 +522,8 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "", workers: int =
 
     bonus = f"{sum(r['bonus_hit'] for r in ok)}/{sum(r['bonus_total'] for r in ok)}"
     n_votes = max((len(r.get("judge_votes") or [1]) for r in ok), default=1)
-    agreed = f"{n_votes}; {sum(r.get('judge_agreement', 1) == 1 for r in ok)}/{len(ok)}"
+    own = f"{sum(r.get('judge_correct', r['correct']) == r['correct'] for r in ok)}/{len(ok)}"
+    agreed = f"{n_votes};{sum(r.get('judge_agreement', 1) == 1 for r in ok)}/{len(ok)}"
     abst_ok = f"{sum(bool(r['abstained']) for r in unanswerable)}/{len(unanswerable)}"
     abst_false = f"{sum(bool(r['abstained']) for r in answerable)}/{len(answerable)}"
 
@@ -513,9 +540,10 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "", workers: int =
         f"| evidence cited (gold evidence turns cited) | {fmt(mean([r.get('evidence_cited') for r in answerable]))} |",
         f"| citation validity (quote found verbatim) | {fmt(mean([r['citation_valid'] for r in ok]))} |",
         f"| failed citations by kind | {', '.join(f'{k} {v}' for k, v in sorted(failed.items())) or 'none'} |",
-        f"| answer correct (LLM judge): yes / partly / no | "
+        f"| answer correct: yes / partly / no (from the judge's fact verdicts, in code) | "
         f"{j('/'.join(str(sum(r['correct'] == v for r in ok)) for v in ('yes', 'partly', 'no')))} |",
-        f"| judge: votes per answer; answers where every vote agreed on `correct` | {j(agreed)} |",
+        f"| judge's own overall verdict agrees with it | {j(own)} |",
+        f"| judge: votes per answer; answers where every vote agreed on its overall verdict | {j(agreed)} |",
         f"| core fact recall (LLM judge) | {j(fmt(mean([r['core_recall'] for r in answerable])))} |",
         f"| atomic fact recall: cores + details, k of n for lists | {j(fmt(mean([r['atomic_recall'] for r in answerable])))} |",
         f"| compound fact recall: old scoring, 1 / 0.5 / 0 | {j(fmt(mean([r['compound_recall'] for r in answerable])))} |",
