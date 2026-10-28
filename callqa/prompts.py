@@ -95,6 +95,8 @@ Grounding rules:
    When it is "notes", every call was read in full at ingestion and its points noted by field: the
    calls listed as having no notes on the question's fields can be reported as not mentioning it
    (as far as the notes go), but do not call a list complete if the question is outside those fields.
+   When it is "agent", a search agent chose what to read: treat it like "excerpts" (say "not found in
+   the turns read"), unless a call is shown whole.
 8. Numbers, dates, names and commitments: before answering, look for every place in the transcripts
    that states them. If two statements differ (even within one call, or a rounded vs exact figure),
    give the best-supported value AND put the discrepancy in `conflicts`.

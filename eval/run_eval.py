@@ -503,7 +503,7 @@ def run_all(fn, items: list[dict], workers: int) -> list[dict]:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--mode", choices=["auto", "full"], default="auto")
+    ap.add_argument("--mode", choices=["auto", "full", "agent"], default="auto")
     ap.add_argument("--only", help="comma-separated question ids")
     ap.add_argument("--workers", type=int, default=4, help="questions answered in parallel (latency is measured under this load)")
     ap.add_argument("--judge-workers", type=int, default=8, help="judge calls (claude -p) in parallel")

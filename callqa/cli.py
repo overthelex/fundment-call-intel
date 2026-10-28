@@ -125,7 +125,7 @@ def main(argv: list[str] | None = None) -> None:
     sub = ap.add_subparsers(dest="cmd")
     ask = sub.add_parser("ask", help="answer one question")
     ask.add_argument("question")
-    ask.add_argument("--mode", choices=["auto", "full"], default="auto",
+    ask.add_argument("--mode", choices=["auto", "full", "agent"], default="auto",
                      help="auto = plan + whole calls or retrieved excerpts; full = entire dataset in context")
     ask.add_argument("--json", action="store_true", help="print the raw result as JSON")
     ask.add_argument("--across", choices=["notes", "map", "retrieval"], default="notes",

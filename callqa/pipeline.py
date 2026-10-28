@@ -121,7 +121,7 @@ class Answer(BaseModel):
 
 @dataclass
 class Context:
-    mode: Literal["full", "excerpts", "claims", "mapped", "notes"]
+    mode: Literal["full", "excerpts", "claims", "mapped", "notes", "agent"]
     call_ids: list[str]
     turns: list[Turn]
     text: str
@@ -386,7 +386,9 @@ class Pipeline:
                            "turns with neighbours, plus retrieved excerpts",
                  "notes": "every call was read in full when it was ingested and its points noted by field; shown "
                           "are the turns behind the notes in the fields this question needs, plus retrieved "
-                          "excerpts"}[context.mode]
+                          "excerpts",
+                 "agent": "the turns a search agent read for this question (search results, ingestion notes, "
+                          "parts or all of some calls); calls not shown were not read"}[context.mode]
         scope = f"CONTEXT MODE: {context.mode} ({len(context.call_ids)} of {len(self.calls)} calls shown, {shown})"
         if context.claim_topics:
             scope += "\nPlus every OrbitFlow statement on: " + "; ".join(context.claim_topics)
@@ -402,11 +404,26 @@ class Pipeline:
 
     # -- entry point -------------------------------------------------------
 
-    def ask(self, question: str, mode: Literal["auto", "full"] = "auto",
+    def agent_context(self, question: str, usage: Usage, say: Callable[[str], None]) -> tuple[Context, Plan]:
+        """Mode "agent": the turns a LangGraph agent's tools returned (callqa/agent.py), rendered from
+        the transcripts, plus the vendor-statement topics it looked up."""
+        from .agent import gather
+
+        got = gather(self, question, usage, say)
+        text, turns = self.excerpt_text(got.by_call)
+        # not a plan the agent followed: a record of its tool calls (in search_queries) and the notes on
+        # ambiguous names, which the answer step and the judge read from the plan
+        plan = Plan(call_ids=[], categories=[], scope="specific", search_queries=got.tool_calls,
+                    entity_notes=ambiguous_names(question, self.calls_list), vendor_consistency=False,
+                    product_topics=[], note_fields=[], assess_each_call=False)
+        return Context("agent", sorted(got.by_call), turns, text, [], got.topics), plan
+
+    def ask(self, question: str, mode: Literal["auto", "full", "agent"] = "auto",
             on_step: Callable[[str], None] | None = None) -> Result:
         """mode="auto": plan, then whole calls or retrieved excerpts depending on size, or the vendor-claims
         table for questions about whether the vendor contradicts itself.
-        mode="full": skip planning and put the entire dataset in context (baseline)."""
+        mode="full": skip planning and put the entire dataset in context (baseline).
+        mode="agent": a tool-calling agent gathers the context step by step (callqa/agent.py)."""
         t0 = time.time()
         usage = Usage()
         steps: dict[str, dict] = {}
@@ -425,6 +442,10 @@ class Pipeline:
         findings: list = []
         if mode == "full":
             context = self.full_context(list(self.calls))
+        elif mode == "agent":
+            say("agent gathering evidence")
+            context, plan = self.agent_context(question, usage, say)
+            done("agent")
         else:
             say("planning")
             plan = self.plan(question, usage)
