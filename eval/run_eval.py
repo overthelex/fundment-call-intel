@@ -116,7 +116,7 @@ def check_judge() -> None:
 
 
 def judge_name() -> str:
-    return f"claude-cli:{CLAUDE_JUDGE_MODEL}"
+    return f"claude-cli:{CLAUDE_JUDGE_MODEL}" + (f" x{JUDGE_VOTES} votes, median" if JUDGE_VOTES > 1 else "")
 
 
 def judge(pipe: Pipeline, user: str) -> Judgement:
@@ -136,6 +136,71 @@ def judge(pipe: Pipeline, user: str) -> Judgement:
             pass
         time.sleep(5 * (attempt + 1))
     raise RuntimeError(f"claude judge failed: {out.stderr[:300] or out.stdout[:300]}")
+
+
+# One Opus verdict is not stable: re-judging the same 30 answers moved 6 verdicts (yes <-> partly). Each
+# answer is judged JUDGE_VOTES times (in parallel) and the verdicts are combined field by field; the
+# share of votes that agree with the result is kept per question, so a split verdict is visible.
+JUDGE_VOTES = int(os.environ.get("JUDGE_VOTES", "3"))
+CORRECT_ORDER = ("no", "partly", "yes")
+CORE_ORDER = ("contradicted", "missing", "supported")
+
+
+def median(values: list[str], order: tuple[str, ...]) -> str:
+    """The middle verdict on an ordinal scale: the majority when there is one, the middle value when
+    the votes all differ (yes / partly / no -> partly), the lower middle for an even split."""
+    ranked = sorted(values, key=order.index)
+    return ranked[(len(ranked) - 1) // 2]
+
+
+def majority(flags: list[bool]) -> bool:
+    return sum(flags) * 2 > len(flags)
+
+
+def combine(votes: list[Judgement]) -> Judgement:
+    if len(votes) == 1:
+        return votes[0]
+
+    def pick(verdicts: list, value) -> str:  # a reason from a vote that gave the combined verdict
+        return next((v.reason for v in verdicts if getattr(v, "core", getattr(v, "hit", None)) == value), "")
+
+    facts = []
+    for n in sorted({f.n for v in votes for f in v.facts}):
+        fs = [f for v in votes for f in v.facts if f.n == n]
+        core = median([f.core for f in fs], CORE_ORDER)
+        details = sorted(d for d in {d for f in fs for d in f.details_covered}
+                         if majority([d in f.details_covered for f in fs]))
+        facts.append(FactVerdict(n=n, core=core, details_covered=details, reason=pick(fs, core)))
+
+    def extras(get) -> list[ExtraVerdict]:
+        out = []
+        for n in sorted({x.n for v in votes for x in get(v)}):
+            xs = [x for v in votes for x in get(v) if x.n == n]
+            hit = majority([x.hit for x in xs])
+            out.append(ExtraVerdict(n=n, hit=hit, reason=pick(xs, hit)))
+        return out
+
+    correct = median([v.correct for v in votes], CORRECT_ORDER)
+    return Judgement(
+        facts=facts, bonus=extras(lambda v: v.bonus), penalties=extras(lambda v: v.penalties),
+        correct=correct, correct_reason=next(v.correct_reason for v in votes if v.correct == correct),
+        declines=majority([v.declines for v in votes]),
+    )
+
+
+def judge_once(pipe: Pipeline, item: dict, user: str) -> Judgement:
+    j = judge(pipe, user)
+    # a verdict missing for a fact would count as "not stated"; ask again rather than score the gap
+    for _ in range(2):
+        if len({v.n for v in j.facts}) >= len(item.get("expected_facts") or []):
+            break
+        j = judge(pipe, user)
+    return j
+
+
+def judge_votes(pipe: Pipeline, item: dict, user: str, n: int) -> list[Judgement]:
+    with ThreadPoolExecutor(n) as pool:
+        return list(pool.map(lambda _: judge_once(pipe, item, user), range(n)))
 
 
 def norm_fact(f: str | dict) -> dict:
@@ -268,12 +333,8 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
     cited_turns = {(c.turn.call_id, c.turn.idx) for c in checks if c.ok and c.turn}
 
     user = f"QUESTION\n{item['question']}\n\nANSWER\n{answer_text(r.answer, r.confidence, r.plan.entity_notes if r.plan else None)}\n\n{rubric(item)}"
-    j = judge(pipe, user) if use_judge else None
-    # a verdict missing for a fact would count as "not stated"; ask again rather than score the gap
-    for _ in range(2):
-        if j is None or len({v.n for v in j.facts}) >= len(item.get("expected_facts") or []):
-            break
-        j = judge(pipe, user)
+    votes = judge_votes(pipe, item, user, JUDGE_VOTES) if use_judge else []
+    j = combine(votes) if votes else None
     row = {
         "id": item["id"],
         "kind": item["kind"],
@@ -309,6 +370,8 @@ def grade(pipe: Pipeline, item: dict, r: Result, use_judge: bool = True) -> dict
         "verdicts": [v.model_dump() for v in j.facts],
         "abstained": j.declines,
         "abstention_correct": j.declines == should_abstain,
+        "judge_votes": [v.correct for v in votes],
+        "judge_agreement": sum(v.correct == j.correct for v in votes) / len(votes),
     }
     return row | {"failure": failure(row)}
 
@@ -432,6 +495,8 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "", workers: int =
         return value if judged else "not judged"
 
     bonus = f"{sum(r['bonus_hit'] for r in ok)}/{sum(r['bonus_total'] for r in ok)}"
+    n_votes = max((len(r.get("judge_votes") or [1]) for r in ok), default=1)
+    agreed = f"{n_votes}; {sum(r.get('judge_agreement', 1) == 1 for r in ok)}/{len(ok)}"
     abst_ok = f"{sum(bool(r['abstained']) for r in unanswerable)}/{len(unanswerable)}"
     abst_false = f"{sum(bool(r['abstained']) for r in answerable)}/{len(answerable)}"
 
@@ -450,6 +515,7 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "", workers: int =
         f"| failed citations by kind | {', '.join(f'{k} {v}' for k, v in sorted(failed.items())) or 'none'} |",
         f"| answer correct (LLM judge): yes / partly / no | "
         f"{j('/'.join(str(sum(r['correct'] == v for r in ok)) for v in ('yes', 'partly', 'no')))} |",
+        f"| judge: votes per answer; answers where every vote agreed on `correct` | {j(agreed)} |",
         f"| core fact recall (LLM judge) | {j(fmt(mean([r['core_recall'] for r in answerable])))} |",
         f"| atomic fact recall: cores + details, k of n for lists | {j(fmt(mean([r['atomic_recall'] for r in answerable])))} |",
         f"| compound fact recall: old scoring, 1 / 0.5 / 0 | {j(fmt(mean([r['compound_recall'] for r in answerable])))} |",
@@ -474,13 +540,20 @@ def summarise(rows: list[dict], mode: str, judge_label: str = "", workers: int =
             out.append(f"| {r['id']} | {r['kind']} | ERROR: {r['error'][:60]} ||||||||||||")
             continue
         out.append(
-            f"| {r['id']}{' (bonus)' if r.get('bonus_question') else ''} | {r['kind']} | {r['correct'] or '-'} | "
+            f"| {r['id']}{' (bonus)' if r.get('bonus_question') else ''} | {r['kind']} | {r['correct'] or '-'}"
+            f"{split(r)} | "
             f"{fmt(r['context_recall'])} | {fmt(r.get('evidence_recall'))} | {fmt(r['cited_recall'])} | "
             f"{fmt(r.get('evidence_cited'))} | {fmt(r['citation_valid'])} | "
             f"{fmt(r['core_recall'])} | {fmt(r['atomic_recall'])} | {len(r['penalties_hit']) or ''} | "
             f"{'-' if r['abstention_correct'] is None else '✓' if r['abstention_correct'] else '✗'} | {r['confidence']} | {r.get('failure', '')} |"
         )
     return "\n".join(out)
+
+
+def split(r: dict) -> str:
+    """' (yes/partly/yes)' when the judge's votes disagreed on this answer, else ''."""
+    votes = r.get("judge_votes") or []
+    return f" ({'/'.join(votes)})" if len(set(votes)) > 1 else ""
 
 
 def run_all(fn, items: list[dict], workers: int) -> list[dict]:
@@ -502,6 +575,7 @@ def run_all(fn, items: list[dict], workers: int) -> list[dict]:
 
 
 def main() -> None:
+    global JUDGE_VOTES
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=["auto", "full", "agent"], default="auto")
     ap.add_argument("--only", help="comma-separated question ids")
@@ -515,10 +589,13 @@ def main() -> None:
     ap.add_argument("--replay", type=Path, metavar="RESULTS_JSON",
                     help="generate new answers on the contexts saved in a results file (answer step only)")
     ap.add_argument("--suffix", default=None, help="output name suffix for --regrade / --replay")
+    ap.add_argument("--judge-votes", type=int, default=JUDGE_VOTES,
+                    help="judge each answer this many times and combine the verdicts (median); 1 = a single verdict")
     ap.add_argument("--no-judge", action="store_true",
                     help="skip the LLM judge: deterministic metrics only (context/cited recall, citations, tokens); no Claude Code needed")
     args = ap.parse_args()
 
+    JUDGE_VOTES = args.judge_votes
     use_judge = not args.no_judge
     if use_judge:
         check_judge()
