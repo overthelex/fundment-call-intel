@@ -268,6 +268,47 @@ inventory of relevant turns written before the answer (the answer-step failures,
 `--replay` so retrieval was held fixed); and low reasoning in the answer step (per-step timings showed
 latency follows generated tokens).
 
+## A stable judge (28.10)
+
+Two regrades of the same 29 answers, each with three Opus votes per answer and the median taken,
+still moved 5 overall verdicts (yes ↔ partly; single votes disagreed on 14% of pairs). On a borderline
+answer the votes split about evenly, so more votes do not settle it. The judge's verdicts on single
+facts hold (core recall 0.80 vs 0.79), so `correct` is now computed in code from them, by the rule the
+judge is given: every required core supported (for an aggregate question, 75% of them), none
+contradicted, no penalty, and the answer does not contradict itself (`inconsistent`, a flag the judge
+sets). On two new regrades of the same answers:
+
+| | regrade a | regrade b | verdicts that moved |
+|---|---|---|---|
+| `correct` computed from the fact verdicts | 16 / 13 / 0 | 16 / 13 / 0 | 0 of 29 |
+| the judge's own overall verdict | 17 / 12 / 0 | 16 / 13 / 0 | 3 of 29 (q03, q12, q17) |
+
+The rule is stricter than the judge was (18 / 11 / 0 for the same answers before): a single-call answer
+missing one required core is partly, where the judge sometimes called it yes. Results files from before
+28.10 report the judge's own verdict; to compare with them, regrade them
+(`run_eval.py --regrade <file>`).
+
+## Agent mode (LangGraph), 28.10
+
+`--mode agent` (callqa/agent.py): a LangGraph tool-calling agent gathers the context step by step
+(search, ingestion notes, reading calls or parts of them, vendor statements per topic); the answer step,
+citation check and confidence rules are the auto mode's, so the two differ only in how they gather.
+
+| same-day runs, stable judge | auto | agent |
+|---|---|---|
+| correct: yes / partly / no | 16 / 13 / 0 | 15 / 12 / 2 |
+| core fact recall | 0.79–0.80 | 0.77 |
+| evidence recall (gold turns reached the model) | 0.91 | 0.79 (0.63 before tuning) |
+| core facts contradicted / penalties hit | 0 / 0 | 2 / 3 |
+| mean latency, 4 in parallel | 12.7 s | 18.4 s |
+
+The agent is worse, and the reason is measurable: it reads less of the evidence (0.79 vs 0.91) and stops
+after 2-5 tool calls, where auto sends whole calls or the notes for every candidate call. Its two "no"
+answers (q07 ranking, q17 the six-week head start) are answer errors on less context; it did better on
+q11 (vendor contradictions). The routing auto does in code (whole calls under 12K words, notes across
+calls, a verdict per call) is what the agent would have to learn per question. Agent mode stays as an
+option and a comparison, not the default.
+
 ## Engineering notes
 
 What was measured, changed or dropped along the way, with the runs in `results/` (index:

@@ -38,6 +38,7 @@ uv run callqa index         # checks the index, which is committed (.cache/callq
 rm -rf .cache && uv run callqa index   # optional: ingest everything from scratch (2–4 min)
 uv run callqa ask "Which competitors were mentioned, and in what context?"
 uv run callqa ask "..." --mode full     # baseline: whole dataset in the prompt
+uv run callqa ask "..." --mode agent    # a LangGraph agent gathers the context (eval/EVALUATION.md)
 uv run callqa ask "..." --json          # raw result, including the plan and every citation check
 uv run callqa ask "..." --across map    # questions across calls: read each call and count (slower)
 uv run callqa                           # interactive prompt
@@ -221,6 +222,7 @@ Details, the full results table and three worked examples: [`eval/EVALUATION.md`
 ```bash
 uv run python eval/run_eval.py                    # pipeline, all 30 questions (~2 min)
 uv run python eval/run_eval.py --mode full        # baseline: whole dataset in the prompt
+uv run python eval/run_eval.py --mode agent       # LangGraph agent gathers the context
 uv run python eval/run_eval.py --only q11,q24     # a subset
 uv run python eval/run_eval.py --regrade eval/results/<run>.json   # re-check and re-judge saved answers, no generation
 uv run python eval/run_eval.py --no-judge         # deterministic metrics only, no Claude Code needed
