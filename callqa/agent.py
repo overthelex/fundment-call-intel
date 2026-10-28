@@ -34,7 +34,9 @@ RECURSION_LIMIT = 25
 AGENT_EFFORT = os.environ.get("AGENT_EFFORT", "low")
 # The answer step reads every gathered turn; past this many words the agent is told to stop reading.
 GATHER_WORD_BUDGET = 30_000
-NOTES_PER_CALL = 40  # find_notes: the best notes, at most this many
+# find_notes: the best notes, at most this many. At 40 the agent saw 1-5K words on questions across calls
+# (evidence recall 0.63 against auto's 0.91, which sends up to 250 noted turns), and rarely asked twice.
+NOTES_PER_CALL = 150
 
 AGENT_SYSTEM = """You gather evidence from B2B sales-call transcripts to answer a question. The vendor on
 every call is OrbitFlow (workflow automation). You do NOT write the final answer: another step writes it
@@ -58,9 +60,16 @@ How to work:
 2. Gather, then look at what came back and decide what is still missing: a reply without its question,
    a figure that may be corrected later in the call, the second step of a two-step question, a call
    in the candidate set you have not looked at.
-3. Stop when the evidence covers the question, or when more searching returns nothing new. Usually
-   2-6 tool calls; do not read every call when notes or search already cover the question.
-4. Finish with one short message: which calls and turns you found, and what you looked for and did not
+3. Read whole calls rather than pieces when the answer sits in one or a few calls: a question about
+   one named call or person, a question about how a call went or what was agreed, and the calls that
+   your notes or search point to for a two-step question. Any one call is under 5,000 words; reading
+   three or four whole calls is fine. A piece around a hit misses corrections and caveats said later.
+4. For a question across many calls (themes, "which customers", comparisons, rankings), start with
+   find_notes over every field the answer can sit in, then search for what the notes do not cover, and
+   read the calls whose verdict the answer needs.
+5. Stop when the evidence covers the question, or when more searching returns nothing new. Usually
+   3-8 tool calls.
+6. Finish with one short message: which calls and turns you found, and what you looked for and did not
    find. Do not answer the question.
 
 CALL CATALOGUE (call id | company | industry | kind | stage | participants)
